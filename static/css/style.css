@@ -45,22 +45,36 @@ body {
     align-items: center;
     overflow: hidden;
     position: relative;
-    width: 80%;  /* Ajuste isso conforme necessário */
+    width: 80%;  /* Ajuste conforme necessário */
     margin: 0 auto;
+    height: 400px; /* Definir uma altura fixa */
 }
 
 .gallery img, .gallery video {
+    position: absolute; /* Usamos position: absolute para sobrepor as imagens e vídeos */
     max-width: 100%;
-    max-height: 400px;
+    max-height: 100%;
     object-fit: cover;
-    display: none; /* Esconder todos os itens inicialmente */
+    transition: transform 0.5s ease, opacity 0.5s ease; /* Aplicar a transição */
+    opacity: 0; /* Todos os itens começam invisíveis */
 }
 
 .gallery img.active, .gallery video.active {
-    display: block;  /* Mostrar apenas o item ativo */
+    opacity: 1;  /* Tornar o item ativo visível */
+    transform: translateX(0); /* Garantir que o item ativo esteja na posição correta */
 }
 
-/* Botões de navegação */
+.gallery img.slide-left, .gallery video.slide-left {
+    transform: translateX(-100%); /* Mover o item para fora da tela à esquerda */
+    opacity: 0;
+}
+
+.gallery img.slide-right, .gallery video.slide-right {
+    transform: translateX(100%); /* Mover o item para fora da tela à direita */
+    opacity: 0;
+}
+
+/* Botões de navegação horizontal */
 .navigation-buttons-horizontal {
     position: absolute;
     top: 50%;
@@ -82,6 +96,7 @@ button {
 button:hover {
     background-color: rgba(0, 0, 0, 0.7);
 }
+
 
 /* Botões de navegação vertical */
 .navigation-buttons-vertical {

@@ -2,6 +2,7 @@ let page = 1;
 let loading = false;
 let activeServiceIndex = 0; // Índice do serviço ativo no carrossel vertical
 let servicesElements = []; // Para armazenar os serviços carregados
+let isAnimating = false; // Variável para controlar se a animação está em andamento
 
 async function carregarMaisServicos() {
     if (loading) return;
@@ -48,16 +49,31 @@ async function carregarMaisServicos() {
         const imagesAndVideos = gallery.querySelectorAll('img, video');
 
         function showNext() {
-            imagesAndVideos[activeIndex].classList.remove('active');
+            const currentItem = imagesAndVideos[activeIndex];
+            currentItem.classList.remove('active');
+            currentItem.classList.add('slide-left'); // Adiciona a animação para sair pela esquerda
+        
+            // Atualiza o índice ativo e reinicia se for o último item
             activeIndex = (activeIndex + 1) % imagesAndVideos.length;
-            imagesAndVideos[activeIndex].classList.add('active');
+        
+            const nextItem = imagesAndVideos[activeIndex];
+            nextItem.classList.remove('slide-left', 'slide-right'); // Remover as classes de animação, se existirem
+            nextItem.classList.add('active'); // Ativa o próximo item
         }
-
+        
         function showPrev() {
-            imagesAndVideos[activeIndex].classList.remove('active');
+            const currentItem = imagesAndVideos[activeIndex];
+            currentItem.classList.remove('active');
+            currentItem.classList.add('slide-right'); // Adiciona a animação para sair pela direita
+        
+            // Atualiza o índice ativo e volta ao primeiro se for o primeiro item
             activeIndex = (activeIndex - 1 + imagesAndVideos.length) % imagesAndVideos.length;
-            imagesAndVideos[activeIndex].classList.add('active');
+        
+            const prevItem = imagesAndVideos[activeIndex];
+            prevItem.classList.remove('slide-left', 'slide-right'); // Remover as classes de animação, se existirem
+            prevItem.classList.add('active'); // Ativa o item anterior
         }
+        
 
         gallery.querySelector('.next').addEventListener('click', showNext);
         gallery.querySelector('.prev').addEventListener('click', showPrev);
@@ -75,16 +91,40 @@ async function carregarMaisServicos() {
     loading = false;
 }
 
+
+
 // Função para exibir o próximo serviço (carrossel vertical)
 function showNextService() {
-    servicesElements[activeServiceIndex].classList.remove('active'); // Esconder o serviço atual
+    if (isAnimating) return; // Se a animação estiver em andamento, sair da função
+    isAnimating = true; // Marcar que a animação começou
+
+    // Esconder o serviço atual
+    servicesElements[activeServiceIndex].classList.remove('active');
+
+    // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
+    servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
+        servicesElements[activeServiceIndex].removeEventListener('transitionend', handler); // Remover o listener após a transição
+        isAnimating = false; // Marcar que a animação terminou
+    });
+
     activeServiceIndex = (activeServiceIndex + 1) % servicesElements.length;
     servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o próximo serviço
 }
 
-// Função para exibir o serviço anterior (carrossel vertical)
+
 function showPrevService() {
-    servicesElements[activeServiceIndex].classList.remove('active'); // Esconder o serviço atual
+    if (isAnimating) return; // Se a animação estiver em andamento, sair da função
+    isAnimating = true; // Marcar que a animação começou
+
+    // Esconder o serviço atual
+    servicesElements[activeServiceIndex].classList.remove('active');
+
+    // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
+    servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
+        servicesElements[activeServiceIndex].removeEventListener('transitionend', handler); // Remover o listener após a transição
+        isAnimating = false; // Marcar que a animação terminou
+    });
+
     activeServiceIndex = (activeServiceIndex - 1 + servicesElements.length) % servicesElements.length;
     servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o serviço anterior
 }
