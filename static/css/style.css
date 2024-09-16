@@ -51,28 +51,29 @@ body {
 }
 
 .gallery img, .gallery video {
-    position: absolute; /* Usamos position: absolute para sobrepor as imagens e vídeos */
+    position: absolute;
     max-width: 100%;
     max-height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease, opacity 0.5s ease; /* Aplicar a transição */
-    opacity: 0; /* Todos os itens começam invisíveis */
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
 }
 
 .gallery img.active, .gallery video.active {
-    opacity: 1;  /* Tornar o item ativo visível */
-    transform: translateX(0); /* Garantir que o item ativo esteja na posição correta */
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .gallery img.slide-left, .gallery video.slide-left {
-    transform: translateX(-100%); /* Mover o item para fora da tela à esquerda */
+    transform: translateX(-100%);
     opacity: 0;
 }
 
 .gallery img.slide-right, .gallery video.slide-right {
-    transform: translateX(100%); /* Mover o item para fora da tela à direita */
+    transform: translateX(100%);
     opacity: 0;
 }
+
 
 /* Botões de navegação horizontal */
 .navigation-buttons-horizontal {
