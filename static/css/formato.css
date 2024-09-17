@@ -1,0 +1,102 @@
+/* Definindo a classe gallery para ter um layout flexível */
+.gallery {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Definindo as dimensões das imagens e vídeos para serem consistentes e com moldura */
+.gallery img, 
+.gallery video {
+    width: 300px; /* Largura fixa para todas as imagens e vídeos */
+    height: 1900px; /* Altura fixa para todas as imagens e vídeos */
+    object-fit: cover; /* Isso garante que a imagem/vídeo se ajuste ao container sem distorcer */
+    margin-bottom: 10px; /* Espaçamento entre a mídia e os botões de navegação */
+    border: 5px solid #ccc; /* Moldura de 5px com cor cinza */
+    border-radius: 10px; /* Bordas arredondadas para um visual mais suave */
+}
+
+/* Ajustando a posição dos botões para serem absolutos e alinhados às laterais da galeria */
+button.next, 
+button.prev {
+    position: absolute;
+    top: 50%; /* Centraliza verticalmente */
+    transform: translateY(-50%); /* Ajuste para manter os botões centralizados */
+    background-color: rgba(0, 0, 0, 0.5); /* Cor de fundo semitransparente */
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 24px; /* Tamanho da fonte maior para melhor visibilidade */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%; /* Torna os botões redondos */
+}
+
+/* Botão 'prev' à esquerda da imagem */
+button.prev {
+    left: 10px; /* Posiciona o botão à esquerda da galeria */
+}
+
+/* Botão 'next' à direita da imagem */
+button.next {
+    right: -141px;
+}
+
+/* Efeitos de hover para os botões */
+button.next:hover, 
+button.prev:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+    transform: translateY(-50%) scale(1.1); /* Aumenta o botão um pouco quando hover */
+}
+
+/* Estilizando o botão de navegação vertical superior (seta para cima) */
+button.vertical-prev {
+    position: absolute;
+    top: 10px; /* Posiciona o botão no topo da galeria */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translateX(-50%); /* Mantém o botão centralizado */
+    background-color: rgba(0, 0, 0, 0.5); /* Cor de fundo semitransparente */
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 24px; /* Tamanho da fonte para visibilidade */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%; /* Botão redondo */
+}
+
+/* Estilizando o botão de navegação vertical inferior (seta para baixo) */
+button.vertical-next {
+    position: absolute;
+    bottom: 10px; /* Posiciona o botão no fundo da galeria */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translateX(-50%); /* Mantém o botão centralizado */
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%;
+}
+
+/* Efeito hover para os botões verticais */
+button.vertical-prev:hover, 
+button.vertical-next:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+    transform: translateX(-50%) scale(1.1); /* Aumenta o botão levemente */
+}
+
+/* Ajuste para telas menores (dispositivos móveis) */
+@media (max-width: 768px) {
+    .navigation-buttons-vertical {
+        right: 10px; /* Ajusta a posição para mais perto da lateral */
+    }
+
+    .navigation-buttons-vertical button {
+        padding: 10px; /* Botões menores */
+        font-size: 20px;
+    }
+}

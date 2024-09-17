@@ -75,16 +75,25 @@ body {
 }
 
 
-/* Botões de navegação horizontal */
+/* Estilos para os botões de navegação */
 .navigation-buttons-horizontal {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
+    top: 50%; /* Centraliza verticalmente */
+    left: 50%; /* Posiciona os botões no centro horizontal */
+    transform: translate(-50%, -50%); /* Centraliza os botões horizontal e verticalmente */
     display: flex;
     justify-content: space-between;
+    width: 120px; /* Largura ajustada para manter os botões próximos */
 }
 
+.navigation-buttons-horizontal button {
+    background-color: rgba(255, 255, 255, 0.7); /* Fundo semitransparente */
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.3s ease;
+}
 button {
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
@@ -121,4 +130,11 @@ button.vertical-btn {
 
 button.vertical-btn:hover {
     background-color: rgba(0, 0, 0, 0.7);
+}
+button.next {
+    margin-left: 340px;
+}
+
+button.prev {
+    margin-left: -150px;
 }

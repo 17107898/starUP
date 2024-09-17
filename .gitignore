@@ -1,1 +1,5 @@
 venv
+venv_novo
+static.zip
+model.pth
+test.py

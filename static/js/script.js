@@ -4,6 +4,72 @@ let activeServiceIndex = 0; // Índice do serviço ativo no carrossel vertical
 let servicesElements = []; // Para armazenar os serviços carregados
 let isAnimating = false; // Variável para controlar se a animação está em andamento
 
+// Função para detectar se o dispositivo é móvel e esconder os botões
+// Função para detectar se o dispositivo é móvel e esconder os botões
+function isMobile() {
+    const isMobileDevice = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    
+    if (isMobileDevice) {
+        // Esconder os botões de navegação vertical
+        const verticalButtons = document.querySelector('.navigation-buttons-vertical');
+        if (verticalButtons) {
+            verticalButtons.style.display = 'none'; // Esconde os botões verticais
+        }
+
+        // Esconder os botões de navegação horizontal (prev e next)
+        const horizontalButtons = document.querySelectorAll('.navigation-buttons-horizontal button');
+        if (horizontalButtons) {
+            horizontalButtons.forEach(button => {
+                button.style.display = 'none'; // Esconde cada botão horizontal
+            });
+        }
+    }
+    
+    return isMobileDevice;
+}
+
+
+// Função que esconde os botões de navegação em dispositivos móveis
+function hideNavigationButtonsIfMobile(serviceElement) {
+    if (isMobile()) {
+        // Esconder botões de navegação horizontal (prev e next)
+        const nextButton = serviceElement.querySelector('button.next');
+        const prevButton = serviceElement.querySelector('button.prev');
+        if (nextButton) {
+            nextButton.style.display = 'none'; // Esconde o botão "next"
+        }
+        if (prevButton) {
+            prevButton.style.display = 'none'; // Esconde o botão "prev"
+        }
+        
+    }
+}
+
+// Função que habilita navegação por toque (swipe) no carrossel horizontal
+function enableSwipeNavigation(gallery, showNext, showPrev) {
+    let startX = 0;
+
+    // Detecta o início do toque
+    gallery.addEventListener('touchstart', function(event) {
+        startX = event.touches[0].clientX; // Armazena a posição horizontal do toque
+    });
+
+    // Detecta o final do toque e verifica a direção do swipe
+    gallery.addEventListener('touchend', function(event) {
+        const endX = event.changedTouches[0].clientX;
+        const deltaX = startX - endX;
+
+        if (deltaX > 50) {
+            // Swipe para a esquerda (próximo item)
+            showNext();
+        } else if (deltaX < -50) {
+            // Swipe para a direita (item anterior)
+            showPrev();
+        }
+    });
+}
+
+
 async function carregarMaisServicos() {
     if (loading) return;
     loading = true;
@@ -73,7 +139,14 @@ async function carregarMaisServicos() {
             prevItem.classList.remove('slide-left', 'slide-right'); // Remover as classes de animação, se existirem
             prevItem.classList.add('active'); // Ativa o item anterior
         }
-        
+
+        // Esconder botões de navegação se for um dispositivo móvel
+        hideNavigationButtonsIfMobile(serviceElement);
+
+        // Adicionar suporte ao swipe no mobile para o carrossel horizontal
+        if (isMobile()) {
+            enableSwipeNavigation(gallery, showNext, showPrev); // Habilitar navegação por swipe
+        }
 
         gallery.querySelector('.next').addEventListener('click', showNext);
         gallery.querySelector('.prev').addEventListener('click', showPrev);
@@ -90,7 +163,6 @@ async function carregarMaisServicos() {
 
     loading = false;
 }
-
 
 
 // Função para exibir o próximo serviço (carrossel vertical)
@@ -129,35 +201,92 @@ function showPrevService() {
     servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o serviço anterior
 }
 
-// Função que identifica a rotação do scroll do mouse e simula o clique
 window.onload = function() {
     carregarMaisServicos();
 
     // Adicionar navegação vertical ao clicar nas setas
     document.querySelector('.vertical-next').addEventListener('click', showNextService);
     document.querySelector('.vertical-prev').addEventListener('click', showPrevService);
+
+    // Verifica se é um dispositivo móvel e ativa o toque
+    if (isMobile()) {
+        enableTouchNavigation(); // Ativar navegação por toque em dispositivos móveis
+    } else {
+        enableScrollAndKeyboardNavigation(); // Ativar navegação por scroll e teclado em desktops
+    }
 };
 
-// Função que identifica a rotação do scroll do mouse e chama as funções diretamente
-window.addEventListener('wheel', function(event) {
-    if (event.deltaY < 0) {
-        // Rolagem para cima, chamar função para serviço anterior
-        showPrevService();
-    } else if (event.deltaY > 0) {
-        // Rolagem para baixo, chamar função para próximo serviço
-        showNextService();
-    }
-});
+// Função para detectar se o dispositivo é móvel
+// Função para detectar se o dispositivo é móvel e esconder os botões
+// function isMobile() {
+//     const isMobileDevice = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    
+//     if (isMobileDevice) {
+//         // Esconder os botões de navegação verticais
+//         const verticalButtons = document.querySelector('.navigation-buttons-vertical');
+//         if (verticalButtons) {
+//             verticalButtons.style.display = 'none'; // Esconde os botões verticais
+//         }
 
-// Função que identifica a navegação pelas teclas do teclado
-window.addEventListener('keydown', function(event) {
-    // Verificar se a tecla pressionada é a seta para cima (keyCode 38) ou seta para baixo (keyCode 40)
-    if (event.key === 'ArrowUp') {
-        // Seta para cima, chamar função para serviço anterior
-        showPrevService();
-    } else if (event.key === 'ArrowDown') {
-        // Seta para baixo, chamar função para próximo serviço
-        showNextService();
-    }
-});
+//         // Esconder os botões de navegação horizontal (next e prev)
+//         const nextButton = document.querySelector('button.next');
+//         const prevButton = document.querySelector('button.prev');
+//         if (nextButton) {
+//             nextButton.style.display = 'none'; // Esconde o botão "next"
+//         }
+//         if (prevButton) {
+//             prevButton.style.display = 'none'; // Esconde o botão "prev"
+//         }
+//     }
+    
+//     return isMobileDevice;
+// }
+// Função para navegação por scroll e teclado (para desktop)
+function enableScrollAndKeyboardNavigation() {
+    // Adicionar navegação por rotação do scroll do mouse
+    window.addEventListener('wheel', function(event) {
+        if (event.deltaY < 0) {
+            // Rolagem para cima, chamar função para serviço anterior
+            showPrevService();
+        } else if (event.deltaY > 0) {
+            // Rolagem para baixo, chamar função para próximo serviço
+            showNextService();
+        }
+    });
+
+    // Adicionar navegação pelas teclas do teclado
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowUp') {
+            // Seta para cima, chamar função para serviço anterior
+            showPrevService();
+        } else if (event.key === 'ArrowDown') {
+            // Seta para baixo, chamar função para próximo serviço
+            showNextService();
+        }
+    });
+}
+
+// Função para navegação por toque (swipe) em dispositivos móveis
+function enableTouchNavigation() {
+    let startY = 0;
+
+    // Detecta o início do toque
+    window.addEventListener('touchstart', function(event) {
+        startY = event.touches[0].clientY;
+    });
+
+    // Detecta o final do toque e verifica a direção do swipe
+    window.addEventListener('touchend', function(event) {
+        const endY = event.changedTouches[0].clientY;
+        const deltaY = startY - endY;
+
+        if (deltaY > 50) {
+            // Swipe para cima (próximo serviço)
+            showNextService();
+        } else if (deltaY < -50) {
+            // Swipe para baixo (serviço anterior)
+            showPrevService();
+        }
+    });
+}
 

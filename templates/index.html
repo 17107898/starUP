@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scroll Infinito</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/formato.css') }}">
 </head>
 <body>
     <h1>Serviços Disponíveis</h1>
@@ -12,10 +13,11 @@
     <div id="services-container"></div>
     <!-- Botões para navegação vertical -->
     <div class="navigation-buttons-vertical">
-        <button class="vertical-prev">↑</button>
-        <button class="vertical-next">↓</button>
+        <button class="vertical-prev">↓</button>
+        <button class="vertical-next">↑</button>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/front.js') }}"></script>
 </body>
 </html>
