@@ -101,11 +101,14 @@ async function carregarMaisServicos() {
             <div class="gallery">
                 ${galleryItems}
                 <div class="video-container">
-                <div class="video-description active">
-                <div class="responsavel-info">
-                <p><strong>Responsável:</strong> ${service.person_name}</p>
-                <img src="/static/${service.perfil_foto}" alt="Foto de ${service.person_name}" class="perfil-foto">
-                </div>
+                    <div class="video-description active">
+                        <!-- Aqui você coloca a imagem de perfil -->
+                        <div class="responsavel-info">
+                            <p><strong>Responsável:</strong> ${service.person_name}</p>
+                            <!-- Substituímos o <img> por uma <div> com background-image -->
+                            <div class="perfil-foto" style="background-image: url('/static/${service.perfil_foto}');"></div>
+                        </div>
+
                         <p><strong>Nota:</strong> ${service.rating}</p>
                         <p><strong>Descrição:</strong> 
                             <span class="short-description">${service.description.substring(0, 50)}...</span> 
@@ -114,7 +117,7 @@ async function carregarMaisServicos() {
                         </p>
                     </div>
                 </div>
-                <!-- Botão de solicitar serviço está fora do video-container -->
+                <!-- Botão de solicitar serviço -->
                 <button class="solicitar-servico-btn">✅</button>
             </div>
             <div class="navigation-buttons-horizontal">
@@ -140,8 +143,10 @@ async function carregarMaisServicos() {
         let activeIndex = 0;
 
         // Capturar apenas imagens e vídeos, excluindo .perfil-foto
+        // Capturar apenas imagens e vídeos dentro da galeria, excluindo .perfil-foto e qualquer coisa dentro de .responsavel-info
         const imagesAndVideos = gallery.querySelectorAll('img:not(.perfil-foto), video');
-
+        console.log(imagesAndVideos); // Verifique o que está sendo capturado
+        
         if (videoDescription) {
             videoDescription.classList.add('active'); // Deixe a descrição ativa
         }

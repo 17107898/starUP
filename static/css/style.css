@@ -184,9 +184,12 @@ button.prev {
 .perfil-foto {
     width: 40px;
     height: 40px;
-    border-radius: 50%; /* Torna a imagem circular */
-    margin-right: 10px; /* Espaço entre a imagem e o nome */
+    border-radius: 50%;
+    background-size: cover; /* Ajusta a imagem para cobrir todo o div */
+    background-position: center; /* Centraliza a imagem */
+    display: inline-block;
 }
+
 .read-more-btn {
     background: none;
     border: none;
