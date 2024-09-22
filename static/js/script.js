@@ -100,18 +100,19 @@ async function carregarMaisServicos() {
             <h3>${service.name}</h3>
             <div class="gallery">
                 ${galleryItems}
-            <div class="video-container">
+                <div class="video-container">
                 <div class="video-description active">
-                    <div class="responsavel-info">
-                        <img src="/static/${service.perfil_foto}" alt="Foto de ${service.person_name}" class="perfil-foto">
-                        <p><strong>Responsável:</strong> ${service.person_name}</p>
+                <div class="responsavel-info">
+                <p><strong>Responsável:</strong> ${service.person_name}</p>
+                <img src="/static/${service.perfil_foto}" alt="Foto de ${service.person_name}" class="perfil-foto">
+                </div>
+                        <p><strong>Nota:</strong> ${service.rating}</p>
+                        <p><strong>Descrição:</strong> 
+                            <span class="short-description">${service.description.substring(0, 50)}...</span> 
+                            <span class="full-description" style="display: none;">${service.description}</span>
+                            <button class="read-more-btn">Ler mais</button>
+                        </p>
                     </div>
-                    <p><strong>Nota:</strong> ${service.rating}</p>
-                    <p><strong>Descrição:</strong>
-                        <span class="short-description">${service.description.substring(0, 50)}...</span>
-                        <span class="full-description" style="display: none;">${service.description}</span>
-                        <button class="read-more-btn">Ler mais</button>
-                    </p>
                 </div>
                 <!-- Botão de solicitar serviço está fora do video-container -->
                 <button class="solicitar-servico-btn">✅</button>
