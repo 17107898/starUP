@@ -9,10 +9,31 @@ def index():
 
 # Simulação de dados de serviços (sem incluir "static/")
 services = [
-    {"id": 1, "name": "Serviço A", "description": "Descrição do serviço A", "images": ["images/foto_1.jpeg", "images/foto_2.jpeg"], "videos": ["videos/video_1.mp4"]},
-    {"id": 2, "name": "Serviço B", "description": "Descrição do serviço B", "images": ["images/foto_3.jpeg"], "videos": ["videos/video_2.mp4"]},
-    # Adicione mais serviços para simular uma lista maior
+    {
+        "id": 1,
+        "perfil_foto":"images/Perfil/perfil_1.jpeg",
+        "name": "Serviço A",
+        "description": "Descrição do serviço A. Um serviço completo voltado para consultoria de negócios.",
+        "images": ["images/foto_1.jpeg", "images/foto_2.jpeg"],
+        "videos": ["videos/video_1.mp4"],
+        "person_name": "Jubileu",  # Nome da pessoa responsável pelo serviço A
+        "rating": 4.7,  # Nota do serviço A
+        "bio": "Jubileu é um consultor experiente, com mais de 10 anos de atuação em projetos de expansão de empresas. Ele deseja ajudar empresas a alcançar novos mercados e otimizar seus processos internos."
+    },
+    {
+        "id": 2,
+        "perfil_foto":"images/Perfil/perfil_2.jpg",
+        "name": "Serviço B",
+        "description": "Descrição do serviço B. Focado em desenvolvimento de websites e plataformas digitais.",
+        "images": ["images/foto_3.jpeg"],
+        "videos": ["videos/video_2.mp4"],
+        "person_name": "Tubilu",  # Nome da pessoa responsável pelo serviço B
+        "rating": 4.3,  # Nota do serviço B
+        "bio": "Tubilu é um desenvolvedor web especializado em criar soluções modernas e responsivas para empresas que buscam uma presença digital marcante. Ele busca aprimorar a performance dos sites e a experiência do usuário."
+    },
+    # Adicione mais serviços simulados conforme necessário
 ]
+
 
 # Rota para fornecer serviços paginados (scroll infinito)
 @app.route('/get_services', methods=['GET'])

@@ -79,7 +79,7 @@ async function carregarMaisServicos() {
 
     const container = document.getElementById('services-container');
     
-    data.services.forEach(service => {
+    data.services.forEach((service, index) => {
         const serviceElement = document.createElement('div');
         serviceElement.classList.add('service');
         
@@ -91,53 +91,125 @@ async function carregarMaisServicos() {
         galleryItems += service.images.map(img => `<img src="/static/${img}" alt="${service.name}" class="${itemIndex++ === 0 ? 'active' : ''}">`).join('');
 
         // Montar galeria com vídeos
-        galleryItems += service.videos.map(vid => `<video src="/static/${vid}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>`).join('');
+        galleryItems += service.videos.map(vid => `
+            <video src="/static/${vid}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>
+        `).join('');
 
         // Montar elemento de navegação horizontal e vertical
         serviceElement.innerHTML = `
             <h3>${service.name}</h3>
-            <p>${service.description}</p>
             <div class="gallery">
                 ${galleryItems}
-                <div class="navigation-buttons-horizontal">
-                    <button class="prev">&laquo;</button>
-                    <button class="next">&raquo;</button>
+            <div class="video-container">
+                <div class="video-description active">
+                    <div class="responsavel-info">
+                        <img src="/static/${service.perfil_foto}" alt="Foto de ${service.person_name}" class="perfil-foto">
+                        <p><strong>Responsável:</strong> ${service.person_name}</p>
+                    </div>
+                    <p><strong>Nota:</strong> ${service.rating}</p>
+                    <p><strong>Descrição:</strong>
+                        <span class="short-description">${service.description.substring(0, 50)}...</span>
+                        <span class="full-description" style="display: none;">${service.description}</span>
+                        <button class="read-more-btn">Ler mais</button>
+                    </p>
                 </div>
+                <!-- Botão de solicitar serviço está fora do video-container -->
+                <button class="solicitar-servico-btn">✅</button>
+            </div>
+            <div class="navigation-buttons-horizontal">
+                <button class="prev">&laquo;</button>
+                <button class="next">&raquo;</button>
             </div>
         `;
-        
+
         container.appendChild(serviceElement);
         servicesElements.push(serviceElement); // Adiciona o serviço à lista de serviços
 
+        // Adicionar evento de clique ao botão "Solicitar Serviço"
+        const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
+        if (solicitarServicoBtn) {
+            solicitarServicoBtn.addEventListener('click', () => {
+                alert(`Solicitando o serviço: ${service.name}`);
+            });
+        }
+
         // Adicionar evento de navegação à galeria horizontal
         const gallery = serviceElement.querySelector('.gallery');
+        const videoDescription = serviceElement.querySelector('.video-description');
         let activeIndex = 0;
-        const imagesAndVideos = gallery.querySelectorAll('img, video');
+
+        // Capturar apenas imagens e vídeos, excluindo .perfil-foto
+        const imagesAndVideos = gallery.querySelectorAll('img:not(.perfil-foto), video');
+
+        if (videoDescription) {
+            videoDescription.classList.add('active'); // Deixe a descrição ativa
+        }
 
         function showNext() {
             const currentItem = imagesAndVideos[activeIndex];
             currentItem.classList.remove('active');
-            currentItem.classList.add('slide-left'); // Adiciona a animação para sair pela esquerda
-        
-            // Atualiza o índice ativo e reinicia se for o último item
+            currentItem.classList.add('slide-left'); // Animação para sair pela esquerda
+
             activeIndex = (activeIndex + 1) % imagesAndVideos.length;
-        
+
             const nextItem = imagesAndVideos[activeIndex];
-            nextItem.classList.remove('slide-left', 'slide-right'); // Remover as classes de animação, se existirem
+            nextItem.classList.remove('slide-left', 'slide-right');
             nextItem.classList.add('active'); // Ativa o próximo item
+
+            // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
+            if (activeIndex === 0) {
+                videoDescription.classList.add('active'); // Aplica fade in para a descrição
+                videoDescription.classList.remove('hidden'); // Remove a classe que esconde
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
+                    solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
+                }
+            } else {
+                videoDescription.classList.remove('active'); // Esconde a descrição
+                videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.remove('active'); // Esconde o botão
+                    solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
+                }
+            }
         }
-        
+
         function showPrev() {
             const currentItem = imagesAndVideos[activeIndex];
             currentItem.classList.remove('active');
-            currentItem.classList.add('slide-right'); // Adiciona a animação para sair pela direita
-        
-            // Atualiza o índice ativo e volta ao primeiro se for o primeiro item
+            currentItem.classList.add('slide-right'); // Animação para sair pela direita
+
             activeIndex = (activeIndex - 1 + imagesAndVideos.length) % imagesAndVideos.length;
-        
+
             const prevItem = imagesAndVideos[activeIndex];
-            prevItem.classList.remove('slide-left', 'slide-right'); // Remover as classes de animação, se existirem
+            prevItem.classList.remove('slide-left', 'slide-right');
             prevItem.classList.add('active'); // Ativa o item anterior
+
+            // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
+            if (activeIndex === 0) {
+                videoDescription.classList.add('active'); // Aplica fade in para a descrição
+                videoDescription.classList.remove('hidden'); // Remove a classe que esconde
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
+                    solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
+                }
+            } else {
+                videoDescription.classList.remove('active'); // Esconde a descrição
+                videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.remove('active'); // Esconde o botão
+                    solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
+                }
+            }
+        }
+
+        // Verificar se os botões de navegação existem antes de adicionar o evento
+        const nextBtn = serviceElement.querySelector('.next');
+        const prevBtn = serviceElement.querySelector('.prev');
+
+        if (nextBtn && prevBtn) {
+            nextBtn.addEventListener('click', showNext);
+            prevBtn.addEventListener('click', showPrev);
         }
 
         // Esconder botões de navegação se for um dispositivo móvel
@@ -147,22 +219,37 @@ async function carregarMaisServicos() {
         if (isMobile()) {
             enableSwipeNavigation(gallery, showNext, showPrev); // Habilitar navegação por swipe
         }
-
-        gallery.querySelector('.next').addEventListener('click', showNext);
-        gallery.querySelector('.prev').addEventListener('click', showPrev);
     });
 
     if (data.has_more) {
         page++;
     }
 
-    // Mostrar o primeiro serviço se ainda não houver nenhum serviço visível
     if (servicesElements.length === data.services.length) {
         servicesElements[0].classList.add('active'); // Ativa o primeiro serviço carregado
     }
 
     loading = false;
 }
+
+
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('read-more-btn')) {
+        const btn = event.target;
+        const shortDescription = btn.previousElementSibling.previousElementSibling;
+        const fullDescription = btn.previousElementSibling;
+        
+        if (fullDescription.style.display === 'none') {
+            fullDescription.style.display = 'inline';
+            shortDescription.style.display = 'none';
+            btn.textContent = 'Ler menos';
+        } else {
+            fullDescription.style.display = 'none';
+            shortDescription.style.display = 'inline';
+            btn.textContent = 'Ler mais';
+        }
+    }
+});
 
 
 // Função para exibir o próximo serviço (carrossel vertical)
