@@ -1,0 +1,343 @@
+/* Garantir que todo o conteúdo use border-box */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Geral */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden; /* Evita rolagem horizontal */
+    background-color: #f0f0f0; /* Fundo claro */
+}
+
+/* Estilo para o container principal */
+#services-container {
+    position: relative; /* Para permitir que os filhos usem posicionamento absoluto */
+    width: 100vw; /* Largura da tela inteira */
+    height: 100vh; /* Altura da tela inteira */
+    overflow: hidden; /* Para esconder qualquer conteúdo que ultrapasse a tela */
+}
+
+/* Estilo para os serviços */
+.service {
+    text-align: center;
+    padding: 0; /* Removemos padding aqui */
+    width: 100%;
+    height: 100vh; /* Altura total da tela */
+    position: absolute; /* Para sobrepor os serviços uns aos outros */
+    top: 0;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(100%); /* Fora da tela inicialmente (à direita) */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Transições suaves */
+}
+
+.service.active {
+    opacity: 1;
+    transform: translateX(0); /* Volta para a posição visível */
+}
+
+.service.prev {
+    transform: translateX(-100%); /* Fora da tela (à esquerda) */
+}
+
+/* Galeria de imagens e vídeos */
+.gallery {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw; /* Garante que a galeria ocupe 100% da largura */
+    height: 100vh; /* A galeria ocupa toda a altura da tela */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Imagens ocupando a tela toda (Zoom Máximo) */
+.zoom-max .gallery img, .zoom-max .gallery video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover; /* Zoom máximo, cobre a tela */
+    margin: 0;
+    padding: 0;
+}
+
+/* Vídeos ocupando a tela toda */
+.zoom-max .gallery video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Imagens ocupando a tela toda (Zoom Mínimo) */
+.zoom-min .gallery img, .zoom-min .gallery video {
+    width: 100vw;
+    height: 50vh;
+    object-fit: contain; /* Zoom mínimo, mostra a imagem completa */
+    margin: 0;
+    padding: 0;
+}
+
+/* Vídeos ocupando a tela toda */
+.zoom-min .gallery video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+
+/* Botões de zoom in e zoom out */
+.zoom-buttons {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.zoom-buttons button {
+    padding: 10px;
+    margin: 5px 0;
+    font-size: 18px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.zoom-buttons button:hover {
+    background-color: #444;
+}
+
+
+/* Estilo de descrição no carrossel para mobile */
+.video-description {
+    position: absolute;
+    bottom: 20px; /* Ajustado para ficar próximo ao rodapé */
+    left: 20px; /* Ajustado para alinhar à esquerda */
+    color: white;
+    padding: 15px;
+    font-size: 14px;
+    border-radius: 8px;
+    max-width: 300px;
+    z-index: 2;
+    
+    background-color: rgba(0, 0, 0, 0.6); /* Fundo semitransparente */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra leve */
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    width: 250px;
+    transition: opacity 0.5s ease; /* Transição suave */
+}
+
+/* Quando a descrição estiver ativa */
+.video-description.active {
+    opacity: 1; /* Descrição visível */
+    display: block;
+}
+
+/* Quando a descrição for oculta */
+.video-description.hidden {
+    opacity: 0; /* Descrição invisível */
+    display: none;
+}
+
+.video-description p {
+    margin: 5px 0;
+}
+
+.solicitar-servico-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease, opacity 0.5s ease;
+    z-index: 4;
+    display: block;
+}
+
+.solicitar-servico-btn.hidden {
+    display: none;
+    opacity: 0;
+}
+
+
+.responsavel-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.perfil-foto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* Estilo para o título (h1) */
+h1 {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    z-index: 1;
+    font-size: 1.7rem !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    
+    /* Balão transparente */
+    background-color: rgba(255, 255, 255, 0.2);  /* Fundo branco transparente */
+    border: 2px solid white;  /* Borda branca */
+    padding: 10px 20px;  /* Espaçamento interno para dar a sensação de balão */
+    border-radius: 20px;  /* Bordas arredondadas para parecer um balão */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);  /* Sombra leve para destacar */
+}
+/* Estilo para o título (h1) - lado esquerdo */
+h1 {
+    position: absolute;
+    top: 20px;
+    left: 35%;  /* Posiciona o h1 mais à esquerda */
+    transform: translateX(-50%);
+    color: white;
+    z-index: 1;
+    font-size: 2rem;  /* Reduz o tamanho da fonte */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    
+    /* Balão transparente */
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    padding: 5px 15px;  /* Reduz o espaçamento interno para evitar espaço vazio */
+    border-radius: 15px;  /* Reduz o arredondamento das bordas */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+/* Estilo para o subtítulo (h3) - lado direito */
+h3 {
+    position: absolute;
+    top: 20px;
+    left: 73%;
+    transform: translateX(-50%);
+    color: white;
+    z-index: 1;
+    font-size: 1.2rem !important;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    /* margin: 0; */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+.solicitar-servico-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease, opacity 0.5s ease;
+    z-index: 4;
+    display: block;
+    margin-top: 477px;
+    margin-left: 220px;
+}
+/* Adaptação para telas pequenas */
+@media (max-width: 768px) {
+    .gallery {
+        height: 100vh; /* Ocupa toda a tela */
+    }
+
+    h1 {
+        font-size: 2rem; /* Texto menor em dispositivos menores */
+    }
+
+    .video-description {
+        font-size: 12px;
+        max-width: 200px;
+    }
+    h3 {
+        font-size: 1.4rem;  /* Ajuste do tamanho da fonte em dispositivos menores */
+    }
+
+}
+
+/* Adaptação para telas pequenas - 6,8" */
+@media (max-width: 1080px) {  /* Para telas de largura de até 1080px */
+    h1, h3 {
+        font-size: 1.2rem !important;  /* Reduz tamanho da fonte */
+        padding: 5px 10px;  /* Ajuste do padding para caber na tela */
+    }
+
+    h1 {
+        left: 35%;  /* Ajuste fino do posicionamento do h1 */
+    }
+
+    h3 {
+        top: 12px;
+        left: 73%;  /* Ajuste fino do posicionamento do h3 */
+    }
+    .video-description {
+        position: absolute;
+        bottom: -650px;
+        left: -120px;
+        color: white;
+        padding: 10px;
+        font-size: 14px;
+        border-radius: 5px;
+        max-width: 250px;
+        z-index: 2;
+        width: 250px;
+    }
+    .solicitar-servico-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+        transition: background-color 0.3s ease, opacity 0.5s ease;
+        z-index: 4;
+        display: block;
+        margin-top: 600px;
+        margin-left: 220px;
+    }
+    /* Quando a descrição estiver ativa */
+    .video-description.active {
+        opacity: 1; /* Descrição visível */
+    }
+
+    /* Quando a descrição for oculta */
+    .video-description.hidden {
+        opacity: 0; /* Descrição invisível */
+        display: none;
+    }
+
+}

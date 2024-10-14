@@ -94,14 +94,6 @@ body {
     font-size: 20px;
     transition: background-color 0.3s ease;
 }
-button {
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    font-size: 18px;
-}
 
 button:hover {
     background-color: rgba(0, 0, 0, 0.7);
@@ -144,21 +136,26 @@ button.prev {
     display: inline-block;
 }
 
+/* Estilo de descrição no carrossel para desktop */
 .video-description {
-    /* position: absolute; */
+    position: absolute;
     bottom: 10px;
     left: 10px;
-    background-color: rgba(0, 0, 0, 0.7);
     color: white;
     padding: 10px;
     font-size: 12px;
     border-radius: 5px;
     max-width: 200px;
     z-index: 2;
+    background-color: rgba(0, 0, 0, 0.6); /* Fundo semitransparente */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra leve */
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: 0.5px;
     margin-left: -71px;
-    margin-top: 276px;
-    text-align: left; /* Para alinhar o texto à esquerda */
-    transition: opacity 0.5s ease; /* Transição suave de opacidade */
+    margin-top: 236px;
+    text-align: left;
+    transition: opacity 0.5s ease; /* Transição suave */
 }
 
 /* Quando a descrição estiver ativa */
@@ -169,6 +166,7 @@ button.prev {
 /* Quando a descrição for oculta */
 .video-description.hidden {
     opacity: 0; /* Descrição invisível */
+    display: none;
 }
 
 .video-description p {
@@ -234,4 +232,3 @@ button.prev {
 .solicitar-servico-btn:hover {
     background-color: #218838; /* Mudança de cor ao passar o mouse */
 }
-

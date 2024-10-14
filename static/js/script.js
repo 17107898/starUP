@@ -4,35 +4,10 @@ let activeServiceIndex = 0; // Índice do serviço ativo no carrossel vertical
 let servicesElements = []; // Para armazenar os serviços carregados
 let isAnimating = false; // Variável para controlar se a animação está em andamento
 
-// Função para detectar se o dispositivo é móvel e esconder os botões
-// Função para detectar se o dispositivo é móvel e esconder os botões
-function isMobile() {
-    const isMobileDevice = /Mobi|Android|iPhone/i.test(navigator.userAgent);
-    
-    if (isMobileDevice) {
-        // Esconder os botões de navegação vertical
-        const verticalButtons = document.querySelector('.navigation-buttons-vertical');
-        if (verticalButtons) {
-            verticalButtons.style.display = 'none'; // Esconde os botões verticais
-        }
-
-        // Esconder os botões de navegação horizontal (prev e next)
-        const horizontalButtons = document.querySelectorAll('.navigation-buttons-horizontal button');
-        if (horizontalButtons) {
-            horizontalButtons.forEach(button => {
-                button.style.display = 'none'; // Esconde cada botão horizontal
-            });
-        }
-    }
-    
-    return isMobileDevice;
-}
-
-
+// Função que esconde os botões de navegação em dispositivos móveis
 // Função que esconde os botões de navegação em dispositivos móveis
 function hideNavigationButtonsIfMobile(serviceElement) {
-    if (isMobile()) {
-        // Esconder botões de navegação horizontal (prev e next)
+    if (isMobileDevice) {  // Use a variável global
         const nextButton = serviceElement.querySelector('button.next');
         const prevButton = serviceElement.querySelector('button.prev');
         if (nextButton) {
@@ -41,7 +16,6 @@ function hideNavigationButtonsIfMobile(serviceElement) {
         if (prevButton) {
             prevButton.style.display = 'none'; // Esconde o botão "prev"
         }
-        
     }
 }
 
@@ -104,9 +78,9 @@ async function carregarMaisServicos() {
                     <div class="video-description active">
                         <!-- Aqui você coloca a imagem de perfil -->
                         <div class="responsavel-info">
-                            <p><strong>Responsável:</strong> ${service.person_name}</p>
+                        <div class="perfil-foto" style="background-image: url('/static/${service.perfil_foto}');"></div>
+                            <p>${service.person_name}</p>
                             <!-- Substituímos o <img> por uma <div> com background-image -->
-                            <div class="perfil-foto" style="background-image: url('/static/${service.perfil_foto}');"></div>
                         </div>
 
                         <p><strong>Nota:</strong> ${service.rating}</p>
@@ -222,7 +196,7 @@ async function carregarMaisServicos() {
         hideNavigationButtonsIfMobile(serviceElement);
 
         // Adicionar suporte ao swipe no mobile para o carrossel horizontal
-        if (isMobile()) {
+        if (isMobileDevice) {
             enableSwipeNavigation(gallery, showNext, showPrev); // Habilitar navegação por swipe
         }
     });
@@ -265,6 +239,7 @@ function showNextService() {
 
     // Esconder o serviço atual
     servicesElements[activeServiceIndex].classList.remove('active');
+    servicesElements[activeServiceIndex].classList.add('hidden'); // Adiciona classe hidden para ocultar
 
     // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
     servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
@@ -274,8 +249,8 @@ function showNextService() {
 
     activeServiceIndex = (activeServiceIndex + 1) % servicesElements.length;
     servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o próximo serviço
+    servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
 }
-
 
 function showPrevService() {
     if (isAnimating) return; // Se a animação estiver em andamento, sair da função
@@ -283,6 +258,7 @@ function showPrevService() {
 
     // Esconder o serviço atual
     servicesElements[activeServiceIndex].classList.remove('active');
+    servicesElements[activeServiceIndex].classList.add('hidden'); // Adiciona classe hidden para ocultar
 
     // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
     servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
@@ -292,48 +268,33 @@ function showPrevService() {
 
     activeServiceIndex = (activeServiceIndex - 1 + servicesElements.length) % servicesElements.length;
     servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o serviço anterior
+    servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
 }
+
 
 window.onload = function() {
     carregarMaisServicos();
 
-    // Adicionar navegação vertical ao clicar nas setas
-    document.querySelector('.vertical-next').addEventListener('click', showNextService);
-    document.querySelector('.vertical-prev').addEventListener('click', showPrevService);
-
     // Verifica se é um dispositivo móvel e ativa o toque
-    if (isMobile()) {
+    if (isMobileDevice) {
         enableTouchNavigation(); // Ativar navegação por toque em dispositivos móveis
     } else {
         enableScrollAndKeyboardNavigation(); // Ativar navegação por scroll e teclado em desktops
+
+        // Adicionar navegação vertical ao clicar nas setas
+        const nextBtn = document.querySelector('.vertical-next');
+        const prevBtn = document.querySelector('.vertical-prev');
+
+        if (nextBtn && prevBtn) { // Verifica se os botões existem antes de adicionar o evento
+            nextBtn.addEventListener('click', showNextService);
+            prevBtn.addEventListener('click', showPrevService);
+        } else {
+            console.log('Botões de navegação vertical não encontrados.');
+        }
     }
 };
 
-// Função para detectar se o dispositivo é móvel
-// Função para detectar se o dispositivo é móvel e esconder os botões
-// function isMobile() {
-//     const isMobileDevice = /Mobi|Android|iPhone/i.test(navigator.userAgent);
-    
-//     if (isMobileDevice) {
-//         // Esconder os botões de navegação verticais
-//         const verticalButtons = document.querySelector('.navigation-buttons-vertical');
-//         if (verticalButtons) {
-//             verticalButtons.style.display = 'none'; // Esconde os botões verticais
-//         }
 
-//         // Esconder os botões de navegação horizontal (next e prev)
-//         const nextButton = document.querySelector('button.next');
-//         const prevButton = document.querySelector('button.prev');
-//         if (nextButton) {
-//             nextButton.style.display = 'none'; // Esconde o botão "next"
-//         }
-//         if (prevButton) {
-//             prevButton.style.display = 'none'; // Esconde o botão "prev"
-//         }
-//     }
-    
-//     return isMobileDevice;
-// }
 // Função para navegação por scroll e teclado (para desktop)
 function enableScrollAndKeyboardNavigation() {
     // Adicionar navegação por rotação do scroll do mouse
@@ -382,4 +343,3 @@ function enableTouchNavigation() {
         }
     });
 }
-

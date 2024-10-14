@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prestador_servico.css') }}">
+    <title>Detalhes do Serviço</title>
+</head>
+<body>
+    <h2>Preencha os Detalhes do Serviço</h2>
+    <form id="servicoForm">
+        <input type="hidden" id="prestadorId" value="{{ prestador_id }}"> <!-- Input oculto para o ID do prestador -->
+        
+        <label for="serviceType">Tipo de Serviço:</label>
+        <input type="text" id="serviceType" name="serviceType" required>
+        <br>
+    
+        <label for="description">Descrição Detalhada:</label>
+        <textarea id="description" name="description" required></textarea>
+        <br>
+    
+        <label for="budget">Orçamento Disponível:</label>
+        <input type="text" id="budget" name="budget" required>
+        <br>
+    
+        <label for="urgency">Prazo/Urgência:</label>
+        <input type="text" id="urgency" name="urgency" required>
+        <br>
+    
+        <label for="location">Localização (se aplicável):</label>
+        <input type="text" id="location" name="location">
+        <br>
+    
+        <label for="contactMethod">Forma de Contato Preferencial:</label>
+        <select id="contactMethod" name="contactMethod" required>
+            <option value="email">Email</option>
+            <option value="telefone">Telefone</option>
+            <option value="whatsapp">WhatsApp</option>
+        </select>
+        <br>
+    
+        <label for="contactDate">Data/Hora de Contato:</label>
+        <input type="datetime-local" id="contactDate" name="contactDate" required>
+        <br>
+    
+        <label for="comments">Comentários sobre Serviços Anteriores:</label>
+        <textarea id="comments" name="comments"></textarea>
+        <br>
+    
+        <label for="providerPreferences">Preferências sobre o Prestador:</label>
+        <textarea id="providerPreferences" name="providerPreferences"></textarea>
+        <br>
+    
+        <button type="submit">Enviar Solicitação</button>
+    </form>
+    
+    <p id="response"></p>
+    
+
+    <script src="{{ url_for('static', filename='js/servico_script.js') }}"></script>
+</body>
+</html>

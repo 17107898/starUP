@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/solicitacao_servico.css') }}">
+    <title>Solicitação de Serviço</title>
+</head>
+<body>
+    <h2>Solicitação de Serviço</h2>
+    <form id="serviceRequestForm">
+        <input type="hidden" id="clienteId" name="clienteId" value="{{ cliente_id }}">
+        <label for="serviceType">Tipo de Serviço:</label>
+        <select id="serviceType" name="serviceType" required>
+            <option value="">Selecione o serviço</option>
+            <option value="consultoria">Consultoria</option>
+            <option value="desenvolvimento">Desenvolvimento</option>
+            <option value="design">Design</option>
+            <option value="manutencao">Manutenção</option>
+        </select>
+        <br>
+
+        <label for="description">Descrição Detalhada:</label>
+        <textarea id="description" name="description" rows="4" required></textarea>
+        <br>
+
+        <label for="budget">Orçamento Disponível (R$):</label>
+        <input type="number" id="budget" name="budget" min="0" required>
+        <br>
+
+        <label for="urgency">Prazo/Urgência:</label>
+        <select id="urgency" name="urgency" required>
+            <option value="">Selecione a urgência</option>
+            <option value="urgente">Urgente</option>
+            <option value="semana">Dentro de uma semana</option>
+            <option value="mes">Dentro de um mês</option>
+            <option value="sem_prazo">Sem prazo específico</option>
+        </select>
+        <br>
+
+        <label for="location">Localização (se aplicável):</label>
+        <input type="text" id="location" name="location" placeholder="Cidade, Estado">
+        <br>
+
+        <label for="contactMethod">Forma de Contato Preferencial:</label>
+        <select id="contactMethod" name="contactMethod" required>
+            <option value="">Selecione a forma de contato</option>
+            <option value="email">Email</option>
+            <option value="telefone">Telefone</option>
+            <option value="whatsapp">WhatsApp</option>
+        </select>
+        <br>
+
+        <label for="contactDate">Data/Hora de Contato:</label>
+        <input type="datetime-local" id="contactDate" name="contactDate">
+        <br>
+
+        <label for="references">Documentos ou Referências (opcional):</label>
+        <input type="file" id="references" name="references">
+        <br>
+
+        <label for="comments">Comentários sobre Serviços Anteriores (opcional):</label>
+        <textarea id="comments" name="comments" rows="4"></textarea>
+        <br>
+
+        <label for="providerPreferences">Preferências sobre o Prestador (opcional):</label>
+        <input type="text" id="providerPreferences" name="providerPreferences" placeholder="Ex: Experiência, Idiomas, etc.">
+        <br>
+
+        <button type="submit">Solicitar Serviço</button>
+    </form>
+
+    <p id="response"></p>
+
+    <script src="{{ url_for('static', filename='js/solicitacao_servico.js') }}"></script>
+</body>
+</html>
+

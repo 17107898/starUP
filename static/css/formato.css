@@ -9,7 +9,7 @@
 /* Definindo as dimensões das imagens e vídeos para serem consistentes e com moldura */
 .gallery img, 
 .gallery video {
-    width: 300px; /* Largura fixa para todas as imagens e vídeos */
+    width: 300px; /* Largura fi<div class>xa para todas as imagens e vídeos */
     height: 1900px; /* Altura fixa para todas as imagens e vídeos */
     object-fit: cover; /* Isso garante que a imagem/vídeo se ajuste ao container sem distorcer */
     margin-bottom: 10px; /* Espaçamento entre a mídia e os botões de navegação */

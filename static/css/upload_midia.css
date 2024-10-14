@@ -1,0 +1,145 @@
+/* Estilo básico do corpo */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Estilo do formulário de upload */
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+}
+
+/* Cabeçalho */
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Estilos para os rótulos */
+label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #555;
+    text-align: left;
+}
+
+/* Inputs de upload de arquivos */
+input[type="file"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Botão de envio */
+button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    max-width: 150px;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Mensagem de resposta */
+#response {
+    margin-top: 20px;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+    form {
+        padding: 15px;
+        width: 90%;
+    }
+
+    input[type="file"] {
+        font-size: 12px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+}
+
+/* Definir estilo para a pré-visualização das imagens */
+.thumbnail {
+    width: 100px;  /* Definir a largura da miniatura */
+    height: auto;  /* Manter a proporção da imagem */
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    position: relative;  /* Necessário para o botão "X" */
+}
+
+/* Estilo para os itens de pré-visualização */
+.file-preview {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+    position: relative;  /* Necessário para o botão "X" */
+}
+
+.file-preview button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;  /* Garante que o botão seja redondo */
+    cursor: pointer;
+    width: 25px;  /* Aumente o tamanho se necessário */
+    height: 25px;  /* Mesma altura que largura para manter redondo */
+    font-size: 14px;
+    line-height: 25px;  /* Centraliza o texto verticalmente */
+    padding: 0;  /* Remove o padding para evitar achatamento */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.file-preview button:hover {
+    background-color: darkred;
+}
+
+
+/* Destacar as imagens inválidas (ex: fotos deitadas demais) */
+.file-preview.invalid img {
+    border: 2px solid red;
+}
+
+/* Para garantir que o vídeo siga as mesmas regras */
+.file-preview video {
+    width: 100px;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
