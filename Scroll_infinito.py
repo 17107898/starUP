@@ -1,39 +1,73 @@
-from flask import Flask, render_template, jsonify, request
+import mysql.connector
+import os
+from dotenv import load_dotenv
+from flask import Flask, render_template, jsonify, request, send_file, make_response
+from io import BytesIO  # Para servir dados binários
 
 app = Flask(__name__)
+
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Função de conexão com o banco de dados
+def connect_to_db():
+    connection = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    return connection
+
+# Função para buscar serviços do banco de dados
+def get_services_from_db():
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)  # Para retornar os dados como dicionários
+    services = []
+    
+    # Consulta para obter dados de prestadores, serviços e uploads
+    cursor.execute("SELECT * FROM bd_servicos.prestadores;")
+    prestadores = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM bd_servicos.servicos;")
+    servicos = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM bd_servicos.uploads;")
+    uploads = cursor.fetchall()
+
+    # Montar o JSON de serviços
+    for prestador in prestadores:
+        # Obter o serviço relacionado ao prestador
+        prestador_servico = next((serv for serv in servicos if serv['prestador_id'] == prestador['id']), None)
+        
+        if prestador_servico:
+            # Obter imagens e vídeos relacionados ao prestador
+            images = [upload['id'] for upload in uploads if upload['prestador_id'] == prestador['id'] and upload['tipo_arquivo'] == 'imagem']
+            videos = [upload['id'] for upload in uploads if upload['prestador_id'] == prestador['id'] and upload['tipo_arquivo'] == 'video']
+            perfil_foto = next((upload['id'] for upload in uploads if upload['prestador_id'] == prestador['id'] and upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
+
+            # Montar o serviço completo
+            service = {
+                "id": prestador['id'],
+                "perfil_foto": perfil_foto,
+                "name": prestador['nome'],
+                "description": prestador_servico['descricao'],
+                "images": images,
+                "videos": videos,
+                "person_name": prestador['nome'],
+                "rating": None,  # Aqui você pode adicionar a lógica de avaliação se necessário
+                "bio": prestador_servico['preferencias_prestador']
+            }
+            services.append(service)
+    
+    cursor.close()
+    db.close()
+    return services
 
 # Rota principal para renderizar a página HTML
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
-
-# Simulação de dados de serviços (sem incluir "static/")
-services = [
-    {
-        "id": 1,
-        "perfil_foto":"images/Perfil/perfil_1.jpeg",
-        "name": "Serviço A",
-        "description": "Descrição do serviço A. Um serviço completo voltado para consultoria de negócios.",
-        "images": ["images/foto_1.jpeg", "images/foto_2.jpeg"],
-        "videos": ["videos/video_1.mp4"],
-        "person_name": "Jubileu",  # Nome da pessoa responsável pelo serviço A
-        "rating": 4.7,  # Nota do serviço A
-        "bio": "Jubileu é um consultor experiente, com mais de 10 anos de atuação em projetos de expansão de empresas. Ele deseja ajudar empresas a alcançar novos mercados e otimizar seus processos internos."
-    },
-    {
-        "id": 2,
-        "perfil_foto":"images/Perfil/perfil_2.jpg",
-        "name": "Serviço B",
-        "description": "Descrição do serviço B. Focado em desenvolvimento de websites e plataformas digitais.",
-        "images": ["images/foto_3.jpeg"],
-        "videos": ["videos/video_2.mp4"],
-        "person_name": "Tubilu",  # Nome da pessoa responsável pelo serviço B
-        "rating": 4.3,  # Nota do serviço B
-        "bio": "Tubilu é um desenvolvedor web especializado em criar soluções modernas e responsivas para empresas que buscam uma presença digital marcante. Ele busca aprimorar a performance dos sites e a experiência do usuário."
-    },
-    # Adicione mais serviços simulados conforme necessário
-]
-
 
 # Rota para fornecer serviços paginados (scroll infinito)
 @app.route('/get_services', methods=['GET'])
@@ -41,19 +75,61 @@ def get_services():
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 5))
 
+    all_services = get_services_from_db()
     start = (page - 1) * per_page
     end = start + per_page
-    paginated_services = services[start:end]
+    paginated_services = all_services[start:end]
 
-    has_more = end < len(services)
+    has_more = end < len(all_services)
 
     return jsonify({
         "services": paginated_services,
         "has_more": has_more
     })
 
+# Rota para obter imagens do banco de dados (LONGBLOB)
+@app.route('/uploads/img/<int:upload_id>')
+def get_image_from_db(upload_id):
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    query = "SELECT arquivo FROM bd_servicos.uploads WHERE id = %s AND tipo_arquivo = 'imagem'"
+    cursor.execute(query, (upload_id,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    db.close()
+
+    if result:
+        image_data = result['arquivo']  # Conteúdo binário
+        return send_file(BytesIO(image_data), mimetype='image/jpeg')  # Ajuste o MIME type conforme necessário (ex: image/png, image/jpg)
+    else:
+        return "Imagem não encontrada", 404
+
+# Rota para obter vídeos do banco de dados (LONGBLOB)
+@app.route('/uploads/video/<int:upload_id>')
+def get_video_from_db(upload_id):
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    query = "SELECT arquivo FROM bd_servicos.uploads WHERE id = %s AND tipo_arquivo = 'video'"
+    cursor.execute(query, (upload_id,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    db.close()
+
+    if result:
+        video_data = result['arquivo']  # Conteúdo binário
+        return send_file(BytesIO(video_data), mimetype='video/mp4')  # Ajuste o MIME type conforme o tipo de vídeo
+    else:
+        return "Vídeo não encontrado", 404
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
+
+
 # import mysql.connector
 # from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 # from dotenv import load_dotenv
@@ -276,42 +352,35 @@ if __name__ == '__main__':
 
 # @app.route('/api/upload-midia', methods=['POST'])
 # def api_upload_midia():
-#     prestador_id = session.get('prestador_id')  # Agora pega o prestador_id diretamente da sessão
+#     prestador_id = session.get('prestador_id')  # Pega o prestador_id diretamente da sessão
 #     documents = request.files.getlist('documents')
 #     video = request.files.get('video')
-#     perfil_foto = request.files.get('perfil_foto')  # Adiciona o campo para a foto de perfil
-
-#     caminho_imagens = 'salvar/img/'
-#     caminho_videos = 'salvar/video/'
-#     caminho_perfil = 'salvar/perfil_foto/'  # Caminho para salvar fotos de perfil
+#     perfil_foto = request.files.get('perfil_foto')  # Campo para a foto de perfil
 
 #     # Salvar a foto de perfil, se houver
 #     if perfil_foto:
-#         caminho_arquivo_perfil = f'{caminho_perfil}{perfil_foto.filename}'
-#         perfil_foto.save(caminho_arquivo_perfil)
+#         perfil_foto_binario = perfil_foto.read()  # Lê o conteúdo binário do arquivo
 #         cursor.execute(
-#             "INSERT INTO uploads (prestador_id, caminho_arquivo, tipo_arquivo, perfil_foto) VALUES (%s, %s, %s, %s)",
-#             (prestador_id, caminho_arquivo_perfil, 'imagem', caminho_arquivo_perfil)
+#             "INSERT INTO uploads (prestador_id, arquivo, tipo_arquivo, perfil_foto) VALUES (%s, %s, %s, %s)",
+#             (prestador_id, perfil_foto_binario, 'imagem', 'perfil')
 #         )
 #         db.commit()
 
 #     # Salvar os arquivos de imagem (documentos)
 #     for document in documents:
-#         caminho_arquivo = f'{caminho_imagens}{document.filename}'
-#         document.save(caminho_arquivo)
+#         document_binario = document.read()  # Lê o conteúdo binário do arquivo
 #         cursor.execute(
-#             "INSERT INTO uploads (prestador_id, caminho_arquivo, tipo_arquivo) VALUES (%s, %s, %s)",
-#             (prestador_id, caminho_arquivo, 'imagem')
+#             "INSERT INTO uploads (prestador_id, arquivo, tipo_arquivo) VALUES (%s, %s, %s)",
+#             (prestador_id, document_binario, 'imagem')
 #         )
 #         db.commit()
 
 #     # Salvar o arquivo de vídeo, se houver
 #     if video:
-#         caminho_arquivo = f'{caminho_videos}{video.filename}'
-#         video.save(caminho_arquivo)
+#         video_binario = video.read()  # Lê o conteúdo binário do arquivo
 #         cursor.execute(
-#             "INSERT INTO uploads (prestador_id, caminho_arquivo, tipo_arquivo) VALUES (%s, %s, %s)",
-#             (prestador_id, caminho_arquivo, 'video')
+#             "INSERT INTO uploads (prestador_id, arquivo, tipo_arquivo) VALUES (%s, %s, %s)",
+#             (prestador_id, video_binario, 'video')
 #         )
 #         db.commit()
 

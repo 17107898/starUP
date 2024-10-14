@@ -48,6 +48,7 @@ async function carregarMaisServicos() {
     if (loading) return;
     loading = true;
 
+    // Fazer a requisição para pegar os serviços paginados
     const response = await fetch(`/get_services?page=${page}&per_page=5`);
     const data = await response.json();
 
@@ -61,29 +62,31 @@ async function carregarMaisServicos() {
         let galleryItems = '';
         let itemIndex = 0;
 
-        // Montar galeria com imagens
-        galleryItems += service.images.map(img => `<img src="/static/${img}" alt="${service.name}" class="${itemIndex++ === 0 ? 'active' : ''}">`).join('');
+        // Montar galeria com imagens (usando o ID do arquivo para buscar diretamente)
+        galleryItems += service.images.map(imgId => 
+            `<img src="/uploads/img/${imgId}" alt="${service.name}" class="${itemIndex++ === 0 ? 'active' : ''}">`
+        ).join('');
 
-        // Montar galeria com vídeos
-        galleryItems += service.videos.map(vid => `
-            <video src="/static/${vid}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>
-        `).join('');
-
-        // Montar elemento de navegação horizontal e vertical
+        // Montar galeria com vídeos (usando o ID do arquivo para buscar diretamente)
+        galleryItems += service.videos.map(vidId => 
+            `<video src="/uploads/video/${vidId}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>`
+        ).join('');
+        
+        // Montar o elemento HTML que exibirá o serviço
         serviceElement.innerHTML = `
             <h3>${service.name}</h3>
             <div class="gallery">
                 ${galleryItems}
                 <div class="video-container">
                     <div class="video-description active">
-                        <!-- Aqui você coloca a imagem de perfil -->
+                        <!-- Informações do responsável pelo serviço -->
                         <div class="responsavel-info">
-                        <div class="perfil-foto" style="background-image: url('/static/${service.perfil_foto}');"></div>
+                            <div class="perfil-foto" style="background-image: url('/uploads/img/${service.perfil_foto}');"></div>
                             <p>${service.person_name}</p>
-                            <!-- Substituímos o <img> por uma <div> com background-image -->
                         </div>
 
-                        <p><strong>Nota:</strong> ${service.rating}</p>
+                        <!-- Informações do serviço -->
+                        <p><strong>Nota:</strong> ${service.rating !== null ? service.rating : 'N/A'}</p>
                         <p><strong>Descrição:</strong> 
                             <span class="short-description">${service.description.substring(0, 50)}...</span> 
                             <span class="full-description" style="display: none;">${service.description}</span>
@@ -91,15 +94,19 @@ async function carregarMaisServicos() {
                         </p>
                     </div>
                 </div>
+
+                <!-- Botões de navegação horizontal -->
+                <div class="navigation-buttons-horizontal">
+                    <button class="prev">&laquo;</button>
+                    <button class="next">&raquo;</button>
+                </div>
+
                 <!-- Botão de solicitar serviço -->
-                <button class="solicitar-servico-btn">✅</button>
-            </div>
-            <div class="navigation-buttons-horizontal">
-                <button class="prev">&laquo;</button>
-                <button class="next">&raquo;</button>
+                <button class="solicitar-servico-btn">✅ Solicitar Serviço</button>
             </div>
         `;
 
+        // Adicionar o serviço ao container
         container.appendChild(serviceElement);
         servicesElements.push(serviceElement); // Adiciona o serviço à lista de serviços
 
