@@ -48,44 +48,55 @@ async function carregarMaisServicos() {
     if (loading) return;
     loading = true;
 
-    // Fazer a requisição para pegar os serviços paginados
-    const response = await fetch(`/get_services?page=${page}&per_page=5`);
+    // Obter filtros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const serviceType = urlParams.get('serviceType');
+    const location = urlParams.get('location');
+    const urgency = urlParams.get('urgency');
+
+    console.log(`Buscando serviços com os filtros: serviceType=${serviceType}, location=${location}, urgency=${urgency}`);
+
+    // Fazer a requisição para pegar os serviços paginados com os filtros aplicados
+    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&location=${location}&urgency=${urgency}`);
     const data = await response.json();
 
+    console.log(`Número de serviços encontrados: ${data.services.length}`);
+    
     const container = document.getElementById('services-container');
     
+    // Verificar se há serviços retornados
+    if (!data.services || data.services.length === 0) {
+        console.log("Nenhum serviço encontrado.");
+        loading = false;
+        return;
+    }
+
     data.services.forEach((service, index) => {
+        console.log(`Carregando serviço ${index + 1}: ${service.person_name}, ${service.service_name}`);
+        
         const serviceElement = document.createElement('div');
         serviceElement.classList.add('service');
-        
-        // Criar a galeria de imagens e vídeos com navegação
+
         let galleryItems = '';
         let itemIndex = 0;
 
-        // Montar galeria com imagens (usando o ID do arquivo para buscar diretamente)
-        galleryItems += service.images.map(imgId => 
-            `<img src="/uploads/img/${imgId}" alt="${service.name}" class="${itemIndex++ === 0 ? 'active' : ''}">`
-        ).join('');
+        galleryItems += service.images.map(imgId => `<img src="/uploads/img/${imgId}" alt="${service.service_name}" class="${itemIndex++ === 0 ? 'active' : ''}">`).join('');
 
-        // Montar galeria com vídeos (usando o ID do arquivo para buscar diretamente)
         galleryItems += service.videos.map(vidId => 
             `<video src="/uploads/video/${vidId}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>`
         ).join('');
-        
-        // Montar o elemento HTML que exibirá o serviço
+
         serviceElement.innerHTML = `
-            <h3>${service.name}</h3>
+            <h3>${service.service_name}</h3>
             <div class="gallery">
                 ${galleryItems}
                 <div class="video-container">
                     <div class="video-description active">
-                        <!-- Informações do responsável pelo serviço -->
                         <div class="responsavel-info">
                             <div class="perfil-foto" style="background-image: url('/uploads/img/${service.perfil_foto}');"></div>
                             <p>${service.person_name}</p>
                         </div>
 
-                        <!-- Informações do serviço -->
                         <p><strong>Nota:</strong> ${service.rating !== null ? service.rating : 'N/A'}</p>
                         <p><strong>Descrição:</strong> 
                             <span class="short-description">${service.description.substring(0, 50)}...</span> 
@@ -95,22 +106,22 @@ async function carregarMaisServicos() {
                     </div>
                 </div>
 
-                <!-- Botões de navegação horizontal -->
                 <div class="navigation-buttons-horizontal">
                     <button class="prev">&laquo;</button>
                     <button class="next">&raquo;</button>
                 </div>
 
-                <!-- Botão de solicitar serviço -->
-                <button class="solicitar-servico-btn">✅ Solicitar Serviço</button>
+                <button class="solicitar-servico-btn">✅</button>
             </div>
         `;
 
-        // Adicionar o serviço ao container
         container.appendChild(serviceElement);
-        servicesElements.push(serviceElement); // Adiciona o serviço à lista de serviços
+        servicesElements.push(serviceElement);  // Adiciona o serviço à lista de serviços
 
-        // Adicionar evento de clique ao botão "Solicitar Serviço"
+        // Verificar se o elemento foi adicionado corretamente
+        console.log(`Serviço adicionado ao container: ${service.person_name}, ID do elemento: ${serviceElement.id}`);
+
+        // Configurar os botões e navegação (conforme seu código original)
         const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
         if (solicitarServicoBtn) {
             solicitarServicoBtn.addEventListener('click', () => {
@@ -124,9 +135,8 @@ async function carregarMaisServicos() {
         let activeIndex = 0;
 
         // Capturar apenas imagens e vídeos, excluindo .perfil-foto
-        // Capturar apenas imagens e vídeos dentro da galeria, excluindo .perfil-foto e qualquer coisa dentro de .responsavel-info
         const imagesAndVideos = gallery.querySelectorAll('img:not(.perfil-foto), video');
-        console.log(imagesAndVideos); // Verifique o que está sendo capturado
+        console.log(`Elementos de galeria capturados para o serviço ${service.person_name}: ${imagesAndVideos.length}`);
         
         if (videoDescription) {
             videoDescription.classList.add('active'); // Deixe a descrição ativa
@@ -142,23 +152,6 @@ async function carregarMaisServicos() {
             const nextItem = imagesAndVideos[activeIndex];
             nextItem.classList.remove('slide-left', 'slide-right');
             nextItem.classList.add('active'); // Ativa o próximo item
-
-            // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
-            if (activeIndex === 0) {
-                videoDescription.classList.add('active'); // Aplica fade in para a descrição
-                videoDescription.classList.remove('hidden'); // Remove a classe que esconde
-                if (solicitarServicoBtn) {
-                    solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
-                    solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
-                }
-            } else {
-                videoDescription.classList.remove('active'); // Esconde a descrição
-                videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
-                if (solicitarServicoBtn) {
-                    solicitarServicoBtn.classList.remove('active'); // Esconde o botão
-                    solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
-                }
-            }
         }
 
         function showPrev() {
@@ -171,23 +164,6 @@ async function carregarMaisServicos() {
             const prevItem = imagesAndVideos[activeIndex];
             prevItem.classList.remove('slide-left', 'slide-right');
             prevItem.classList.add('active'); // Ativa o item anterior
-
-            // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
-            if (activeIndex === 0) {
-                videoDescription.classList.add('active'); // Aplica fade in para a descrição
-                videoDescription.classList.remove('hidden'); // Remove a classe que esconde
-                if (solicitarServicoBtn) {
-                    solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
-                    solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
-                }
-            } else {
-                videoDescription.classList.remove('active'); // Esconde a descrição
-                videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
-                if (solicitarServicoBtn) {
-                    solicitarServicoBtn.classList.remove('active'); // Esconde o botão
-                    solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
-                }
-            }
         }
 
         // Verificar se os botões de navegação existem antes de adicionar o evento
@@ -212,8 +188,11 @@ async function carregarMaisServicos() {
         page++;
     }
 
-    if (servicesElements.length === data.services.length) {
+    console.log(`Total de perfis carregados até agora: ${servicesElements.length}`);
+
+    if (servicesElements.length > 0) {
         servicesElements[0].classList.add('active'); // Ativa o primeiro serviço carregado
+        console.log(`Primeiro serviço ativado: ${servicesElements[0].querySelector('h3').textContent}`);
     }
 
     loading = false;
@@ -240,42 +219,62 @@ document.addEventListener('click', function(event) {
 
 
 // Função para exibir o próximo serviço (carrossel vertical)
+// Função para exibir o próximo serviço (carrossel vertical)
 function showNextService() {
-    if (isAnimating) return; // Se a animação estiver em andamento, sair da função
+    if (isAnimating || servicesElements.length === 0) return; // Se a animação estiver em andamento ou se não houver serviços, sair da função
     isAnimating = true; // Marcar que a animação começou
 
-    // Esconder o serviço atual
-    servicesElements[activeServiceIndex].classList.remove('active');
-    servicesElements[activeServiceIndex].classList.add('hidden'); // Adiciona classe hidden para ocultar
+    // Verificar se o índice atual é válido antes de remover a classe
+    if (servicesElements[activeServiceIndex]) {
+        // Esconder o serviço atual
+        servicesElements[activeServiceIndex].classList.remove('active');
+        servicesElements[activeServiceIndex].classList.add('hidden'); // Adiciona classe hidden para ocultar
 
-    // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
-    servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
-        servicesElements[activeServiceIndex].removeEventListener('transitionend', handler); // Remover o listener após a transição
-        isAnimating = false; // Marcar que a animação terminou
-    });
+        // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
+        servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
+            servicesElements[activeServiceIndex].removeEventListener('transitionend', handler); // Remover o listener após a transição
+            isAnimating = false; // Marcar que a animação terminou
+        });
+    }
 
+    // Atualizar o índice do próximo serviço, garantindo que ele seja cíclico
     activeServiceIndex = (activeServiceIndex + 1) % servicesElements.length;
-    servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o próximo serviço
-    servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
+
+    // Verificar se o próximo índice é válido antes de adicionar a classe
+    if (servicesElements[activeServiceIndex]) {
+        // Mostrar o próximo serviço
+        servicesElements[activeServiceIndex].classList.add('active');
+        servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
+    }
 }
 
+// Função para exibir o serviço anterior (carrossel vertical)
 function showPrevService() {
-    if (isAnimating) return; // Se a animação estiver em andamento, sair da função
+    if (isAnimating || servicesElements.length === 0) return; // Se a animação estiver em andamento ou se não houver serviços, sair da função
     isAnimating = true; // Marcar que a animação começou
 
-    // Esconder o serviço atual
-    servicesElements[activeServiceIndex].classList.remove('active');
-    servicesElements[activeServiceIndex].classList.add('hidden'); // Adiciona classe hidden para ocultar
+    // Verificar se o índice atual é válido antes de remover a classe
+    if (servicesElements[activeServiceIndex]) {
+        // Esconder o serviço atual
+        servicesElements[activeServiceIndex].classList.remove('active');
+        servicesElements[activeServiceIndex].classList.add('hidden'); // Adiciona classe hidden para ocultar
 
-    // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
-    servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
-        servicesElements[activeServiceIndex].removeEventListener('transitionend', handler); // Remover o listener após a transição
-        isAnimating = false; // Marcar que a animação terminou
-    });
+        // Evento de transição para garantir que a próxima ação só ocorra após a transição terminar
+        servicesElements[activeServiceIndex].addEventListener('transitionend', function handler() {
+            servicesElements[activeServiceIndex].removeEventListener('transitionend', handler); // Remover o listener após a transição
+            isAnimating = false; // Marcar que a animação terminou
+        });
+    }
 
+    // Atualizar o índice do serviço anterior, garantindo que ele seja cíclico
     activeServiceIndex = (activeServiceIndex - 1 + servicesElements.length) % servicesElements.length;
-    servicesElements[activeServiceIndex].classList.add('active'); // Mostrar o serviço anterior
-    servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
+
+    // Verificar se o próximo índice é válido antes de adicionar a classe
+    if (servicesElements[activeServiceIndex]) {
+        // Mostrar o serviço anterior
+        servicesElements[activeServiceIndex].classList.add('active');
+        servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
+    }
 }
 
 

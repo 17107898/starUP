@@ -35,10 +35,19 @@ document.getElementById('serviceRequestForm').addEventListener('submit', functio
         method: 'POST',
         body: formData,
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.redirected) {
+            // Redirecionar o navegador se o servidor retornou um redirecionamento
+            window.location.href = response.url;
+        } else {
+            return response.json(); // Para lidar com qualquer outro tipo de resposta JSON
+        }
+    })
     .then(data => {
-        // Exibir a resposta do servidor
-        document.getElementById('response').textContent = data.message;
+        if (data) {
+            // Exibir a resposta do servidor (caso não seja um redirecionamento)
+            document.getElementById('response').textContent = data.message;
+        }
     })
     .catch(error => {
         console.error('Erro:', error);
