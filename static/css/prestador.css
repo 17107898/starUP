@@ -52,3 +52,13 @@ button:hover {
     color: red;
     font-weight: bold;
 }
+
+/* CSS para estilizar o select */
+#service {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}

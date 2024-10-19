@@ -51,19 +51,23 @@ async function carregarMaisServicos() {
     // Obter filtros da URL
     const urlParams = new URLSearchParams(window.location.search);
     const serviceType = urlParams.get('serviceType');
-    const location = urlParams.get('location');
+    const cep = urlParams.get('cep');
+    const street = urlParams.get('street');
+    const neighborhood = urlParams.get('neighborhood');
+    const city = urlParams.get('city');
+    const state = urlParams.get('state');
     const urgency = urlParams.get('urgency');
 
-    console.log(`Buscando serviços com os filtros: serviceType=${serviceType}, location=${location}, urgency=${urgency}`);
+    console.log(`Buscando serviços com os filtros: serviceType=${serviceType}, cep=${cep}, neighborhood=${neighborhood}, city=${city}, state=${state}, urgency=${urgency}`);
 
     // Fazer a requisição para pegar os serviços paginados com os filtros aplicados
-    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&location=${location}&urgency=${urgency}`);
+    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&cep=${cep}&neighborhood=${neighborhood}&city=${city}&state=${state}&urgency=${urgency}`);
     const data = await response.json();
 
     console.log(`Número de serviços encontrados: ${data.services.length}`);
-    
+
     const container = document.getElementById('services-container');
-    
+
     // Verificar se há serviços retornados
     if (!data.services || data.services.length === 0) {
         console.log("Nenhum serviço encontrado.");
@@ -76,27 +80,27 @@ async function carregarMaisServicos() {
         
         const serviceElement = document.createElement('div');
         serviceElement.classList.add('service');
-
+    
         let galleryItems = '';
         let itemIndex = 0;
-
+    
         galleryItems += service.images.map(imgId => `<img src="/uploads/img/${imgId}" alt="${service.service_name}" class="${itemIndex++ === 0 ? 'active' : ''}">`).join('');
-
+    
         galleryItems += service.videos.map(vidId => 
             `<video src="/uploads/video/${vidId}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>`
         ).join('');
-
+    
         serviceElement.innerHTML = `
             <h3>${service.service_name}</h3>
             <div class="gallery">
                 ${galleryItems}
                 <div class="video-container">
                     <div class="video-description active">
-                        <div class="responsavel-info">
+                        <div class="responsavel-info" id="responsavel-${service.prestador_id}">
                             <div class="perfil-foto" style="background-image: url('/uploads/img/${service.perfil_foto}');"></div>
                             <p>${service.person_name}</p>
                         </div>
-
+    
                         <p><strong>Nota:</strong> ${service.rating !== null ? service.rating : 'N/A'}</p>
                         <p><strong>Descrição:</strong> 
                             <span class="short-description">${service.description.substring(0, 50)}...</span> 
@@ -105,19 +109,24 @@ async function carregarMaisServicos() {
                         </p>
                     </div>
                 </div>
-
+    
                 <div class="navigation-buttons-horizontal">
                     <button class="prev">&laquo;</button>
                     <button class="next">&raquo;</button>
                 </div>
-
+    
                 <button class="solicitar-servico-btn">✅</button>
             </div>
         `;
-
+    
         container.appendChild(serviceElement);
         servicesElements.push(serviceElement);  // Adiciona o serviço à lista de serviços
-
+    
+        // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
+        const responsavelInfo = serviceElement.querySelector(`#responsavel-${service.prestador_id}`);
+        responsavelInfo.addEventListener('click', () => {
+            window.location.href = `/perfil_prestador?prestador_id=${service.prestador_id}`;
+        });
         // Verificar se o elemento foi adicionado corretamente
         console.log(`Serviço adicionado ao container: ${service.person_name}, ID do elemento: ${serviceElement.id}`);
 
@@ -152,6 +161,23 @@ async function carregarMaisServicos() {
             const nextItem = imagesAndVideos[activeIndex];
             nextItem.classList.remove('slide-left', 'slide-right');
             nextItem.classList.add('active'); // Ativa o próximo item
+
+            // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
+            if (activeIndex === 0) {
+                videoDescription.classList.add('active'); // Aplica fade in para a descrição
+                videoDescription.classList.remove('hidden'); // Remove a classe que esconde
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
+                    solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
+                }
+            } else {
+                videoDescription.classList.remove('active'); // Esconde a descrição
+                videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.remove('active'); // Esconde o botão
+                    solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
+                }
+            }
         }
 
         function showPrev() {
@@ -164,6 +190,23 @@ async function carregarMaisServicos() {
             const prevItem = imagesAndVideos[activeIndex];
             prevItem.classList.remove('slide-left', 'slide-right');
             prevItem.classList.add('active'); // Ativa o item anterior
+
+            // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
+            if (activeIndex === 0) {
+                videoDescription.classList.add('active'); // Aplica fade in para a descrição
+                videoDescription.classList.remove('hidden'); // Remove a classe que esconde
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
+                    solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
+                }
+            } else {
+                videoDescription.classList.remove('active'); // Esconde a descrição
+                videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
+                if (solicitarServicoBtn) {
+                    solicitarServicoBtn.classList.remove('active'); // Esconde o botão
+                    solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
+                }
+            }
         }
 
         // Verificar se os botões de navegação existem antes de adicionar o evento
@@ -217,9 +260,36 @@ document.addEventListener('click', function(event) {
     }
 });
 
+function resetHorizontalCarousel(serviceElement) {
+    const gallery = serviceElement.querySelector('.gallery');
+    const videoDescription = serviceElement.querySelector('.video-description');
+    const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
+    let activeIndex = 0;
 
-// Função para exibir o próximo serviço (carrossel vertical)
-// Função para exibir o próximo serviço (carrossel vertical)
+    // Capturar apenas imagens e vídeos, excluindo .perfil-foto
+    const imagesAndVideos = gallery.querySelectorAll('img:not(.perfil-foto), video');
+
+    // Resetar a posição do carrossel para o primeiro item
+    imagesAndVideos.forEach((item, index) => {
+        item.classList.remove('active', 'slide-left', 'slide-right');
+        if (index === 0) {
+            item.classList.add('active');
+        }
+    });
+
+    // Resetar a descrição e o botão de solicitação
+    if (videoDescription) {
+        videoDescription.classList.add('active');
+        videoDescription.classList.remove('hidden');
+    }
+
+    if (solicitarServicoBtn) {
+        solicitarServicoBtn.classList.add('active');
+        solicitarServicoBtn.classList.remove('hidden');
+    }
+}
+
+
 function showNextService() {
     if (isAnimating || servicesElements.length === 0) return; // Se a animação estiver em andamento ou se não houver serviços, sair da função
     isAnimating = true; // Marcar que a animação começou
@@ -245,10 +315,13 @@ function showNextService() {
         // Mostrar o próximo serviço
         servicesElements[activeServiceIndex].classList.add('active');
         servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
+
+        // Resetar o carrossel horizontal do novo serviço
+        resetHorizontalCarousel(servicesElements[activeServiceIndex]);
     }
 }
 
-// Função para exibir o serviço anterior (carrossel vertical)
+
 function showPrevService() {
     if (isAnimating || servicesElements.length === 0) return; // Se a animação estiver em andamento ou se não houver serviços, sair da função
     isAnimating = true; // Marcar que a animação começou
@@ -274,6 +347,9 @@ function showPrevService() {
         // Mostrar o serviço anterior
         servicesElements[activeServiceIndex].classList.add('active');
         servicesElements[activeServiceIndex].classList.remove('hidden'); // Remove a classe hidden
+
+        // Resetar o carrossel horizontal do serviço anterior
+        resetHorizontalCarousel(servicesElements[activeServiceIndex]);
     }
 }
 

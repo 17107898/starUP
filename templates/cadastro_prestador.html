@@ -21,8 +21,24 @@
         <label for="confirmPassword">Confirmar Senha:</label>
         <input type="password" id="confirmPassword" name="confirmPassword" required>
         <br>
+        <!-- Primeira tela: Cadastro do serviço -->
         <label for="service">Tipo de Serviço:</label>
-        <input type="text" id="service" name="service" required>
+        <select id="service" name="service" required>
+            <option value="">Selecione o serviço</option>
+            <option value="desenvolvimento_software">Desenvolvimento de Software</option>
+            <option value="infraestrutura_ti">Infraestrutura de TI</option>
+            <option value="seguranca_cibernetica">Segurança Cibernética</option>
+            <option value="inteligencia_artificial">Inteligência Artificial</option>
+            <option value="cloud_computing">Computação em Nuvem</option>
+            <option value="data_science">Ciência de Dados</option>
+            <option value="desenvolvimento_web">Desenvolvimento Web</option>
+            <option value="desenvolvimento_mobile">Desenvolvimento Mobile</option>
+            <option value="iot">Internet das Coisas (IoT)</option>
+            <option value="suporte_tecnico">Suporte Técnico</option>
+            <option value="automacao_industrial">Automação Industrial</option>
+            <option value="devops">DevOps</option>
+            <option value="analise_de_dados">Análise de Dados</option>
+        </select>
         <br>
         <button type="submit">Cadastrar</button>
     </form>

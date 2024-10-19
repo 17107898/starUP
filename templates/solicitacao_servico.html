@@ -13,10 +13,19 @@
         <label for="serviceType">Tipo de Serviço:</label>
         <select id="serviceType" name="serviceType" required>
             <option value="">Selecione o serviço</option>
-            <option value="consultoria">Consultoria</option>
-            <option value="desenvolvimento">Desenvolvimento</option>
-            <option value="design">Design</option>
-            <option value="manutencao">Manutenção</option>
+            <option value="desenvolvimento_software">Desenvolvimento de Software</option>
+            <option value="infraestrutura_ti">Infraestrutura de TI</option>
+            <option value="seguranca_cibernetica">Segurança Cibernética</option>
+            <option value="inteligencia_artificial">Inteligência Artificial</option>
+            <option value="cloud_computing">Computação em Nuvem</option>
+            <option value="data_science">Ciência de Dados</option>
+            <option value="desenvolvimento_web">Desenvolvimento Web</option>
+            <option value="desenvolvimento_mobile">Desenvolvimento Mobile</option>
+            <option value="iot">Internet das Coisas (IoT)</option>
+            <option value="suporte_tecnico">Suporte Técnico</option>
+            <option value="automacao_industrial">Automação Industrial</option>
+            <option value="devops">DevOps</option>
+            <option value="analise_de_dados">Análise de Dados</option>            
         </select>
         <br>
 
@@ -38,8 +47,25 @@
         </select>
         <br>
 
-        <label for="location">Localização (se aplicável):</label>
-        <input type="text" id="location" name="location" placeholder="Cidade, Estado">
+        <label for="location">CEP (se aplicável):</label>
+        <input type="text" id="location" name="location" placeholder="Digite o CEP" required>
+        <br>
+
+        <!-- Campos de endereço preenchidos automaticamente -->
+        <label for="street">Rua:</label>
+        <input type="text" id="street" name="street" readonly>
+        <br>
+
+        <label for="neighborhood">Bairro:</label>
+        <input type="text" id="neighborhood" name="neighborhood" readonly>
+        <br>
+
+        <label for="city">Cidade:</label>
+        <input type="text" id="city" name="city" readonly>
+        <br>
+
+        <label for="state">Estado:</label>
+        <input type="text" id="state" name="state" readonly>
         <br>
 
         <label for="contactMethod">Forma de Contato Preferencial:</label>

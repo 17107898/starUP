@@ -7,12 +7,14 @@
     <title>Detalhes do Serviço</title>
 </head>
 <body>
-    <h2>Preencha os Detalhes do Serviço</h2>
     <form id="servicoForm">
+        <h2>Preencha os Detalhes do Serviço</h2>
         <input type="hidden" id="prestadorId" value="{{ prestador_id }}"> <!-- Input oculto para o ID do prestador -->
-        
-        <label for="serviceType">Tipo de Serviço:</label>
-        <input type="text" id="serviceType" name="serviceType" required>
+        <br>
+        <label for="nome">Olá {{nome_prestador}}</label>
+        <br>
+        <label for="serviceType">Tipo de Serviço Selecionado:</label>
+        <input type="text" id="serviceType" name="serviceType" value="{{ service_type_legivel }}" required>
         <br>
     
         <label for="description">Descrição Detalhada:</label>
@@ -27,8 +29,24 @@
         <input type="text" id="urgency" name="urgency" required>
         <br>
     
-        <label for="location">Localização (se aplicável):</label>
+        <label for="location">CEP (se aplicável):</label>
         <input type="text" id="location" name="location">
+        <br>
+    
+        <label for="street">Rua:</label>
+        <input type="text" id="street" name="street" readonly>
+        <br>
+    
+        <label for="neighborhood">Bairro:</label>
+        <input type="text" id="neighborhood" name="neighborhood" readonly>
+        <br>
+    
+        <label for="city">Cidade:</label>
+        <input type="text" id="city" name="city" readonly>
+        <br>
+    
+        <label for="state">Estado:</label>
+        <input type="text" id="state" name="state" readonly>
         <br>
     
         <label for="contactMethod">Forma de Contato Preferencial:</label>
@@ -56,7 +74,7 @@
     
     <p id="response"></p>
     
-
     <script src="{{ url_for('static', filename='js/servico_script.js') }}"></script>
+    
 </body>
 </html>

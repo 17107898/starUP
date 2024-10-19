@@ -1,6 +1,7 @@
 document.getElementById('prestadorForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+    event.preventDefault();  // Evita o envio do formulário de forma tradicional
 
+    // Coleta os valores dos campos
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -24,13 +25,27 @@ document.getElementById('prestadorForm').addEventListener('submit', function(eve
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: name, email: email, password: password, service: service })
+        body: JSON.stringify({
+            name: name, 
+            email: email, 
+            password: password, 
+            service: service
+        })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            // Se o status da resposta for diferente de 2xx, lança um erro
+            throw new Error('Erro na solicitação.');
+        }
+        return response.json();  // Converte a resposta para JSON
+    })
     .then(data => {
         document.getElementById('response').textContent = data.message;
-        if (data.redirect) {
-            window.location.href = data.redirect;  // Redireciona para a página de detalhes do serviço
+        if (data.success) {
+            // Se o cadastro for bem-sucedido, redireciona
+            if (data.redirect) {
+                window.location.href = data.redirect;  // Redireciona para a página de detalhes do serviço
+            }
         }
     })
     .catch(error => {

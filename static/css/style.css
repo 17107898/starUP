@@ -219,15 +219,21 @@ button.prev {
     margin-left: 220px;
 }
 
-/* Quando o botão estiver ativo */
-.solicitar-servico-btn.active {
-    opacity: 1; /* Torna o botão visível com a transição suave */
-}
 
 /* Quando o botão estiver oculto */
 .solicitar-servico-btn.hidden {
-    opacity: 0; /* Esconde o botão com a transição suave */
+    opacity: 0; /* Esconde o botão com uma transição suave */
+    pointer-events: none; /* Desabilita eventos de clique */
+    transition: opacity 0.3s ease; /* Adiciona a animação */
 }
+
+/* Quando o botão estiver visível */
+.solicitar-servico-btn.active {
+    opacity: 1; /* Mostra o botão */
+    pointer-events: auto; /* Habilita eventos de clique */
+    transition: opacity 0.3s ease; /* Adiciona a animação */
+}
+
 
 .solicitar-servico-btn:hover {
     background-color: #218838; /* Mudança de cor ao passar o mouse */

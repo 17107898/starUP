@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Prestador</title>
+    <link rel="stylesheet" href="/static/css/perfil_prestador.css"> <!-- Adicione o link para o seu arquivo CSS -->
+</head>
+<body>
+    <div class="profile-container">
+        <!-- Foto de Perfil -->
+        <div class="profile-header">
+            <!-- Aqui usamos a rota para buscar a imagem de perfil diretamente do banco de dados, se houver -->
+            <div class="profile-photo" style="background-image: url('/uploads/img/{{ perfil_foto }}');">
+                <!-- Caso não tenha foto, exiba um ícone genérico -->
+            </div>
+            <h1>{{ prestador.nome }}</h1>
+            <p><strong>Email:</strong> {{ prestador.email }}</p>
+        </div>
+
+        <!-- Informações do Serviço -->
+        <div class="service-info">
+            <h2>Serviço Oferecido</h2>
+            <p><strong>Tipo de Serviço:</strong> {{ prestador.service_type }}</p>
+            <p><strong>Descrição:</strong> {{ prestador.descricao }}</p>
+            <p><strong>Orçamento:</strong> {{ prestador.orcamento }}</p>
+            <p><strong>Urgência:</strong> {{ prestador.urgencia }}</p>
+        </div>
+
+        <!-- Localização -->
+        <div class="location-info">
+            <h2>Localização</h2>
+            <p><strong>CEP:</strong> {{ prestador.localizacao }}</p>
+            <p><strong>Rua:</strong> {{ prestador.rua }}</p>
+            <p><strong>Bairro:</strong> {{ prestador.bairro }}</p>
+            <p><strong>Cidade:</strong> {{ prestador.cidade }}</p>
+            <p><strong>Estado:</strong> {{ prestador.estado }}</p>
+        </div>
+
+        <!-- Preferências de Contato -->
+        <div class="contact-info">
+            <h2>Contato</h2>
+            <p><strong>Método de Contato:</strong> {{ prestador.metodo_contato }}</p>
+            <p><strong>Data Preferida para Contato:</strong> {{ prestador.data_contato }}</p>
+            <p><strong>Comentários:</strong> {{ prestador.comentarios }}</p>
+        </div>
+
+        <!-- Preferências de Prestador -->
+        <div class="provider-preferences">
+            <h2>Preferências do Prestador</h2>
+            <p>{{ prestador.preferencias_prestador }}</p>
+        </div>
+
+        <!-- Mídias Carregadas -->
+        <div class="media-section">
+            <h2>Documentos e Vídeos</h2>
+
+            <!-- Galeria de Imagens -->
+            <div class="gallery">
+                <h3>Imagens Carregadas:</h3>
+                <div class="gallery-container">
+                    {% for image_id in images %}
+                        <div class="gallery-item">
+                            <!-- Usamos a rota para buscar as imagens carregadas -->
+                            <img src="/uploads/img/{{ image_id }}" alt="Imagem do documento">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Vídeo -->
+            <div class="video-section">
+                <h3>Vídeos Carregados:</h3>
+                {% for video_id in videos %}
+                    <!-- Usamos a rota para buscar os vídeos carregados -->
+                    <video controls>
+                        <source src="/uploads/video/{{ video_id }}" type="video/mp4">
+                        Seu navegador não suporta a exibição de vídeos.
+                    </video>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Botão de Ação -->
+        <div class="action-buttons">
+            <button class="solicitar-servico-btn">Solicitar Serviço</button>
+        </div>
+    </div>
+
+    <!-- Inclua o script JS, caso necessário -->
+    <!-- <script src="/static/js/script.js"></script> -->
+</body>
+</html>
