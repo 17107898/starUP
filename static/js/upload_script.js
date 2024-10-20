@@ -159,8 +159,33 @@ document.getElementById('video').addEventListener('change', function () {
     videoElement.onloadedmetadata = function () {
         if (videoElement.duration > 60) {
             showTemporaryMessage("O vídeo pode ter no máximo 1 minuto.");
-            storedVideo = null;  // Limpa o vídeo armazenado
-            document.getElementById('video').value = '';  // Limpa o campo de vídeo
+
+            // Marcar o vídeo como inválido sem removê-lo
+            const videoPreview = document.getElementById('video-preview');
+            videoPreview.innerHTML = '';  // Limpa a pré-visualização atual
+
+            const fileElement = document.createElement('div');
+            fileElement.classList.add('file-preview', 'invalid');  // Adiciona a classe 'invalid' para o contorno vermelho
+
+            const videoElement = document.createElement('video');
+            videoElement.src = URL.createObjectURL(storedVideo);
+            videoElement.controls = true;
+            videoElement.classList.add('thumbnail');
+            fileElement.appendChild(videoElement);
+
+            const removeButton = document.createElement('button');
+            removeButton.innerHTML = '&times;';
+            removeButton.classList.add('remove-btn');
+            removeButton.addEventListener('click', function () {
+                console.log("Removendo vídeo:", storedVideo.name);
+                storedVideo = null;
+                document.getElementById('video').value = '';
+                updatePreview();
+                checkMediaLimit();
+            });
+
+            fileElement.appendChild(removeButton);
+            videoPreview.appendChild(fileElement);
         } else {
             updatePreview();  // Atualiza a pré-visualização com o vídeo
         }
@@ -168,6 +193,7 @@ document.getElementById('video').addEventListener('change', function () {
 
     checkMediaLimit();  // Verifica se o limite de mídias foi atingido
 });
+
 
 // Função para exibir o aviso temporariamente
 function showTemporaryMessage(message) {

@@ -10,20 +10,10 @@
 
 <div class="container" id="initialScreen">
     <h1>Bem-vindo</h1>
-    <button class="btn" id="loginButton">Entrar</button>
+    <button class="btn" id="loginButton" onclick="window.location.href='/login';">Entrar</button>
     <button class="btn" id="registerButton">Cadastro</button>
 </div>
-
-<div class="container hidden" id="loginScreen">
-    <h2>Login</h2>
-    <form id="loginForm">
-        <label for="loginEmail">E-mail:</label>
-        <input type="email" id="loginEmail" name="email" required><br><br>
-        <label for="loginPassword">Senha:</label>
-        <input type="password" id="loginPassword" name="password" required><br><br>
-        <button type="submit" class="btn">Entrar</button>
-    </form>
-</div>
+    
 
 <div class="container hidden" id="registerScreen">
     <h2>Escolha o tipo de cadastro</h2>

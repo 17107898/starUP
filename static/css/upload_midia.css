@@ -130,6 +130,12 @@ button:hover {
     background-color: darkred;
 }
 
+/* Destacar vídeos inválidos com um contorno vermelho */
+.file-preview.invalid video {
+    border: 2px solid red;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.8); /* Sombra para destacar ainda mais */
+    border-radius: 4px;  /* Suavizar as bordas do vídeo */
+}
 
 /* Destacar as imagens inválidas (ex: fotos deitadas demais) */
 .file-preview.invalid img {

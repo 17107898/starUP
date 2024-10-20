@@ -54,11 +54,25 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
     cursor = db.cursor(dictionary=True)
 
     query = """
-    SELECT prestadores.id AS prestador_id, prestadores.nome, servicos.tipo_servico AS servico, servicos.descricao, servicos.preferencias_prestador, uploads.id AS upload_id, uploads.tipo_arquivo, uploads.perfil_foto,
-           servicos.localizacao, servicos.rua, servicos.bairro, servicos.cidade, servicos.estado
+    SELECT prestadores.id AS prestador_id, 
+        prestadores.nome, 
+        servicos.tipo_servico AS servico, 
+        servicos.descricao, 
+        servicos.preferencias_prestador, 
+        uploads.id AS upload_id, 
+        uploads.tipo_arquivo, 
+        uploads.perfil_foto,
+        servicos.localizacao, 
+        servicos.rua, 
+        servicos.bairro, 
+        servicos.cidade, 
+        servicos.estado,
+        prestadores.nota  -- Modificado para pegar a nota de `prestadores`
     FROM bd_servicos.prestadores
-    JOIN bd_servicos.servicos ON prestadores.id = servicos.prestador_id
-    LEFT JOIN bd_servicos.uploads ON prestadores.id = uploads.prestador_id
+    JOIN bd_servicos.servicos 
+        ON prestadores.id = servicos.prestador_id
+    LEFT JOIN bd_servicos.uploads 
+        ON prestadores.id = uploads.prestador_id
     WHERE 1=1
     """
     
@@ -132,9 +146,10 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
                     "state": prestador['estado']
                 },
                 "person_name": prestador['nome'],
-                "rating": None,
+                "rating": prestador['nota'],  # Atribuindo a nota ao campo rating
                 "bio": prestador['preferencias_prestador']
             }
+
             services.append(service)
 
     # Log do número de serviços retornados
@@ -215,54 +230,72 @@ def get_services():
     })
 @app.route('/perfil_prestador', methods=['GET'])
 def perfil_prestador():
-    prestador_id = request.args.get('prestador_id')
-    
+    prestador_id_url = request.args.get('prestador_id')
+
+    if not prestador_id_url:
+        return "ID do prestador não fornecido", 400
+
     # Conectar ao banco e usar cursor padrão
-    db = connect_to_db()  # Conexão ao banco de dados
-    cursor = db.cursor(dictionary=True)  # Usando dictionary=True para retornar resultados como dicionários
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
 
     # Consulta ao banco de dados para obter os dados do prestador e seus serviços
     cursor.execute("""
-        SELECT prestadores.id AS prestador_id, 
-               prestadores.nome, 
-               prestadores.email, 
-               servicos.tipo_servico AS service_type, 
-               servicos.descricao, 
-               servicos.orcamento, 
-               servicos.urgencia, 
-               servicos.localizacao, 
-               servicos.rua, 
-               servicos.bairro, 
-               servicos.cidade, 
-               servicos.estado, 
-               servicos.metodo_contato, 
-               servicos.data_contato, 
-               servicos.comentarios, 
-               servicos.preferencias_prestador, 
-               uploads.id AS upload_id, 
-               uploads.tipo_arquivo, 
-               uploads.perfil_foto
-        FROM bd_servicos.prestadores
-        JOIN bd_servicos.servicos 
-            ON prestadores.id = servicos.prestador_id
-        LEFT JOIN bd_servicos.uploads 
-            ON prestadores.id = uploads.prestador_id
-        WHERE prestadores.id = %s
-    """, (prestador_id,))
+SELECT prestadores.id AS prestador_id, 
+       prestadores.nome, 
+       prestadores.email, 
+       servicos.tipo_servico AS service_type, 
+       servicos.descricao, 
+       servicos.orcamento, 
+       servicos.urgencia, 
+       servicos.localizacao, 
+       servicos.rua, 
+       servicos.bairro, 
+       servicos.cidade, 
+       servicos.estado,  -- Mudando para servicos.estado
+       servicos.metodo_contato, 
+       servicos.data_contato, 
+       servicos.comentarios, 
+       uploads.id AS upload_id, 
+       uploads.tipo_arquivo, 
+       uploads.perfil_foto
+FROM bd_servicos.prestadores
+JOIN bd_servicos.servicos 
+    ON prestadores.id = servicos.prestador_id
+LEFT JOIN bd_servicos.uploads 
+    ON prestadores.id = uploads.prestador_id
+WHERE prestadores.id = %s
+
+    """, (prestador_id_url,))
     
     prestador = cursor.fetchall()
+
+    if not prestador:
+        return "Prestador não encontrado", 404
+
+    # Agora buscar todos os feedbacks relacionados ao prestador
+    cursor.execute("""
+        SELECT comentario, nota, nome_cliente
+        FROM bd_servicos.feedback
+        WHERE id_prestador = %s
+    """, (prestador_id_url,))
+    
+    feedbacks = cursor.fetchall()
 
     cursor.close()
     db.close()
 
-    # Verificar se o prestador foi encontrado
-    if not prestador:
-        return "Prestador não encontrado", 404
+    # Calcular a média das notas dos feedbacks
+    media_nota = 0
+    if feedbacks:
+        total_feedbacks = len(feedbacks)
+        soma_notas = sum(feedback['nota'] for feedback in feedbacks)
+        media_nota = round(soma_notas / total_feedbacks, 2)
 
-    # Exemplo de acesso usando os dicionários
     prestador_dados = {
         'nome': prestador[0]['nome'],
         'email': prestador[0]['email'],
+        'nota': media_nota,  # Usamos a nova média calculada
         'service_type': prestador[0]['service_type'],
         'descricao': prestador[0]['descricao'],
         'orcamento': prestador[0]['orcamento'],
@@ -275,22 +308,16 @@ def perfil_prestador():
         'metodo_contato': prestador[0]['metodo_contato'],
         'data_contato': prestador[0]['data_contato'],
         'comentarios': prestador[0]['comentarios'],
-        'preferencias_prestador': prestador[0]['preferencias_prestador'],
+        'feedbacks': feedbacks
     }
 
-    # Selecionar a foto de perfil (se houver)
-    perfil_foto = next((upload['upload_id'] for upload in prestador
-                    if upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
+    perfil_foto = next((upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
+    images = [upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['upload_id'] != perfil_foto]
+    videos = [upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'video']
 
-    # Separar os uploads em imagens (excluindo a foto de perfil) e vídeos
-    images = [upload['upload_id'] for upload in prestador
-                if upload['tipo_arquivo'] == 'imagem' and upload['upload_id'] != perfil_foto]
+    is_owner = 'prestador_id' in session and str(session['prestador_id']) == str(prestador_id_url)
 
-    videos = [upload['upload_id'] for upload in prestador
-                if upload['tipo_arquivo'] == 'video']
-
-    # Renderizar a página de perfil do prestador com os dados
-    return render_template('perfil_prestador.html', prestador=prestador_dados, perfil_foto=perfil_foto, images=images, videos=videos)
+    return render_template('perfil_prestador.html', prestador=prestador_dados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
 
 # Rota para obter imagens do banco de dados (LONGBLOB)
 @app.route('/uploads/img/<int:upload_id>')
@@ -345,8 +372,82 @@ def cadastro_cliente():
 def login_page():
     return render_template('login.html')
 
+
 @app.route('/api/login', methods=['POST'])
 def login():
+    data = request.get_json()
+    email = data['email']
+    senha = data['password']
+
+    # Conectar ao banco de dados e configurar cursor para retornar dicionários
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    # Buscar o usuário pelo email tanto na tabela de clientes quanto de prestadores
+    cursor.execute("""
+        SELECT id, nome, email, senha, tipo_usuario 
+        FROM (
+            SELECT id, nome, email, senha, 'cliente' AS tipo_usuario 
+            FROM bd_servicos.clientes 
+            WHERE email = %s
+            UNION
+            SELECT id, nome, email, senha, 'prestador' AS tipo_usuario 
+            FROM bd_servicos.prestadores 
+            WHERE email = %s
+        ) AS usuarios
+    """, (email, email))
+    
+    result = cursor.fetchone()
+
+    if result and check_password_hash(result['senha'], senha):  # Comparando a senha correta
+        tipo_usuario = result['tipo_usuario']
+        
+        if tipo_usuario == 'prestador':
+            session['prestador_id'] = result['id']  # Armazenar ID do prestador
+            # Redirecionar com o prestador_id na URL
+            redirect_url = url_for('perfil_prestador', prestador_id=result['id'])
+            return jsonify({'redirectUrl': redirect_url})
+        
+        elif tipo_usuario == 'cliente':
+            # Pegar informações adicionais do cliente
+            cliente_id = result['id']
+            session['cliente_id'] = cliente_id  # Armazenar ID do cliente
+            cursor.execute("""
+                SELECT servicos.* 
+                FROM bd_servicos.servicos 
+                WHERE cliente_id = %s
+            """, (cliente_id,))
+            servicos = cursor.fetchall()
+
+            if servicos:
+                redirect_url = url_for('carrossel', serviceType=servicos[0]['tipo_servico'], 
+                                       cep=servicos[0]['localizacao'], 
+                                       street=servicos[0]['rua'], 
+                                       neighborhood=servicos[0]['bairro'], 
+                                       city=servicos[0]['cidade'], 
+                                       state=servicos[0]['estado'], 
+                                       urgency=servicos[0]['urgencia'])
+                return jsonify({'redirectUrl': redirect_url})
+            else:
+                return jsonify({'message': 'Nenhum serviço encontrado para este cliente'}), 404
+        else:
+            return jsonify({'message': 'Tipo de usuário inválido'}), 400
+    else:
+        return jsonify({'message': 'Credenciais inválidas'}), 401
+
+
+
+
+
+# Página de cadastro
+@app.route('/register', methods=['GET'])
+def register_page():
+    return render_template('registro.html')
+
+
+# API de cadastro
+@app.route('/api/register', methods=['POST'])
+def register():
     data = request.get_json()
     email = data['email']
     senha = data['password']
@@ -361,6 +462,7 @@ def login():
         return jsonify({'message': 'Login bem-sucedido'})
     else:
         return jsonify({'message': 'Credenciais inválidas'}), 401
+
 
 @app.route('/api/cadastrar-cliente', methods=['POST'])
 def cadastrar_cliente():
@@ -405,9 +507,9 @@ def cadastrar_cliente():
             'success': False
         }), 400  # Código de erro HTTP 400 - Bad Request
 
-    # Inserir o novo cliente no banco de dados
+    # Inserir o novo cliente no banco de dados com tipo_usuario = 'cliente'
     cursor.execute(
-        "INSERT INTO clientes (nome, email, senha, cnpj) VALUES (%s, %s, %s, %s)",
+        "INSERT INTO clientes (nome, email, senha, cnpj, tipo_usuario) VALUES (%s, %s, %s, %s, 'cliente')",
         (nome, email, senha_hash, cnpj)
     )
     db.commit()
@@ -418,7 +520,6 @@ def cadastrar_cliente():
         'success': True
     })
 
-
 # Rota para a página de solicitação de serviço
 @app.route('/solicitar_servico', methods=['GET'])
 def solicitar_servico():
@@ -427,7 +528,7 @@ def solicitar_servico():
     
     # Verifique se o cliente está logado (cliente_id existe na sessão)
     if not cliente_id:
-        return redirect(url_for('login_page'))  # Redirecionar para a página de login se não estiver logado
+        return redirect(url_for('register_page'))  # Redirecionar para a página de login se não estiver logado
     print(f"Cliente ID: {cliente_id}")
     
     # Exibir a página de solicitação de serviço
@@ -499,16 +600,34 @@ def api_solicitar_servico():
 @app.route('/api/cadastrar-prestador', methods=['POST'])
 def cadastrar_prestador():
     data = request.get_json()
-    nome = data['name']
-    email = data['email']
-    senha_hash = generate_password_hash(data['password'])  # Hash da senha
-    servico = data['service']
+    nome = data.get('name')
+    email = data.get('email')
+    senha = data.get('password')
+    servico = data.get('service')
+
+    # Verificar se todos os campos obrigatórios foram fornecidos
+    if not nome or not email or not senha or not servico:
+        return jsonify({
+            'message': 'Nome, e-mail, senha e serviço são obrigatórios.',
+            'success': False
+        }), 400
+
+    # Hash da senha
+    senha_hash = generate_password_hash(senha)
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
 
     # Verificar se o e-mail já está cadastrado
     cursor.execute("SELECT id FROM prestadores WHERE email = %s", (email,))
     prestador_existente_email = cursor.fetchone()
 
     if prestador_existente_email:
+        # Fechar conexão com o banco de dados
+        cursor.close()
+        db.close()
+
         # Se o e-mail já estiver cadastrado, retornar uma mensagem de erro
         return jsonify({
             'message': 'O e-mail já está cadastrado. Tente fazer login ou use outro e-mail.',
@@ -517,7 +636,7 @@ def cadastrar_prestador():
 
     # Inserir o novo prestador no banco de dados (o ID será gerado automaticamente)
     cursor.execute(
-        "INSERT INTO prestadores (nome, email, senha, servico) VALUES (%s, %s, %s, %s)",
+        "INSERT INTO prestadores (nome, email, senha, servico, tipo_usuario) VALUES (%s, %s, %s, %s, 'prestador')",
         (nome, email, senha_hash, servico)
     )
     db.commit()
@@ -528,12 +647,17 @@ def cadastrar_prestador():
     # Armazenar o ID do prestador na sessão
     session['prestador_id'] = prestador_id
 
+    # Fechar conexão com o banco de dados
+    cursor.close()
+    db.close()
+
     return jsonify({
         'message': 'Prestador de serviços cadastrado com sucesso!',
         'prestador_id': prestador_id,  # Retorna o ID do prestador
         'redirect': url_for('prestador_servico'),
         'success': True
     })
+
 
 
 # Rota para a página de cadastro de prestador
@@ -571,7 +695,7 @@ def prestador_servico():
                            prestador_id=prestador_id, 
                            service_type_legivel=service_type_legivel, 
                            nome_prestador=nome_prestador)
-# Rota para tratar a solicitação de serviço do prestador
+
 # Rota para tratar a solicitação de serviço do prestador
 @app.route('/api/cadastrar-servico', methods=['POST'])
 def api_prestador_solicitar_servico():

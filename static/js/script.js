@@ -89,14 +89,14 @@ async function carregarMaisServicos() {
         galleryItems += service.videos.map(vidId => 
             `<video src="/uploads/video/${vidId}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>`
         ).join('');
-    
+        console.log('id do prestador', service)
         serviceElement.innerHTML = `
             <h3>${service.service_name}</h3>
             <div class="gallery">
                 ${galleryItems}
                 <div class="video-container">
                     <div class="video-description active">
-                        <div class="responsavel-info" id="responsavel-${service.prestador_id}">
+                        <div class="responsavel-info" id="responsavel-${service.id}">
                             <div class="perfil-foto" style="background-image: url('/uploads/img/${service.perfil_foto}');"></div>
                             <p>${service.person_name}</p>
                         </div>
@@ -123,10 +123,20 @@ async function carregarMaisServicos() {
         servicesElements.push(serviceElement);  // Adiciona o serviço à lista de serviços
     
         // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
-        const responsavelInfo = serviceElement.querySelector(`#responsavel-${service.prestador_id}`);
-        responsavelInfo.addEventListener('click', () => {
-            window.location.href = `/perfil_prestador?prestador_id=${service.prestador_id}`;
-        });
+        // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
+        const responsavelInfo = serviceElement.querySelector(`#responsavel-${service.id}`);
+
+        // Verificação se o elemento foi encontrado
+        if (responsavelInfo) {
+            responsavelInfo.addEventListener('click', () => {
+                window.location.href = `/perfil_prestador?prestador_id=${service.id}`;
+            });
+        } else {
+            // Adiciona log para verificar se o ID está correto
+            console.log(`Elemento #responsavel-${service.id} não encontrado. Verifique o DOM.`);
+        }
+
+        
         // Verificar se o elemento foi adicionado corretamente
         console.log(`Serviço adicionado ao container: ${service.person_name}, ID do elemento: ${serviceElement.id}`);
 

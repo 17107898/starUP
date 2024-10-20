@@ -1,3 +1,4 @@
+/* Estilização geral */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -11,6 +12,18 @@ body {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Container geral para cada seção */
+.container {
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px; /* Definindo um tamanho máximo para os containers */
+    margin: 20px auto; /* Centralizando os containers */
 }
 
 .profile-header {
@@ -31,14 +44,19 @@ h1, h2 {
     color: #007BFF;
 }
 
-.gallery-container, .video-section {
+.gallery-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
 .gallery-item {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
 }
 
 .gallery-item img {
@@ -47,6 +65,24 @@ h1, h2 {
     object-fit: cover;
 }
 
+.gallery-item:hover {
+    transform: scale(1.05);
+}
+
+.video-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.video-section video {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Botões de ação */
 .action-buttons {
     text-align: center;
     margin-top: 20px;
@@ -59,4 +95,193 @@ h1, h2 {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    border-radius: 8px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.feedback-item {
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Classe para desativar o scroll da página */
+.no-scroll {
+    overflow: hidden;
+}
+
+.no-feedback {
+    background-color: #fcdcdc; /* Cinza escuro para destacar o texto */
+    border: 1px solid #000; /* Borda preta mais forte */
+    border-radius: 5px; /* Bordas levemente arredondadas */
+    padding: 10px; /* Espaço interno */
+    margin-top: 10px; /* Distância do conteúdo acima */
+    text-align: center; /* Centraliza o texto */
+}
+
+.no-feedback p {
+    color: #fff; /* Texto branco para melhor contraste com o fundo escuro */
+    font-size: 16px; /* Tamanho da fonte */
+    font-weight: bold; /* Texto em negrito para dar mais destaque */
+    text-shadow: 
+        -1px -1px 0 #000,  /* Sombra para o canto superior esquerdo */
+        1px -1px 0 #000,   /* Sombra para o canto superior direito */
+        -1px 1px 0 #000,   /* Sombra para o canto inferior esquerdo */
+        1px 1px 0 #000;    /* Sombra para o canto inferior direito */
+}
+
+
+/* Definir estilo para a pré-visualização das imagens */
+.thumbnail {
+    width: 100px;  /* Definir a largura da miniatura */
+    height: auto;  /* Manter a proporção da imagem */
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    position: relative;  /* Necessário para o botão "X" */
+}
+
+/* Estilo para os itens de pré-visualização */
+.file-preview {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+    position: relative;  /* Necessário para o botão "X" */
+}
+
+.file-preview button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;  /* Garante que o botão seja redondo */
+    cursor: pointer;
+    width: 25px;  /* Aumente o tamanho se necessário */
+    height: 25px;  /* Mesma altura que largura para manter redondo */
+    font-size: 14px;
+    line-height: 25px;  /* Centraliza o texto verticalmente */
+    padding: 0;  /* Remove o padding para evitar achatamento */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.file-preview button:hover {
+    background-color: darkred;
+}
+
+
+/* Destacar as imagens inválidas (ex: fotos deitadas demais) */
+.file-preview.invalid img {
+    border: 2px solid red;
+}
+/* Destacar vídeos inválidos com um contorno vermelho */
+.file-preview.invalid video {
+    border: 2px solid red;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.8); /* Sombra para destacar ainda mais */
+    border-radius: 4px;  /* Suavizar as bordas do vídeo */
+}
+
+/* Para garantir que o vídeo siga as mesmas regras */
+.file-preview video {
+    width: 100px;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+/* Estilização para inputs e textarea */
+input[type="text"], input[type="number"], input[type="date"], input[type="email"], textarea {
+    width: calc(100% - 20px);  /* Preenche o espaço disponível com uma margem interna */
+    padding: 10px;  /* Aumenta o espaço interno */
+    margin-bottom: 15px;  /* Espaço entre os campos */
+    border: 1px solid #ccc;  /* Borda leve */
+    border-radius: 6px;  /* Bordas arredondadas para um visual mais suave */
+    font-size: 16px;  /* Fonte mais legível */
+    box-sizing: border-box;  /* Garante que padding e borda não alterem o tamanho do input */
+    background-color: #f9f9f9;  /* Cor de fundo leve para o campo */
+    transition: border-color 0.3s ease;  /* Transição suave na borda ao foco */
+}
+
+/* Foco no campo de entrada */
+input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="email"]:focus, textarea:focus {
+    border-color: #007BFF;  /* Azul mais chamativo quando o campo estiver em foco */
+    outline: none;  /* Remove o outline padrão */
+}
+
+/* Estilização específica para textarea */
+textarea {
+    height: 120px;  /* Ajusta a altura para se adequar às necessidades de texto */
+    resize: vertical;  /* Permite redimensionamento apenas na vertical */
+}
+
+/* Estilo para os botões */
+button {
+    padding: 12px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover no botão */
+button:hover {
+    background-color: #0056b3;  /* Cor mais escura ao passar o mouse */
+}
+
+/* Ajuste de espaçamento e alinhamento para labels */
+label {
+    display: block;  /* Exibe as labels como blocos, uma acima do input */
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;  /* Cor mais escura para destaque */
+}
+
+/* Responsividade para telas menores */
+@media screen and (max-width: 768px) {
+    input[type="text"], input[type="number"], input[type="date"], input[type="email"], textarea {
+        width: 100%;  /* Inputs ocupam 100% da largura do container */
+    }
 }
