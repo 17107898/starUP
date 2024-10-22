@@ -51,12 +51,18 @@
     
         <label for="contactMethod">Forma de Contato Preferencial:</label>
         <select id="contactMethod" name="contactMethod" required>
+            <option value="">Selecione a forma de contato</option>
             <option value="email">Email</option>
             <option value="telefone">Telefone</option>
             <option value="whatsapp">WhatsApp</option>
         </select>
         <br>
-    
+        <!-- Aqui será exibido o campo para o número ou email com base na escolha -->
+        <div id="contactDetail" style="display:none;">
+            <label for="contactInput" id="contactLabel">Por favor, insira seu contato:</label>
+            <input type="text" id="contactInput" name="contactInput" placeholder="Digite seu contato">
+        </div>
+        
         <label for="contactDate">Data/Hora de Contato:</label>
         <input type="datetime-local" id="contactDate" name="contactDate" required>
         <br>

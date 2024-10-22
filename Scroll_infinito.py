@@ -67,7 +67,8 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
         servicos.bairro, 
         servicos.cidade, 
         servicos.estado,
-        prestadores.nota  -- Modificado para pegar a nota de `prestadores`
+        prestadores.nota,  -- Modificado para pegar a nota de `prestadores`
+        prestadores.contato
     FROM bd_servicos.prestadores
     JOIN bd_servicos.servicos 
         ON prestadores.id = servicos.prestador_id
@@ -244,6 +245,7 @@ def perfil_prestador():
 SELECT prestadores.id AS prestador_id, 
        prestadores.nome, 
        prestadores.email, 
+       prestadores.contato,
        servicos.tipo_servico AS service_type, 
        servicos.descricao, 
        servicos.orcamento, 
@@ -295,6 +297,7 @@ WHERE prestadores.id = %s
     prestador_dados = {
         'nome': prestador[0]['nome'],
         'email': prestador[0]['email'],
+        'contato':prestador[0]['contato'],
         'nota': media_nota,  # Usamos a nova média calculada
         'service_type': prestador[0]['service_type'],
         'descricao': prestador[0]['descricao'],
@@ -318,6 +321,100 @@ WHERE prestadores.id = %s
     is_owner = 'prestador_id' in session and str(session['prestador_id']) == str(prestador_id_url)
 
     return render_template('perfil_prestador.html', prestador=prestador_dados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
+
+
+@app.route('/api/editar_prestador', methods=['POST'])
+def editar_prestador():
+    prestador_id = session.get('prestador_id')
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Receber dados do formulário
+    contato = request.form.get('contato')
+    service_type = request.form.get('service_type')
+    descricao = request.form.get('descricao')
+    orcamento = request.form.get('orcamento')
+    urgencia = request.form.get('urgencia')
+    localizacao = request.form.get('localizacao')
+    rua = request.form.get('rua')
+    bairro = request.form.get('bairro')
+    cidade = request.form.get('cidade')
+    estado = request.form.get('estado')
+    metodo_contato = request.form.get('metodo_contato')
+    data_contato = request.form.get('data_contato')
+
+    # Atualizar os dados do prestador no banco de dados
+    cursor.execute("""
+        UPDATE bd_servicos.prestadores
+        SET contato = %s
+        WHERE id = %s
+    """, (contato, prestador_id))
+
+    cursor.execute("""
+        UPDATE bd_servicos.servicos
+        SET tipo_servico = %s, descricao = %s, orcamento = %s, urgencia = %s, localizacao = %s, rua = %s, bairro = %s, cidade = %s, estado = %s, metodo_contato = %s, data_contato = %s
+        WHERE prestador_id = %s
+    """, (service_type, descricao, orcamento, urgencia, localizacao, rua, bairro, cidade, estado, metodo_contato, data_contato, prestador_id))
+
+    # Verificar se uma nova foto de perfil foi enviada
+    if 'perfil_foto' in request.files:
+        perfil_foto = request.files['perfil_foto']
+        if perfil_foto.filename != '':
+            perfil_foto_binario = perfil_foto.read()  # Ler conteúdo binário
+            # Substituir a foto de perfil existente
+            cursor.execute("""
+                INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, perfil_foto, created_at)
+                VALUES (%s, %s, 'imagem', 'perfil', NOW())
+                ON DUPLICATE KEY UPDATE arquivo = %s
+            """, (prestador_id, perfil_foto_binario, perfil_foto_binario))
+
+    # Verificar se os documentos foram enviados
+    if 'documents' in request.files:
+        documents = request.files.getlist('documents')
+        
+        # Apagar documentos antigos
+        cursor.execute("""
+            DELETE FROM bd_servicos.uploads
+            WHERE prestador_id = %s AND tipo_arquivo = 'imagem'
+        """, (prestador_id,))
+        db.commit()
+
+        # Inserir novos documentos
+        for document in documents:
+            if document.filename != '':
+                document_binario = document.read()  # Ler conteúdo binário
+                cursor.execute("""
+                    INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, created_at)
+                    VALUES (%s, %s, 'imagem', NOW())
+                """, (prestador_id, document_binario))
+
+    # Verificar se o vídeo foi enviado
+    if 'video' in request.files:
+        video = request.files['video']
+        if video.filename != '':
+            video_binario = video.read()  # Ler conteúdo binário
+            # Substituir o vídeo existente
+            cursor.execute("""
+                DELETE FROM bd_servicos.uploads
+                WHERE prestador_id = %s AND tipo_arquivo = 'video'
+            """, (prestador_id,))
+            db.commit()
+
+            cursor.execute("""
+                INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, created_at)
+                VALUES (%s, %s, 'video', NOW())
+            """, (prestador_id, video_binario))
+
+    # Commit das mudanças no banco de dados
+    db.commit()
+    cursor.close()
+    db.close()
+
+    # Responder com uma mensagem de sucesso
+    return jsonify({'message': 'Dados e mídias atualizados com sucesso.'})
+
 
 # Rota para obter imagens do banco de dados (LONGBLOB)
 @app.route('/uploads/img/<int:upload_id>')
@@ -712,7 +809,8 @@ def api_prestador_solicitar_servico():
     neighborhood = data.get('neighborhood')  # Bairro
     city = data.get('city')  # Cidade
     state = data.get('state')  # Estado
-    contact_method = data.get('contactMethod')
+    contact_method = data.get('contactMethod')  # Método de contato escolhido (email, telefone, whatsapp)
+    contact_detail = data.get('contactDetail')  # Detalhe do contato (email, número de telefone, número do WhatsApp)
     contact_date = data.get('contactDate')
     comments = data.get('comments')
     provider_preferences = data.get('providerPreferences')
@@ -744,16 +842,29 @@ def api_prestador_solicitar_servico():
         }), 400  # Código de erro HTTP 400 - Bad Request
 
     # Inserir os dados no banco de dados, incluindo o prestador_id e as novas informações de endereço
+    # Atualizando método de contato na tabela `prestadores`
+    cursor.execute("""
+        UPDATE bd_servicos.prestadores
+        SET contato = %s
+        WHERE id = %s
+    """, (contact_detail, prestador_id))
+
+    # Confirmando a transação
+    db.commit()
+
+    # Inserindo dados na tabela `servicos`
     cursor.execute(
         """
-        INSERT INTO servicos (prestador_id, tipo_servico, descricao, orcamento, urgencia, localizacao, 
-                              rua, bairro, cidade, estado, metodo_contato, data_contato, comentarios, preferencias_prestador)
+        INSERT INTO bd_servicos.servicos (prestador_id, tipo_servico, descricao, orcamento, urgencia, localizacao, 
+                                        rua, bairro, cidade, estado, metodo_contato, data_contato, comentarios, preferencias_prestador)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (prestador_id, service_type, description, budget, urgency, location, 
-         street, neighborhood, city, state, contact_method, contact_date, comments, provider_preferences)
+        street, neighborhood, city, state, contact_method, contact_date, comments, provider_preferences)
     )
+
     db.commit()
+
 
     return jsonify({
         'message': 'Serviço enviado com sucesso!',

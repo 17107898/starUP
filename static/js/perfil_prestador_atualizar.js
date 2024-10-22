@@ -346,6 +346,171 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+// Função para exibir o campo de contato baseado na escolha do método
+document.getElementById('contactMethod').addEventListener('change', function () {
+    const selectedMethod = this.value;
+    const contactDetailDiv = document.getElementById('contactDetail');
+    const contactLabel = document.getElementById('contactLabel');
+    const contactInput = document.getElementById('contactInput');
+    const currentContactDiv = document.getElementById('currentContact');
+
+    // Limpa o valor do campo de entrada
+    contactInput.value = ''; // Limpa o campo
+
+    // Atualiza o label e o placeholder conforme o método escolhido
+    if (selectedMethod === 'email') {
+        contactLabel.innerHTML = 'Por favor, insira seu email:';
+        contactInput.placeholder = 'Digite seu email';
+        contactInput.type = 'email';
+        contactDetailDiv.style.display = 'block';
+        currentContactDiv.style.display = 'none';  // Esconde o contato atual
+    } else if (selectedMethod === 'telefone') {
+        contactLabel.innerHTML = 'Por favor, insira seu número de telefone:';
+        contactInput.placeholder = 'Digite seu número de telefone';
+        contactInput.type = 'tel';
+        contactDetailDiv.style.display = 'block';
+        currentContactDiv.style.display = 'none';  // Esconde o contato atual
+    } else if (selectedMethod === 'whatsapp') {
+        contactLabel.innerHTML = 'Por favor, insira seu número do WhatsApp:';
+        contactInput.placeholder = 'Digite seu número do WhatsApp';
+        contactInput.type = 'tel';
+        contactDetailDiv.style.display = 'block';
+        currentContactDiv.style.display = 'none';  // Esconde o contato atual
+    } else {
+        contactDetailDiv.style.display = 'none';  // Oculta o campo se nenhum método for selecionado
+        currentContactDiv.style.display = 'block';  // Exibe o contato atual
+    }
+
+    // Função de rolagem suave até o campo de contato
+    contactDetailDiv.scrollIntoView({ behavior: 'smooth' });
+
+    // Adiciona a animação de destaque ao label
+    contactLabel.classList.add('focus-highlight');  // Adiciona a classe de destaque
+
+    // Remove o destaque após 2 segundos
+    setTimeout(() => {
+        contactLabel.classList.remove('focus-highlight');  // Remove a classe de destaque após o tempo
+    }, 2000);
+});
+
+// No carregamento da página, exibe o contato atual sem alterar nada
+window.onload = function () {
+    const contactDetailDiv = document.getElementById('contactDetail');
+    const currentContactDiv = document.getElementById('currentContact');
+    contactDetailDiv.style.display = 'none';  // Não exibe o campo de contato
+    currentContactDiv.style.display = 'block'; // Exibe o campo de contato atual
+};
+
+
+// Função para formatar o CEP enquanto o usuário digita
+function formatarCEP(cep) {
+    // Remove todos os caracteres que não sejam números
+    cep = cep.replace(/\D/g, '');
+    
+    // Formata o CEP para o padrão 'XXXXX-XXX'
+    if (cep.length > 5) {
+        cep = cep.replace(/^(\d{5})(\d)/, '$1-$2');
+    }
+    
+    return cep;
+}
+
+// Função para buscar o endereço via API do ViaCEP
+function buscarEndereco(cep) {
+    // Remover caracteres não numéricos do CEP
+    cep = cep.replace(/\D/g, '');
+
+    // Verificar se o CEP tem 8 dígitos
+    if (cep.length !== 8) {
+        document.getElementById('response').textContent = 'CEP inválido!';
+        return;
+    }
+
+    // Fazer a requisição para a API ViaCEP
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar CEP');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.erro) {
+                document.getElementById('response').textContent = 'CEP não encontrado!';
+                return;
+            }
+
+            // Preencher os campos com os dados retornados pela API
+            document.getElementById('street').value = data.logradouro || '';
+            document.getElementById('neighborhood').value = data.bairro || '';
+            document.getElementById('city').value = data.localidade || '';
+            document.getElementById('state').value = data.uf || '';
+            document.getElementById('response').textContent = '';  // Limpa mensagens de erro, se houver
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('response').textContent = 'Erro ao buscar CEP.';
+        });
+}
+
+// Adicionar evento ao campo de CEP para formatar enquanto o usuário digita e buscar o endereço automaticamente ao completar 8 dígitos
+document.getElementById('location').addEventListener('input', function () {
+    const cepInput = document.getElementById('location');
+    cepInput.value = formatarCEP(cepInput.value);
+    
+    // Se o CEP tiver 8 dígitos, buscar o endereço automaticamente
+    const cepLimpo = cepInput.value.replace(/\D/g, '');
+    if (cepLimpo.length === 8) {
+        buscarEndereco(cepLimpo);
+    }
+});
+
+
+
+// Evento de submissão do formulário
+document.getElementById('uploadForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);  // Cria o FormData diretamente do formulário
+    const perfilFoto = document.getElementById('perfil_foto').files[0];
+    const documents = document.getElementById('documents').files;
+    const video = document.getElementById('video').files[0];
+
+    // Adicionar a foto de perfil ao FormData
+    if (perfilFoto) {
+        formData.append('perfil_foto', perfilFoto);
+    }
+
+    // Adicionar os documentos ao FormData
+    for (let i = 0; i < documents.length; i++) {
+        formData.append('documents', documents[i]);
+    }
+
+    // Adicionar o vídeo ao FormData
+    if (video) {
+        formData.append('video', video);
+    }
+
+    // Fazer o upload via fetch
+    fetch('/api/editar_prestador', { 
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const responseMessage = document.getElementById('response-message');
+        responseMessage.textContent = data.message;
+        responseMessage.classList.remove('error');  // Remove a classe de erro, caso ela tenha sido adicionada
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        const responseMessage = document.getElementById('response-message');
+        responseMessage.textContent = 'Erro ao fazer o upload das mídias.';
+        responseMessage.classList.add('error');  // Adiciona a classe de erro para estilizar a mensagem
+    });
+});
+
+
 
 // Lógica para remoção da foto de perfil
 document.getElementById('remove-foto').addEventListener('click', function () {

@@ -60,6 +60,34 @@ document.getElementById('location').addEventListener('input', function () {
     }
 });
 
+// Função para exibir o campo de contato baseado na escolha do método
+document.getElementById('contactMethod').addEventListener('change', function () {
+    const selectedMethod = this.value;
+    const contactDetailDiv = document.getElementById('contactDetail');
+    const contactLabel = document.getElementById('contactLabel');
+    const contactInput = document.getElementById('contactInput');
+    
+    // Exibe o campo e define o placeholder e o label conforme o método escolhido
+    if (selectedMethod === 'email') {
+        contactLabel.innerHTML = 'Por favor, insira seu email:';
+        contactInput.placeholder = 'Digite seu email';
+        contactInput.type = 'email';
+        contactDetailDiv.style.display = 'block';  // Exibe o campo
+    } else if (selectedMethod === 'telefone') {
+        contactLabel.innerHTML = 'Por favor, insira seu número de telefone:';
+        contactInput.placeholder = 'Digite seu número de telefone';
+        contactInput.type = 'tel';  // Define como campo de telefone
+        contactDetailDiv.style.display = 'block';
+    } else if (selectedMethod === 'whatsapp') {
+        contactLabel.innerHTML = 'Por favor, insira seu número do WhatsApp:';
+        contactInput.placeholder = 'Digite seu número do WhatsApp';
+        contactInput.type = 'tel';  // Define como campo de telefone
+        contactDetailDiv.style.display = 'block';
+    } else {
+        contactDetailDiv.style.display = 'none';  // Oculta o campo se nenhum método for selecionado
+    }
+});
+
 // Função para enviar o formulário de serviço
 document.getElementById('servicoForm').addEventListener('submit', function(event) {
     event.preventDefault();
@@ -76,12 +104,13 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
     const city = document.getElementById('city').value;
     const state = document.getElementById('state').value;
     const contactMethod = document.getElementById('contactMethod').value;
+    const contactDetail = document.getElementById('contactInput').value;  // Coletando o valor do campo de contato
     const contactDate = document.getElementById('contactDate').value;
     const comments = document.getElementById('comments').value;
     const providerPreferences = document.getElementById('providerPreferences').value;
 
     // Verificar se os campos estão preenchidos corretamente (opcional)
-    if (!serviceType || !description || !budget || !urgency || !location || !contactMethod || !contactDate) {
+    if (!serviceType || !description || !budget || !urgency || !location || !contactMethod || !contactDetail || !contactDate) {
         document.getElementById('response').textContent = 'Por favor, preencha todos os campos obrigatórios.';
         return;
     }
@@ -104,6 +133,7 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
             city: city,
             state: state,
             contactMethod: contactMethod,
+            contactDetail: contactDetail,  // Adiciona o contato fornecido pelo usuário
             contactDate: contactDate,
             comments: comments,
             providerPreferences: providerPreferences

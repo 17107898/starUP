@@ -253,6 +253,13 @@ textarea {
     height: 120px;  /* Ajusta a altura para se adequar às necessidades de texto */
     resize: vertical;  /* Permite redimensionamento apenas na vertical */
 }
+/* Animação de destaque para o label */
+.focus-highlight {
+    background-color: #ffffcc;  /* Cor de fundo destacada */
+    border-radius: 4px;
+    padding: 5px;
+    transition: background-color 0.5s ease, color 0.5s ease;  /* Transição suave */
+}
 
 /* Estilo para os botões */
 button {
@@ -264,6 +271,15 @@ button {
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s ease;
+}
+.response-message {
+    margin-top: 10px;
+    font-size: 14px;
+    color: green;  /* Cor para mensagem de sucesso */
+}
+
+.response-message.error {
+    color: red;  /* Cor para mensagem de erro */
 }
 
 /* Hover no botão */

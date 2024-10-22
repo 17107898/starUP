@@ -7,75 +7,70 @@
     <link rel="stylesheet" href="/static/css/perfil_prestador.css">
 </head>
 <body>
-    <div class="profile-container">
+    <form id="uploadForm" action="/editar_prestador" method="POST" enctype="multipart/form-data">
+        <div class="profile-container">
         <!-- Foto de Perfil -->
         <div class="profile-header">
             <div class="profile-photo" style="background-image: url('/uploads/img/{{ perfil_foto }}');"></div>
             <h1>{{ prestador.nome }}</h1>
             {% if is_owner %}
-                <!-- Campo para editar o email -->
-                <label for="email">Email:</label>
-                <input type="email" name="email" value="{{ prestador.email }}">
+            <!-- Campo dinâmico para editar o método de contato -->
+            <label for="contactMethod">Forma de Contato Preferencial:</label>
+            <!-- Aqui será exibido o campo de email ou telefone conforme a escolha -->
+            <div id="contactDetail" style="display:none;">
+                <label for="contactInput" id="contactLabel">
+                    {% if prestador.metodo_contato == 'email' %}
+                        Por favor, insira seu email:
+                    {% elif prestador.metodo_contato == 'telefone' %}
+                        Por favor, insira seu número de telefone:
+                    {% elif prestador.metodo_contato == 'whatsapp' %}
+                        Por favor, insira seu número do WhatsApp:
+                    {% endif %}
+                </label>
+                <input type="text" id="contactInput" name="contato" value="{{ prestador.contato }}" 
+                    placeholder="{% if prestador.metodo_contato == 'email' %}Digite seu email{% 
+                    elif prestador.metodo_contato == 'telefone' %}Digite seu número de telefone{% 
+                    elif prestador.metodo_contato == 'whatsapp' %}Digite seu número do WhatsApp{% 
+                    endif %}" 
+                    style="width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9; transition: border-color 0.3s ease;">
+            </div>
 
+            <div id="currentContact" style="display: block;">
+                <label for="currentContactInput">Contato Atual:</label>
+                <input type="text" id="currentContactInput" name="contato_atual" value="{{ prestador.contato }}" readonly style="width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; background-color: #f1f1f1;">
+            </div>
+
+        
                 <!-- Upload de nova foto de perfil -->
                 <div class="photo-upload">
                     <label for="perfil_foto">Alterar Foto de Perfil:</label>
                     <input type="file" id="perfil_foto" name="perfil_foto" accept="image/*">
-
+        
                     <!-- Botão para remover a foto de perfil -->
                     <button type="button" id="remove-foto">Remover Foto de Perfil</button>
                 </div>
+
             {% else %}
-                <p><strong>Email:</strong> {{ prestador.email }}</p>
+
+                <p><strong>Contato:</strong> {{ prestador.contato }}</p>
             {% endif %}
         </div>
-
+        
         <!-- Informações do Serviço -->
         <div class="service-info container">
             <h2>Serviço Oferecido</h2>
             {% if is_owner %}
-                <form action="/editar_prestador" method="POST" enctype="multipart/form-data">
-                    <label for="service_type">Tipo de Serviço:</label>
-                    <input type="text" name="service_type" value="{{ prestador.service_type }}">
-                    
-                    <label for="descricao">Descrição:</label>
-                    <textarea name="descricao">{{ prestador.descricao }}</textarea>
-                    
-                    <label for="orcamento">Orçamento:</label>
-                    <input type="number" name="orcamento" value="{{ prestador.orcamento }}">
-                    
-                    <label for="urgencia">Urgência:</label>
-                    <input type="text" name="urgencia" value="{{ prestador.urgencia }}">
-
-                    <div class="location-info container">
-                        <h2>Localização</h2>
-                        <label for="localizacao">CEP:</label>
-                        <input type="text" name="localizacao" value="{{ prestador.localizacao }}">
-                        
-                        <label for="rua">Rua:</label>
-                        <input type="text" name="rua" value="{{ prestador.rua }}">
-                        
-                        <label for="bairro">Bairro:</label>
-                        <input type="text" name="bairro" value="{{ prestador.bairro }}">
-                        
-                        <label for="cidade">Cidade:</label>
-                        <input type="text" name="cidade" value="{{ prestador.cidade }}">
-                        
-                        <label for="estado">Estado:</label>
-                        <input type="text" name="estado" value="{{ prestador.estado }}">
-                    </div>
-
-                    <!-- Preferências de Contato -->
-                    <div class="contact-info container">
-                        <h2>Contato</h2>
-                        <label for="metodo_contato">Método de Contato:</label>
-                        <input type="text" name="metodo_contato" value="{{ prestador.metodo_contato }}">
-                        
-                        <label for="data_contato">Data Preferida para Contato:</label>
-                        <input type="date" name="data_contato" value="{{ prestador.data_contato }}">
-                    </div>
-                    
-                </form>
+                <label for="service_type">Tipo de Serviço:</label>
+                <input type="text" name="service_type" value="{{ prestador.service_type }}">
+        
+                <label for="descricao">Descrição:</label>
+                <textarea name="descricao">{{ prestador.descricao }}</textarea>
+        
+                <label for="orcamento">Orçamento:</label>
+                <input type="number" name="orcamento" value="{{ prestador.orcamento }}">
+        
+                <label for="urgencia">Urgência:</label>
+                <input type="text" name="urgencia" value="{{ prestador.urgencia }}">
             {% else %}
                 <p><strong>Tipo de Serviço:</strong> {{ prestador.service_type }}</p>
                 <p><strong>Descrição:</strong> {{ prestador.descricao }}</p>
@@ -83,92 +78,75 @@
                 <p><strong>Urgência:</strong> {{ prestador.urgencia }}</p>
             {% endif %}
         </div>
-
+        
         <!-- Localização -->
-        <!-- Localização -->
-        {% if not is_owner %}
         <div class="location-info container">
             <h2>Localização</h2>
+            {% if is_owner %}
+            <label for="localizacao">CEP:</label>
+            <input type="text" id="location" name="localizacao" value="{{ prestador.localizacao }}">
+        
+            <label for="rua">Rua:</label>
+            <input type="text" id="street" name="rua" value="{{ prestador.rua }}">
+        
+            <label for="bairro">Bairro:</label>
+            <input type="text" id="neighborhood" name="bairro" value="{{ prestador.bairro }}">
+        
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="city" name="cidade" value="{{ prestador.cidade }}">
+        
+            <label for="estado">Estado:</label>
+            <input type="text" id="state" name="estado" value="{{ prestador.estado }}">
+        
+            <!-- Exibe mensagens de erro ou sucesso
+            <div id="response" style="color: red;"></div> -->
+        {% else %}
             <p><strong>CEP:</strong> {{ prestador.localizacao }}</p>
             <p><strong>Rua:</strong> {{ prestador.rua }}</p>
             <p><strong>Bairro:</strong> {{ prestador.bairro }}</p>
             <p><strong>Cidade:</strong> {{ prestador.cidade }}</p>
             <p><strong>Estado:</strong> {{ prestador.estado }}</p>
-        </div>
         {% endif %}
-
-        <!-- Preferências de Contato -->
-        {% if not is_owner %}
+        
+        </div>
+        
+        <!-- Contato -->
         <div class="contact-info container">
             <h2>Contato</h2>
+            {% if is_owner %}
+            <select id="contactMethod" name="metodo_contato" required>
+                <option value="">Selecione a forma de contato</option>
+                <option value="email" {% if prestador.metodo_contato == 'email' %}selected{% endif %}>Email</option>
+                <option value="telefone" {% if prestador.metodo_contato == 'telefone' %}selected{% endif %}>Telefone</option>
+                <option value="whatsapp" {% if prestador.metodo_contato == 'whatsapp' %}selected{% endif %}>WhatsApp</option>
+            </select>
+                <label for="data_contato">Data Preferida para Contato:</label>
+                <input type="date" name="data_contato" value="{{ prestador.data_contato }}">
+            {% else %}
             <p><strong>Método de Contato:</strong> {{ prestador.metodo_contato }}</p>
-            <p><strong>Data Preferida para Contato:</strong> {{ prestador.data_contato }}</p>
+                <p><strong>Data Preferida para Contato:</strong> {{ prestador.data_contato }}</p>
+            {% endif %}
         </div>
-        {% endif %}
-
-
-        <!-- Avaliações -->
-<!-- Avaliações -->
-<div class="comments-and-rating container">
-    <h2>Avaliação</h2>
-    <p><strong>Nota Média:</strong> {{ prestador.nota }}</p>
-
-    {% if prestador.feedbacks|length == 0 %}
-        <div class="no-feedback">
-            <p>Nenhuma avaliação disponível para este prestador.</p>
-        </div>
-    {% else %}
-        <!-- Exibir os feedbacks -->
-        {% for feedback in prestador.feedbacks[:2] %}
-        <div class="feedback-item">
-            <p><strong>Cliente:</strong> {{ feedback.nome_cliente }}</p>
-            <p><strong>Comentário:</strong> {{ feedback.comentario }}</p>
-            <p><strong>Nota:</strong> {{ feedback.nota }}</p>
-        </div>
-        {% endfor %}
-
-        <!-- Verificar se há mais de 2 avaliações para mostrar o botão "Ler mais" -->
-        {% if prestador.feedbacks|length > 2 %}
-        <button id="open-modal-btn">Ler mais</button>
-        {% endif %}
-    {% endif %}
-</div>
-
-<!-- Modal para exibir os comentários completos -->
-<div id="modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <div id="modal-feedbacks">
-            <!-- Comentários completos serão carregados aqui via JavaScript -->
-        </div>
-    </div>
-</div>
-
+        
 
         <!-- Mídias Carregadas -->
         <div class="media-section container">
             <h2>Documentos e Vídeos</h2>
-
             <div class="gallery">
                 <h3>Imagens Carregadas:</h3>
                 <div id="preview" class="gallery-container">
-                    <!-- As imagens existentes já carregadas -->
                     {% for image_id in images %}
                         <div class="gallery-item">
-                            <!-- Se for o dono do perfil, adicionar a funcionalidade de remoção de imagem -->
-                            <img src="/uploads/img/{{ image_id }}" alt="Imagem do documento" 
-                                class="{% if is_owner %}thumbnail{% else %}gallery-item img{% endif %}">
+                            <img src="/uploads/img/{{ image_id }}" alt="Imagem do documento" class="{% if is_owner %}thumbnail{% else %}gallery-item img{% endif %}">
                             {% if is_owner %}
-                            <button class="remove-image" data-image-id="{{ image_id }}">&times;</button>
+                                <button class="remove-image" data-image-id="{{ image_id }}">&times;</button>
                             {% endif %}
                         </div>
                     {% endfor %}
                 </div>
 
-                <!-- Mostrar campo de upload de imagem apenas se o dono do perfil estiver visualizando -->
                 {% if is_owner %}
                 <input type="file" id="documents" name="documents" multiple accept="image/*">
-                <!-- Mensagem de limite de upload de arquivos -->
                 <p id="response" class="upload-limit-message"></p>
                 {% endif %}
             </div>
@@ -179,41 +157,37 @@
                     {% for video_id in videos %}
                         <video controls class="{% if is_owner %}thumbnail{% else %}video-section video{% endif %}">
                             <source src="/uploads/video/{{ video_id }}" type="video/mp4">
-                            Seu navegador não suporta a exibição de vídeos.
                         </video>
                         {% if is_owner %}
-                        <button class="remove-video" data-video-id="{{ video_id }}">&times;</button>
+                            <button class="remove-video" data-video-id="{{ video_id }}">&times;</button>
                         {% endif %}
                     {% endfor %}
                 </div>
 
-                <!-- Mostrar campo de upload de vídeo apenas se o dono do perfil estiver visualizando -->
                 {% if is_owner %}
                 <input type="file" id="video" name="video" accept="video/mp4">
                 {% endif %}
             </div>
         </div>
 
-        <!-- Mostrar campo de upload de vídeo apenas se o dono do perfil estiver visualizando -->
-        {% if is_owner %}
-        <input type="file" id="video" name="video" accept="video/mp4">
-        {% endif %}
-    </div>
-
-        <!-- Botão para o prestador (Salvar Alterações) ou visitante (Solicitar Serviço) -->
+        <!-- Botão para salvar as alterações -->
+        <!-- Botão para salvar as alterações -->
         <div class="action-buttons">
             {% if is_owner %}
                 <button type="submit" class="btn-save">Salvar Alterações</button>
+                <div id="response-message" class="response-message"></div>
             {% else %}
                 <button class="solicitar-servico-btn">Solicitar Serviço</button>
             {% endif %}
         </div>
-</div>
-    <script src="{{ url_for('static', filename='js/prefil_prestador.js') }}"></script>
-{% if is_owner %}
+        
+            <!-- Adicionando uma div para exibir as mensagens de sucesso ou erro -->
+    </div>
+    {% if is_owner %}
     <script src="{{ url_for('static', filename='js/perfil_prestador_atualizar.js') }}"></script>
-{% endif %}
-
+    {% endif %}
+</form>
+        <script src="{{ url_for('static', filename='js/prefil_prestador.js') }}"></script>
     <script>
         // Defina uma variável global no HTML com o valor de 'is_owner'
         var isOwner = {{ is_owner | tojson }};
