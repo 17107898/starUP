@@ -9,6 +9,29 @@
 <body>
     <form id="uploadForm" action="/editar_prestador" method="POST" enctype="multipart/form-data">
         <div class="profile-container">
+            {% if is_owner %}
+            <!-- Adicione o ícone de notificação na barra de navegação ou no topo -->
+            <div class="notification-container center-notification">
+                <span class="notification-icon" onclick="abrirSolicitacoes()">
+                    🔔
+                    <span class="notification-count" id="notificationCount">0</span> <!-- Contador de notificações -->
+                </span>
+            </div>
+        
+            <!-- Popup de notificações -->
+            <div id="popupSolicitacoes" class="popup-solicitacao" style="display: none;">
+                <div class="popup-content-solicitacao">
+                    <span class="popup-close" onclick="fecharSolicitacoes()">&times;</span>
+                    <h3>Solicitações de Serviço</h3>
+                    <ul id="solicitacoesList">
+                        <!-- As solicitações serão carregadas aqui -->
+                    </ul>
+                </div>
+            </div>            
+        {% endif %}
+        
+            
+
         <!-- Foto de Perfil -->
         <div class="profile-header">
             <div class="profile-photo" style="background-image: url('/uploads/img/{{ perfil_foto }}');"></div>
@@ -55,13 +78,28 @@
                 <p><strong>Contato:</strong> {{ prestador.contato }}</p>
             {% endif %}
         </div>
-        
         <!-- Informações do Serviço -->
         <div class="service-info container">
             <h2>Serviço Oferecido</h2>
             {% if is_owner %}
-                <label for="service_type">Tipo de Serviço:</label>
-                <input type="text" name="service_type" value="{{ prestador.service_type }}">
+            <label for="service">Tipo de Serviço:</label>
+            <select id="service" name="service_type" required>
+                <option value="">Selecione o serviço</option>
+                <option value="desenvolvimento_software" {% if prestador.service_type == 'desenvolvimento_software' %}selected{% endif %}>Desenvolvimento de Software</option>
+                <option value="infraestrutura_ti" {% if prestador.service_type == 'infraestrutura_ti' %}selected{% endif %}>Infraestrutura de TI</option>
+                <option value="seguranca_cibernetica" {% if prestador.service_type == 'seguranca_cibernetica' %}selected{% endif %}>Segurança Cibernética</option>
+                <option value="inteligencia_artificial" {% if prestador.service_type == 'inteligencia_artificial' %}selected{% endif %}>Inteligência Artificial</option>
+                <option value="cloud_computing" {% if prestador.service_type == 'cloud_computing' %}selected{% endif %}>Computação em Nuvem</option>
+                <option value="data_science" {% if prestador.service_type == 'data_science' %}selected{% endif %}>Ciência de Dados</option>
+                <option value="desenvolvimento_web" {% if prestador.service_type == 'desenvolvimento_web' %}selected{% endif %}>Desenvolvimento Web</option>
+                <option value="desenvolvimento_mobile" {% if prestador.service_type == 'desenvolvimento_mobile' %}selected{% endif %}>Desenvolvimento Mobile</option>
+                <option value="iot" {% if prestador.service_type == 'iot' %}selected{% endif %}>Internet das Coisas (IoT)</option>
+                <option value="suporte_tecnico" {% if prestador.service_type == 'suporte_tecnico' %}selected{% endif %}>Suporte Técnico</option>
+                <option value="automacao_industrial" {% if prestador.service_type == 'automacao_industrial' %}selected{% endif %}>Automação Industrial</option>
+                <option value="devops" {% if prestador.service_type == 'devops' %}selected{% endif %}>DevOps</option>
+                <option value="analise_de_dados" {% if prestador.service_type == 'analise_de_dados' %}selected{% endif %}>Análise de Dados</option>
+            </select>
+            
         
                 <label for="descricao">Descrição:</label>
                 <textarea name="descricao">{{ prestador.descricao }}</textarea>
@@ -69,14 +107,95 @@
                 <label for="orcamento">Orçamento:</label>
                 <input type="number" name="orcamento" value="{{ prestador.orcamento }}">
         
-                <label for="urgencia">Urgência:</label>
-                <input type="text" name="urgencia" value="{{ prestador.urgencia }}">
+                <label for="urgency">Urgência:</label>
+                <select id="urgency" name="urgencia" required>
+                    <option value="">Selecione a urgência</option>
+                    <option value="urgente" {% if prestador.urgencia == 'urgente' %}selected{% endif %}>Urgente</option>
+                    <option value="semana" {% if prestador.urgencia == 'semana' %}selected{% endif %}>Dentro de uma semana</option>
+                    <option value="mes" {% if prestador.urgencia == 'mes' %}selected{% endif %}>Dentro de um mês</option>
+                    <option value="sem_prazo" {% if prestador.urgencia == 'sem_prazo' %}selected{% endif %}>Sem prazo específico</option>
+                </select>
+                <br>
+                
+                
             {% else %}
-                <p><strong>Tipo de Serviço:</strong> {{ prestador.service_type }}</p>
+                <p><strong>Tipo de Serviço:</strong> 
+                    {% if prestador.service_type == 'desenvolvimento_software' %}
+                        Desenvolvimento de Software
+                    {% elif prestador.service_type == 'infraestrutura_ti' %}
+                        Infraestrutura de TI
+                    {% elif prestador.service_type == 'seguranca_cibernetica' %}
+                        Segurança Cibernética
+                    {% elif prestador.service_type == 'inteligencia_artificial' %}
+                        Inteligência Artificial
+                    {% elif prestador.service_type == 'cloud_computing' %}
+                        Computação em Nuvem
+                    {% elif prestador.service_type == 'data_science' %}
+                        Ciência de Dados
+                    {% elif prestador.service_type == 'desenvolvimento_web' %}
+                        Desenvolvimento Web
+                    {% elif prestador.service_type == 'desenvolvimento_mobile' %}
+                        Desenvolvimento Mobile
+                    {% elif prestador.service_type == 'iot' %}
+                        Internet das Coisas (IoT)
+                    {% elif prestador.service_type == 'suporte_tecnico' %}
+                        Suporte Técnico
+                    {% elif prestador.service_type == 'automacao_industrial' %}
+                        Automação Industrial
+                    {% elif prestador.service_type == 'devops' %}
+                        DevOps
+                    {% elif prestador.service_type == 'analise_de_dados' %}
+                        Análise de Dados
+                    {% else %}
+                        Serviço não especificado
+                    {% endif %}
+                </p>
+                
                 <p><strong>Descrição:</strong> {{ prestador.descricao }}</p>
                 <p><strong>Orçamento:</strong> {{ prestador.orcamento }}</p>
-                <p><strong>Urgência:</strong> {{ prestador.urgencia }}</p>
+                <p><strong>Urgência:</strong> 
+                    {% if prestador.urgencia == 'urgente' %}
+                        Urgente
+                    {% elif prestador.urgencia == 'semana' %}
+                        Dentro de uma semana
+                    {% elif prestador.urgencia == 'mes' %}
+                        Dentro de um mês
+                    {% elif prestador.urgencia == 'sem_prazo' %}
+                        Sem prazo específico
+                    {% else %}
+                        Não especificada
+                    {% endif %}
+                </p>
+                
             {% endif %}
+        </div>
+        <div class="comments-and-rating container">
+            <h2>Avaliação</h2>
+            <p><strong>Nota Média:</strong> {{ prestador.nota }}</p>
+            {% if prestador.feedbacks|length == 0 %}
+                <div class="no-feedback">
+                    <p>Nenhuma avaliação disponível para este prestador.</p>
+                </div>
+            {% else %}
+                {% for feedback in prestador.feedbacks[:2] %}
+                <div class="feedback-item">
+                    <p><strong>Cliente:</strong> {{ feedback.nome_cliente }}</p>
+                    <p><strong>Comentário:</strong> {{ feedback.comentario }}</p>
+                    <p><strong>Nota:</strong> {{ feedback.nota }}</p>
+                </div>
+                {% endfor %}
+                {% if prestador.feedbacks|length > 2 %}
+                <button id="open-modal-btn">Ler mais</button>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+        <!-- Modal -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="modal-feedbacks"></div>
+            </div>
         </div>
         
         <!-- Localização -->
@@ -107,8 +226,58 @@
             <p><strong>Cidade:</strong> {{ prestador.cidade }}</p>
             <p><strong>Estado:</strong> {{ prestador.estado }}</p>
         {% endif %}
-        
         </div>
+        <div class="certificados container-cert">
+            <h2>Certificados</h2>
+        
+            <div id="certificados-list">
+                <!-- Lista de certificados carregados -->
+                {% if certificados %}
+                    {% for certificado_id, certificado_nome in certificados %}
+                        <div class="certificado-item">
+                            <div class="certificado-content">
+                                {% if certificado_nome.endswith('.png') or certificado_nome.endswith('.jpg') or certificado_nome.endswith('.jpeg') or certificado_nome.endswith('.webp') %}
+                                    <!-- Exibir a imagem do certificado e permitir abrir em popup -->
+                                    <img src="/uploads/certificado/{{ certificado_id }}" alt="{{ certificado_nome }}" style="max-width: 200px; max-height: 200px;" onclick="abrirPopup('/uploads/certificado/{{ certificado_id }}')">
+                                {% elif certificado_nome.endswith('.pdf') %}
+                                    <!-- Link para download de arquivos PDF -->
+                                    <a href="/uploads/certificado/{{ certificado_id }}" target="_blank">{{ certificado_nome }}</a>
+                                {% else %}
+                                    <p>{{ certificado_nome }}</p> <!-- Caso o arquivo tenha outro formato, apenas mostre o nome -->
+                                {% endif %}
+                            </div>
+        
+                            <!-- Ícone de remover no lado superior esquerdo -->
+                            <!-- Ícone de remover no lado superior esquerdo -->
+                            {% if is_owner %}
+                                <button class="btn-remove" onclick="removerCertificado('{{ certificado_id }}', '{{ certificado_nome }}')" aria-label="Remover">
+                                    <span class="remove-icon">&times;</span>
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Nenhum certificado carregado.</p>
+                {% endif %}
+            </div>
+        
+            {% if is_owner %}
+            <h3>Adicionar Certificado:</h3>
+            <form id="uploadCertificadoForm" enctype="multipart/form-data">
+                <label for="certificados">Carregar Certificados (PDF ou Imagem):</label>
+                <input type="file" id="certificados" name="certificados" multiple accept="application/pdf,image/*">
+            </form>
+            {% endif %}
+        </div>
+        
+        <!-- Estrutura do Popup -->
+        <div id="popupCertificado" class="popup">
+            <div class="popup-content">
+                <span class="popup-close" onclick="fecharPopup()">&times;</span>
+                <img id="popupImg" src="" alt="Certificado" style="max-width: 100%; max-height: 100%;">
+            </div>
+        </div>
+        
         
         <!-- Contato -->
         <div class="contact-info container">
@@ -177,22 +346,113 @@
                 <button type="submit" class="btn-save">Salvar Alterações</button>
                 <div id="response-message" class="response-message"></div>
             {% else %}
-                <button class="solicitar-servico-btn">Solicitar Serviço</button>
             {% endif %}
         </div>
-        
-            <!-- Adicionando uma div para exibir as mensagens de sucesso ou erro -->
     </div>
     {% if is_owner %}
     <script src="{{ url_for('static', filename='js/perfil_prestador_atualizar.js') }}"></script>
     {% endif %}
 </form>
+<!-- Coloque o botão de "Solicitar Serviço" fora do formulário de edição -->
+<div class="action-buttons">
+    {% if not is_owner %}
+        <!-- Botão de confirmação de solicitação -->
+        <button class="solicitar-servico-btn" onclick="abrirPopupSolicitacao()">Solicitar Serviço</button>
+    {% endif %}
+</div>
+
+<!-- Popup de confirmação de solicitação -->
+<div id="popupSolicitacao" class="popup">
+    <div class="popup-content-solicitacao">
+        <span class="popup-close" onclick="fecharPopupSolicitacao()">&times;</span>
+        <h3>Confirmar Solicitação de Serviço</h3>
+
+        <div class="solicitacao-details">
+            <!-- Tipo de Serviço (não editável) -->
+            <p><strong>Tipo de Serviço:</strong> 
+                <span id="tipoServico">{{ prestador.service_type }}</span>
+            </p>
+
+            <!-- Descrição (não editável) -->
+            <p><strong>Descrição:</strong> 
+                <span id="descricaoServico">{{ prestador.descricao }}</span>
+            </p>
+
+            <!-- Orçamento Editável -->
+            <p><strong>Orçamento:</strong> 
+                <input type="number" id="orcamentoServico" class="editable-field" value="{{ prestador.orcamento }}">
+            </p>
+
+            <!-- Urgência Editável -->
+            <p><strong>Urgência:</strong> 
+                <select id="urgenciaServico" class="editable-field">
+                    <option value="urgente">Urgente</option>
+                    <option value="semana">Dentro de uma semana</option>
+                    <option value="mes">Dentro de um mês</option>
+                    <option value="sem_prazo">Sem prazo específico</option>
+                </select>
+            </p>
+
+            <!-- Localização (não editável) -->
+            <p><strong>Localização:</strong> <span id="localizacaoServico">{{ prestador.localizacao }}</span></p>
+            <p><strong>Rua:</strong> <span id="ruaServico">{{ prestador.rua }}</span></p>
+            <p><strong>Bairro:</strong> <span id="bairroServico">{{ prestador.bairro }}</span></p>
+            <p><strong>Cidade:</strong> <span id="cidadeServico">{{ prestador.cidade }}</span></p>
+            <p><strong>Estado:</strong> <span id="estadoServico">{{ prestador.estado }}</span></p>
+
+            <!-- Método de Contato (não editável) -->
+            <p><strong>Método de Contato:</strong> <span id="metodoContatoServico">{{ prestador.metodo_contato }}</span></p>
+
+            <!-- Data de Contato Editável -->
+            <p><strong>Data de Contato:</strong> 
+                <input type="date" id="dataContatoServico" class="editable-field" value="{{ prestador.data_contato }}">
+            </p>
+
+            <!-- Hora de Contato Editável -->
+            <p><strong>Hora de Contato:</strong> 
+                <input type="time" id="horaContatoServico" class="editable-field">
+            </p>
+
+            <!-- Botão para mostrar a área de mensagem -->
+            <p><span class="icon" onclick="toggleMensagem()"> 📝 Adicionar mensagem </span></p>
+
+            <!-- Área de mensagem escondida inicialmente -->
+            <div id="mensagemContainer" style="display: none;">
+                <p><strong>Mensagem ao prestador:</strong></p>
+                <textarea id="mensagemCliente" class="editable-field" placeholder="Escreva sua mensagem..."></textarea>
+            </div>
+        </div>
+
+        <!-- Botão de confirmação -->
+        <button class="confirmar-servico-btn" onclick="confirmarSolicitacao()">Confirmar Solicitação</button>
+    </div>
+</div>
+
+
         <script src="{{ url_for('static', filename='js/prefil_prestador.js') }}"></script>
     <script>
         // Defina uma variável global no HTML com o valor de 'is_owner'
         var isOwner = {{ is_owner | tojson }};
         // Os dados de feedback já estão disponíveis no lado do servidor, você pode renderizá-los no JavaScript como um array JSON
         var feedbacks = {{ prestador.feedbacks | tojson }};
+        // Defina uma variável global no HTML com o valor dos dados do prestador
+    // Agora você pode capturar o 'prestador_id' diretamente
+    const prestador = {
+        prestador_id: "{{ prestador_id }}",  // O prestador_id vem diretamente da URL
+        service_type: "{{ prestador.service_type }}",
+        descricao: "{{ prestador.descricao }}",
+        orcamento: "{{ prestador.orcamento }}",
+        urgencia: "{{ prestador.urgencia }}",
+        localizacao: "{{ prestador.localizacao }}",
+        rua: "{{ prestador.rua }}",
+        bairro: "{{ prestador.bairro }}",
+        cidade: "{{ prestador.cidade }}",
+        estado: "{{ prestador.estado }}",
+        metodo_contato: "{{ prestador.metodo_contato }}",
+        data_contato: "{{ prestador.data_contato }}"
+    };
+
+    console.log("ID do Prestador:", prestador.prestador_id);  // Verifique no console do navegador se o ID aparece corretamente
     </script>
 </body>
 </html>

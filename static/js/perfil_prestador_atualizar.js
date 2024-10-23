@@ -466,6 +466,31 @@ document.getElementById('location').addEventListener('input', function () {
 });
 
 
+// Função para remover o certificado
+function removerCertificado(certificadoNome) {
+    fetch('/api/remover_certificado', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ certificado_nome: certificadoNome })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro ao remover certificado');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.message);
+        // Atualizar a página ou remover o certificado da UI
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao remover o certificado.');
+    });
+}
 
 // Evento de submissão do formulário
 document.getElementById('uploadForm').addEventListener('submit', function (event) {
@@ -475,6 +500,7 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
     const perfilFoto = document.getElementById('perfil_foto').files[0];
     const documents = document.getElementById('documents').files;
     const video = document.getElementById('video').files[0];
+    const certificados = document.getElementById('certificados').files;  // Certificados
 
     // Adicionar a foto de perfil ao FormData
     if (perfilFoto) {
@@ -489,6 +515,11 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
     // Adicionar o vídeo ao FormData
     if (video) {
         formData.append('video', video);
+    }
+
+    // Adicionar os certificados ao FormData
+    for (let i = 0; i < certificados.length; i++) {
+        formData.append('certificados', certificados[i]);
     }
 
     // Fazer o upload via fetch
@@ -509,6 +540,143 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
         responseMessage.classList.add('error');  // Adiciona a classe de erro para estilizar a mensagem
     });
 });
+
+// Função para remover certificado
+function removerCertificado(certificadoId, certificadoNome) {
+    const confirmacao = confirm('Tem certeza que deseja remover este certificado?');
+    if (!confirmacao) {
+        return;  // Se o usuário cancelar, não faz nada
+    }
+
+    // Faz a requisição POST para remover o certificado
+    fetch('/api/remover_certificado', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            certificado_id: certificadoId,
+            certificado_nome: certificadoNome,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert(data.message);
+            // Atualizar a página ou remover o certificado da UI
+            location.reload();  // Atualiza a página para refletir a remoção
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao remover o certificado:', error);
+        alert('Ocorreu um erro ao remover o certificado.');
+    });
+}
+
+// Função para abrir o popup de solicitações
+function abrirSolicitacoes() {
+    // Fazer uma requisição para obter as solicitações
+    fetch('/api/solicitacoes')
+        .then(response => response.json())
+        .then(data => {
+            if (data.solicitacoes) {
+                carregarSolicitacoes(data.solicitacoes);  // Carregar as solicitações no popup
+                atualizarContadorSolicitacoes(data.solicitacoes.filter(s => !s.lido).length);  // Atualizar o contador com solicitações não lidas
+            } else {
+                console.error('Erro ao carregar as solicitações:', data.error);
+            }
+        })
+        .catch(error => console.error('Erro na requisição:', error));
+
+    document.getElementById("popupSolicitacoes").style.display = "block";
+}
+
+// Função para fechar o popup de solicitações
+function fecharSolicitacoes() {
+    document.getElementById("popupSolicitacoes").style.display = "none";
+}
+
+// Função para atualizar o contador de notificações
+function atualizarContadorSolicitacoes(count) {
+    const notificationCountElement = document.getElementById('notificationCount');
+    notificationCountElement.textContent = count;
+
+    // Atualiza a visibilidade do ícone de notificação
+    if (count > 0) {
+        notificationCountElement.style.display = 'inline-block';
+        document.querySelector('.notification-icon').style.backgroundColor = 'red';
+    } else {
+        notificationCountElement.style.display = 'none';
+        document.querySelector('.notification-icon').style.backgroundColor = 'transparent';
+    }
+}
+
+function carregarSolicitacoes(solicitacoes) {
+    const lista = document.getElementById('solicitacoesList');
+    lista.innerHTML = '';  // Limpar a lista antes de adicionar novos itens
+
+    solicitacoes.forEach(solicitacao => {
+        const li = document.createElement('li');
+
+        // Informações principais da solicitação
+        li.innerHTML = `
+            Solicitação de ${solicitacao.nome_cliente}: ${solicitacao.mensagem}
+            <button onclick="toggleDetalhes(${solicitacao.id})">Ver Mais</button>
+            <div id="detalhes-${solicitacao.id}" style="display:none; margin-top:10px;">
+                <p><strong>Orçamento:</strong> ${solicitacao.orcamento}</p>
+                <p><strong>Urgência:</strong> ${solicitacao.urgencia}</p>
+                <p><strong>Data de Contato:</strong> ${solicitacao.data_contato}</p>
+                <p><strong>Hora de Contato:</strong> ${solicitacao.hora_contato}</p>
+                <p><strong>Contato Cliente:</strong> ${solicitacao.contato_cliente}</p>
+            </div>
+        `;
+
+        lista.appendChild(li);
+    });
+}
+
+// Função para exibir/esconder os detalhes de uma solicitação e marcar como lida
+function toggleDetalhes(solicitacaoId) {
+    const detalhes = document.getElementById(`detalhes-${solicitacaoId}`);
+    if (detalhes.style.display === "none") {
+        detalhes.style.display = "block";
+
+        // Marcar a solicitação como lida
+        fetch(`/api/marcar_lido/${solicitacaoId}`, {
+            method: 'POST'
+        }).then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                console.log('Solicitação marcada como lida.');
+            } else {
+                console.error('Erro ao marcar a solicitação como lida:', data.error);
+            }
+        })
+        .catch(error => console.error('Erro na requisição:', error));
+    } else {
+        detalhes.style.display = "none";
+    }
+}
+
+
+// Função para verificar novas solicitações a cada intervalo de tempo
+function verificarNovasSolicitacoes() {
+    fetch('/api/verificar_solicitacoes')  // Rota para retornar o número de novas solicitações
+        .then(response => response.json())
+        .then(data => {
+            const count = data.count;  // data.count contém o número de novas solicitações
+            atualizarContadorSolicitacoes(count);
+        })
+        .catch(error => {
+            console.error('Erro ao verificar novas solicitações:', error);
+        });
+}
+
+// Chamar a função para verificar solicitações a cada 10 segundos
+setInterval(verificarNovasSolicitacoes, 10000);  // 10 segundos
+
+// Inicializar a contagem de solicitações ao carregar a página
+verificarNovasSolicitacoes();
 
 
 

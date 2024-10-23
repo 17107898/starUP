@@ -16,7 +16,9 @@
         <label for="serviceType">Tipo de Serviço Selecionado:</label>
         <input type="text" id="serviceType" name="serviceType" value="{{ service_type_legivel }}" required>
         <br>
-    
+        <label for="certificado">Carregar Certificado (opcional):</label>
+        <input type="file" id="certificado" name="certificado" accept="application/pdf,image/*">
+        <br>
         <label for="description">Descrição Detalhada:</label>
         <textarea id="description" name="description" required></textarea>
         <br>
@@ -26,7 +28,13 @@
         <br>
     
         <label for="urgency">Prazo/Urgência:</label>
-        <input type="text" id="urgency" name="urgency" required>
+        <select id="urgency" name="urgency" required>
+            <option value="">Selecione a urgência</option>
+            <option value="urgente">Urgente</option>
+            <option value="semana">Dentro de uma semana</option>
+            <option value="mes">Dentro de um mês</option>
+            <option value="sem_prazo">Sem prazo específico</option>
+        </select>
         <br>
     
         <label for="location">CEP (se aplicável):</label>

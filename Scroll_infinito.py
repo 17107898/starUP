@@ -4,8 +4,13 @@ from dotenv import load_dotenv
 from io import BytesIO  # Para servir dados binários
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, make_response, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from datetime import datetime, date, time
+import secrets
+from itsdangerous import URLSafeTimedSerializer
+import smtplib
 app = Flask(__name__)
+
+
 
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -188,12 +193,9 @@ def carrossel():
         state=state, 
         urgency=urgency
     )
-# Rota para fornecer serviços paginados (scroll infinito)
+# Rota para fornecer serviços sem paginação
 @app.route('/get_services', methods=['GET'])
 def get_services():
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 5))
-    
     # Obter filtros da URL
     service_type = request.args.get('serviceType')
     cep = request.args.get('cep')  # Novo parâmetro
@@ -205,30 +207,18 @@ def get_services():
 
     # Log para verificar os filtros recebidos
     print(f"Rota /get_services - Filtros recebidos: serviceType={service_type}, cep={cep}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}")
-    print(f"Paginação - Página: {page}, Serviços por página: {per_page}")
 
     # Buscar serviços filtrados com base nas preferências do cliente
     all_services = get_services_from_db(service_type, cep, street, neighborhood, city, state, urgency)
     
-    # Log para verificar quantos serviços foram encontrados antes da paginação
-    print(f"Total de serviços encontrados (antes da paginação): {len(all_services)}")
-    
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_services = all_services[start:end]
+    # Log para verificar quantos serviços foram encontrados
+    print(f"Total de serviços encontrados: {len(all_services)}")
 
-    # Log para verificar quantos serviços foram paginados
-    print(f"Total de serviços retornados na página atual: {len(paginated_services)}")
-
-    has_more = end < len(all_services)
-
-    # Log para verificar se há mais serviços para carregar
-    print(f"Mais serviços a carregar? {'Sim' if has_more else 'Não'}")
-
+    # Retornar todos os serviços de uma vez
     return jsonify({
-        "services": paginated_services,
-        "has_more": has_more
+        "services": all_services
     })
+
 @app.route('/perfil_prestador', methods=['GET'])
 def perfil_prestador():
     prestador_id_url = request.args.get('prestador_id')
@@ -260,7 +250,8 @@ SELECT prestadores.id AS prestador_id,
        servicos.comentarios, 
        uploads.id AS upload_id, 
        uploads.tipo_arquivo, 
-       uploads.perfil_foto
+       uploads.perfil_foto,
+       uploads.tipo_certificado
 FROM bd_servicos.prestadores
 JOIN bd_servicos.servicos 
     ON prestadores.id = servicos.prestador_id
@@ -317,11 +308,196 @@ WHERE prestadores.id = %s
     perfil_foto = next((upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
     images = [upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['upload_id'] != perfil_foto]
     videos = [upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'video']
+    # Coletar os certificados do prestador e enviar para o frontend
+    # Coletar os certificados do prestador e enviar para o frontend
+    certificados = [(upload['upload_id'], upload['tipo_certificado'].decode('utf-8') if isinstance(upload['tipo_certificado'], bytes) else upload['tipo_certificado'])
+                    for upload in prestador if upload['tipo_certificado']]
+
+    # Remover duplicatas de certificados
+    certificados_unicos = list(dict.fromkeys(certificados))  # Remove duplicatas
+
+    print(f'Certificados: {certificados_unicos}')
 
     is_owner = 'prestador_id' in session and str(session['prestador_id']) == str(prestador_id_url)
 
-    return render_template('perfil_prestador.html', prestador=prestador_dados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
+    return render_template('perfil_prestador.html', prestador_id=prestador_id_url,prestador=prestador_dados, certificados=certificados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
 
+
+
+# Mapeamento dos meses para português
+meses_portugues = {
+    1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+    7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
+}
+
+def formatar_data_brasileira(data_obj):
+    """Converte objeto datetime ou date para string formatada no estilo brasileiro (dd Mmm yyyy)"""
+    if isinstance(data_obj, (datetime, date)):
+        dia = data_obj.day
+        mes = meses_portugues[data_obj.month]
+        ano = data_obj.year
+        return f'{dia} {mes} {ano}'
+    return str(data_obj)
+
+
+def timedelta_to_string(time_obj):
+    """Converte objeto time ou timedelta para string formatada (HH:MM)"""
+    if isinstance(time_obj, time):
+        return time_obj.strftime('%H:%M')  # Formato de horas e minutos
+    return str(time_obj)
+
+@app.route('/api/solicitacoes', methods=['GET'])
+def get_solicitacoes():
+    prestador_id = session.get('prestador_id')
+    
+    if not prestador_id:
+        return jsonify({'error': 'Prestador não autenticado'}), 401
+    
+    # Conectar ao banco de dados e buscar as solicitações
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT id, nome_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato, contato_cliente, lido 
+        FROM solicitacao 
+        WHERE prestador_id = %s
+    """, (prestador_id,))
+    solicitacoes = cursor.fetchall()
+    
+    # Formatar datas e horas
+    for solicitacao in solicitacoes:
+        if 'data_contato' in solicitacao and solicitacao['data_contato']:
+            data_contato = solicitacao['data_contato']
+            # Certifique-se de que a data está no formato datetime ou date antes de formatar
+            if isinstance(data_contato, (datetime, date)):
+                solicitacao['data_contato'] = formatar_data_brasileira(data_contato)
+        if 'hora_contato' in solicitacao and solicitacao['hora_contato']:
+            solicitacao['hora_contato'] = timedelta_to_string(solicitacao['hora_contato'])  # Converter hora para string HH:MM
+    
+    cursor.close()
+    db.close()
+    
+    return jsonify({'solicitacoes': solicitacoes})
+
+
+
+
+@app.route('/api/marcar_lido/<int:solicitacao_id>', methods=['POST'])
+def marcar_lido(solicitacao_id):
+    prestador_id = session.get('prestador_id')
+
+    if not prestador_id:
+        return jsonify({'error': 'Prestador não autenticado'}), 401
+
+    # Conectar ao banco de dados e marcar a solicitação como lida
+    db = connect_to_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE solicitacao 
+        SET lido = TRUE 
+        WHERE id = %s AND prestador_id = %s
+    """, (solicitacao_id, prestador_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({'message': 'Solicitação marcada como lida'})
+
+
+
+@app.route('/api/verificar_solicitacoes', methods=['GET'])
+def verificar_solicitacoes():
+    prestador_id = session.get('prestador_id')
+
+    if not prestador_id:
+        return jsonify({'count': 0})
+
+    # Conectar ao banco de dados e buscar o número de solicitações não lidas
+    db = connect_to_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM solicitacao 
+        WHERE prestador_id = %s AND lido = FALSE
+    """, (prestador_id,))
+    count = cursor.fetchone()[0]
+
+    cursor.close()
+    db.close()
+
+    return jsonify({'count': count})
+
+
+
+# Rota para obter certificados do banco de dados (LONGBLOB)
+@app.route('/uploads/certificado/<int:certificado_id>')
+def get_certificado_from_db(certificado_id):
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    query = "SELECT arquivo, tipo_certificado FROM bd_servicos.uploads WHERE id = %s AND tipo_arquivo = 'certificado'"
+    cursor.execute(query, (certificado_id,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    db.close()
+
+    if not result:
+        return "Certificado não encontrado", 404
+
+    certificado_data = result.get('arquivo')
+    tipo_certificado = result.get('tipo_certificado')
+
+    # Certificar-se de que tipo_certificado está em string
+    if isinstance(tipo_certificado, bytes):
+        tipo_certificado = tipo_certificado.decode('utf-8')
+
+    # Verificar se os dados foram recuperados corretamente
+    print(f'Certificado ID: {certificado_id}, Tipo: {tipo_certificado}, Tamanho do arquivo: {len(certificado_data) if certificado_data else "N/A"}')
+
+    if not certificado_data or not tipo_certificado:
+        return jsonify({'error': 'Erro ao recuperar o certificado ou tipo'}), 500
+
+    # Definir o mime type com base na extensão do arquivo
+    if tipo_certificado.endswith('.png'):
+        mime_type = 'image/png'
+    elif tipo_certificado.endswith('.jpg') or tipo_certificado.endswith('.jpeg'):
+        mime_type = 'image/jpeg'
+    elif tipo_certificado.endswith('.pdf'):
+        mime_type = 'application/pdf'
+    else:
+        mime_type = 'application/octet-stream'  # Tipo genérico para outros formatos
+
+    return send_file(BytesIO(certificado_data), mimetype=mime_type, download_name=tipo_certificado)
+
+
+@app.route('/api/remover_certificado', methods=['POST'])
+def remover_certificado():
+    prestador_id = session.get('prestador_id')  # Pegar o ID do prestador da sessão
+    certificado_id = request.json.get('certificado_id')  # Receber o ID do certificado
+    certificado_nome = request.json.get('certificado_nome')  # Receber o nome do certificado a ser removido
+
+    # Verificar se os parâmetros foram fornecidos corretamente
+    if not prestador_id or not certificado_id or not certificado_nome:
+        return jsonify({'message': 'Informações inválidas para remoção do certificado.'}), 400
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Remover o certificado com base no prestador_id e no certificado_id
+    cursor.execute("""
+        DELETE FROM bd_servicos.uploads
+        WHERE prestador_id = %s AND id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
+    """, (prestador_id, certificado_id, certificado_nome))
+
+    # Confirmar a remoção no banco de dados
+    db.commit()
+
+    cursor.close()
+    db.close()
+
+    return jsonify({'message': 'Certificado removido com sucesso.'})
 
 @app.route('/api/editar_prestador', methods=['POST'])
 def editar_prestador():
@@ -407,6 +583,32 @@ def editar_prestador():
                 VALUES (%s, %s, 'video', NOW())
             """, (prestador_id, video_binario))
 
+    # Verificar se os certificados foram enviados
+    if 'certificados' in request.files:
+        certificados = request.files.getlist('certificados')
+
+        for certificado in certificados:
+            if certificado.filename != '':
+                # Verificar se já existe um certificado com o mesmo nome para evitar duplicação
+                cursor.execute("""
+                    SELECT id FROM bd_servicos.uploads 
+                    WHERE prestador_id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
+                """, (prestador_id, certificado.filename))
+
+                duplicado = cursor.fetchone()
+
+                if duplicado:
+                    # Se já existir um certificado com o mesmo nome, pular a inserção
+                    print(f"Certificado {certificado.filename} já existe. Pulando inserção.")
+                    continue
+
+                certificado_binario = certificado.read()
+                cursor.execute("""
+                    INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
+                    VALUES (%s, %s, 'certificado', %s, NOW())
+                """, (prestador_id, certificado_binario, certificado.filename))
+
+
     # Commit das mudanças no banco de dados
     db.commit()
     cursor.close()
@@ -434,7 +636,6 @@ def get_image_from_db(upload_id):
         return send_file(BytesIO(image_data), mimetype='image/jpeg')  # Ajuste o MIME type conforme necessário (ex: image/png, image/jpg)
     else:
         return "Imagem não encontrada", 404
-
 # Rota para obter vídeos do banco de dados (LONGBLOB)
 @app.route('/uploads/video/<int:upload_id>')
 def get_video_from_db(upload_id):
@@ -454,6 +655,7 @@ def get_video_from_db(upload_id):
     else:
         return "Vídeo não encontrado", 404
     
+    
 # ------------------------------------
 # Rotas para Clientes
 # ------------------------------------
@@ -464,6 +666,7 @@ def index():
 @app.route('/cadastro_cliente', methods=['GET'])
 def cadastro_cliente():
     return render_template('cadastro_cliente.html')
+
 
 @app.route('/login', methods=['GET'])
 def login_page():
@@ -496,42 +699,150 @@ def login():
     
     result = cursor.fetchone()
 
-    if result and check_password_hash(result['senha'], senha):  # Comparando a senha correta
-        tipo_usuario = result['tipo_usuario']
-        
-        if tipo_usuario == 'prestador':
-            session['prestador_id'] = result['id']  # Armazenar ID do prestador
-            # Redirecionar com o prestador_id na URL
-            redirect_url = url_for('perfil_prestador', prestador_id=result['id'])
-            return jsonify({'redirectUrl': redirect_url})
-        
-        elif tipo_usuario == 'cliente':
-            # Pegar informações adicionais do cliente
-            cliente_id = result['id']
-            session['cliente_id'] = cliente_id  # Armazenar ID do cliente
-            cursor.execute("""
-                SELECT servicos.* 
-                FROM bd_servicos.servicos 
-                WHERE cliente_id = %s
-            """, (cliente_id,))
-            servicos = cursor.fetchall()
+    if result:
+        # Mostrar a senha armazenada no banco e a senha recebida do formulário
+        print(f"Senha armazenada (hash): {result['senha']}")
+        print(f"Senha recebida (plain): {senha}")
 
-            if servicos:
-                redirect_url = url_for('carrossel', serviceType=servicos[0]['tipo_servico'], 
-                                       cep=servicos[0]['localizacao'], 
-                                       street=servicos[0]['rua'], 
-                                       neighborhood=servicos[0]['bairro'], 
-                                       city=servicos[0]['cidade'], 
-                                       state=servicos[0]['estado'], 
-                                       urgency=servicos[0]['urgencia'])
+        # Verificar a comparação da senha criptografada
+        if check_password_hash(result['senha'], senha):
+            print("As senhas são iguais.")
+            tipo_usuario = result['tipo_usuario']
+            
+            if tipo_usuario == 'prestador':
+                session['prestador_id'] = result['id']  # Armazenar ID do prestador
+                # Redirecionar com o prestador_id na URL
+                redirect_url = url_for('perfil_prestador', prestador_id=result['id'])
                 return jsonify({'redirectUrl': redirect_url})
-            else:
-                return jsonify({'message': 'Nenhum serviço encontrado para este cliente'}), 404
-        else:
-            return jsonify({'message': 'Tipo de usuário inválido'}), 400
-    else:
-        return jsonify({'message': 'Credenciais inválidas'}), 401
 
+            elif tipo_usuario == 'cliente':
+                cliente_id = result['id']
+                session['cliente_id'] = cliente_id  # Armazenar ID do cliente
+                cursor.execute("""
+                    SELECT servicos.* 
+                    FROM bd_servicos.servicos 
+                    WHERE cliente_id = %s
+                """, (cliente_id,))
+                servicos = cursor.fetchall()
+
+                if servicos:
+                    redirect_url = url_for('carrossel', serviceType=servicos[0]['tipo_servico'], 
+                                           cep=servicos[0]['localizacao'], 
+                                           street=servicos[0]['rua'], 
+                                           neighborhood=servicos[0]['bairro'], 
+                                           city=servicos[0]['cidade'], 
+                                           state=servicos[0]['estado'], 
+                                           urgency=servicos[0]['urgencia'])
+                    return jsonify({'redirectUrl': redirect_url})
+                else:
+                    return jsonify({'message': 'Nenhum serviço encontrado para este cliente'}), 404
+            else:
+                return jsonify({'message': 'Tipo de usuário inválido'}), 400
+        else:
+            print("As senhas são diferentes.")
+            return jsonify({'message': 'Credenciais inválidas'}), 401
+    else:
+        return jsonify({'message': 'Usuário não encontrado'}), 404
+
+
+@app.route('/esqueceu_senha', methods=['GET', 'POST'])
+def esqueceu_senha():
+    if request.method == 'POST':
+        email = request.form.get('email')
+
+        # Conectar ao banco de dados
+        db = connect_to_db()
+        cursor = db.cursor(dictionary=True)
+
+        # Verificar se o email está cadastrado em clientes ou prestadores
+        cursor.execute("""
+            SELECT id, 'cliente' as tipo_usuario FROM bd_servicos.clientes WHERE email = %s
+            UNION
+            SELECT id, 'prestador' as tipo_usuario FROM bd_servicos.prestadores WHERE email = %s
+        """, (email, email))
+
+        user = cursor.fetchone()
+
+        if user:
+            # Gerar token único
+            token = secrets.token_urlsafe(16)
+
+            # Salvar o token no banco, associado ao usuário
+            if user['tipo_usuario'] == 'cliente':
+                cursor.execute("""
+                    UPDATE bd_servicos.clientes SET reset_token = %s WHERE id = %s
+                """, (token, user['id']))
+            elif user['tipo_usuario'] == 'prestador':
+                cursor.execute("""
+                    UPDATE bd_servicos.prestadores SET reset_token = %s WHERE id = %s
+                """, (token, user['id']))
+
+            db.commit()
+
+            # Enviar email com o link de redefinição
+            link = url_for('reset_senha', token=token, _external=True)
+            send_email(email, "Recuperação de senha", f"Clique no link para redefinir sua senha: {link}")
+
+            return render_template('mensagem.html', message="Um link de recuperação foi enviado para seu email.")
+        else:
+            return render_template('mensagem.html', message="Email não encontrado."), 404
+
+    return render_template('esqueceu_senha.html')
+
+import smtplib
+
+def send_email(to, subject, body):
+    print("Enviar email")
+    # Ajustar para a senha de app gerada pelo Google
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls()
+        server.login('arnaldo166.ado@gmail.com', 'zpml rkkl ldtc echd')
+        
+        # Garantir que o e-mail será enviado com codificação UTF-8
+        message = f"Subject: {subject}\n\n{body}".encode('utf-8')  # Codifica a mensagem para UTF-8
+        
+        print('Email enviado')
+        server.sendmail('arnaldo166.ado@gmail.com', to, message)
+
+
+@app.route('/reset_senha/<token>', methods=['GET', 'POST'])
+def reset_senha(token):
+    # Verificar se o token existe e é válido
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    # Verificar o token tanto em clientes quanto prestadores
+    cursor.execute("""
+        SELECT id, 'cliente' as tipo_usuario FROM bd_servicos.clientes WHERE reset_token = %s
+        UNION
+        SELECT id, 'prestador' as tipo_usuario FROM bd_servicos.prestadores WHERE reset_token = %s
+    """, (token, token))
+
+    user = cursor.fetchone()
+
+    if not user:
+        return render_template('mensagem.html', message="Token inválido ou expirado."), 400
+
+    if request.method == 'POST':
+        nova_senha = request.form.get('password')
+
+        # Atualizar a senha no banco e remover o token
+        senha_hash = generate_password_hash(nova_senha)
+
+        if user['tipo_usuario'] == 'cliente':
+            cursor.execute("""
+                UPDATE bd_servicos.clientes SET senha = %s, reset_token = NULL WHERE id = %s
+            """, (senha_hash, user['id']))
+        elif user['tipo_usuario'] == 'prestador':
+            cursor.execute("""
+                UPDATE bd_servicos.prestadores SET senha = %s, reset_token = NULL WHERE id = %s
+            """, (senha_hash, user['id']))
+
+        db.commit()
+
+        return render_template('mensagem.html', message="Senha redefinida com sucesso!")
+
+    return render_template('reset_senha.html', token=token)
 
 
 
@@ -690,6 +1001,57 @@ def api_solicitar_servico():
     # Redirecionar para a página principal com os filtros aplicados
     return redirect(url_for('carrossel', serviceType=service_type, cep=cep, street=street, neighborhood=neighborhood, city=city, state=state, urgency=urgency))
 
+# solicitar serviço
+
+@app.route('/api/solicitar_servico_confirmar', methods=['POST'])
+def solicitar_servico_confirmar():
+    # Receber os dados da solicitação via AJAX
+    prestador_id = request.form.get('prestador_id')  # Capturando o prestador_id enviado pelo frontend
+    orcamento = request.form.get('orcamento')
+    urgencia = request.form.get('urgencia')
+    data_contato = request.form.get('data_contato')
+    hora_contato = request.form.get('hora_contato')
+    mensagem = request.form.get('mensagem_cliente')
+
+    # Validar se o prestador_id foi passado
+    if not prestador_id:
+        return jsonify({'error': 'ID do prestador não fornecido'}), 400
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Obter nome e email do cliente logado (garantindo que o cliente está logado)
+    cliente_id = session.get('cliente_id')
+    if not cliente_id:
+        return jsonify({'error': 'Usuário não autenticado'}), 401
+
+    cursor.execute("""
+        SELECT nome, email 
+        FROM bd_servicos.clientes 
+        WHERE id = %s
+    """, (cliente_id,))
+    cliente_info = cursor.fetchone()
+
+    if not cliente_info:
+        return jsonify({'error': 'Cliente não encontrado'}), 404
+
+    nome_cliente = cliente_info[0]
+    contato_cliente = cliente_info[1]  # Usar o email como contato do cliente
+
+    # Inserir a solicitação no banco de dados
+    cursor.execute("""
+        INSERT INTO solicitacao 
+        (prestador_id, nome_cliente, contato_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (prestador_id, nome_cliente, contato_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({'message': 'Solicitação enviada com sucesso!'})
+
 
 # ------------------------------------
 # Rotas para Prestadores
@@ -796,7 +1158,8 @@ def prestador_servico():
 # Rota para tratar a solicitação de serviço do prestador
 @app.route('/api/cadastrar-servico', methods=['POST'])
 def api_prestador_solicitar_servico():
-    data = request.get_json()
+    # Coletar dados do formulário ao invés de JSON
+    data = request.form
 
     # Coletar o ID do prestador e os outros dados enviados
     prestador_id = data.get('prestadorId')
@@ -831,25 +1194,21 @@ def api_prestador_solicitar_servico():
         SELECT id FROM servicos WHERE prestador_id = %s AND tipo_servico = %s
     """, (prestador_id, service_type))
     
-    # Verificar se a consulta retornou algum resultado (significa que já existe esse serviço)
     duplicata = cursor.fetchone()
     
     if duplicata:
-        # Se já existir um serviço do mesmo tipo para este prestador, retornar erro
         return jsonify({
             'message': 'O prestador já possui um serviço desse tipo cadastrado.',
             'success': False
-        }), 400  # Código de erro HTTP 400 - Bad Request
+        }), 400
 
-    # Inserir os dados no banco de dados, incluindo o prestador_id e as novas informações de endereço
-    # Atualizando método de contato na tabela `prestadores`
+    # Atualizar método de contato na tabela `prestadores`
     cursor.execute("""
         UPDATE bd_servicos.prestadores
         SET contato = %s
         WHERE id = %s
     """, (contact_detail, prestador_id))
 
-    # Confirmando a transação
     db.commit()
 
     # Inserindo dados na tabela `servicos`
@@ -865,10 +1224,24 @@ def api_prestador_solicitar_servico():
 
     db.commit()
 
+    # Aqui, o upload de mídia (certificados) será manipulado.
+    if 'certificados' in request.files:
+        certificados = request.files.getlist('certificados')
+        
+        for certificado in certificados:
+            if certificado.filename != '':
+                certificado_binario = certificado.read()  # Ler conteúdo binário
+                cursor.execute("""
+                    INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
+                    VALUES (%s, %s, 'certificado', 'certificado', NOW())
+                """, (prestador_id, certificado_binario))
+
+    # Confirmar a transação final
+    db.commit()
 
     return jsonify({
         'message': 'Serviço enviado com sucesso!',
-        'redirect': url_for('upload_midia'),
+        'redirect': url_for('upload_midia'),  # Redirecionar para uma página de upload de mídia (opcional)
         'success': True
     })
 

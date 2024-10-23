@@ -6,7 +6,7 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     const password = document.getElementById('password').value;
 
     // Enviar os dados via fetch usando o método POST
-    fetch('/api/login', {
+    fetch('/api/register', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

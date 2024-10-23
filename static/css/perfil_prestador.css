@@ -26,6 +26,26 @@ body {
     margin: 20px auto; /* Centralizando os containers */
 }
 
+.container-cert {
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    height: auto; /* Começa com altura automática */
+    min-height: 221px; /* Define o tamanho mínimo para conter 2 certificados */
+    max-height: 450px; /* Tamanho máximo permitido antes de ativar o scroll */
+    overflow-y: auto; /* Ativa o scroll vertical quando necessário */
+    margin: 20px auto; /* Centralizando o container */
+}
+#certificados-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Layout 2x2 */
+    gap: 20px; /* Aumenta o espaço entre os itens */
+}
+
 .profile-header {
     text-align: center;
 }
@@ -253,6 +273,306 @@ textarea {
     height: 120px;  /* Ajusta a altura para se adequar às necessidades de texto */
     resize: vertical;  /* Permite redimensionamento apenas na vertical */
 }
+select {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+/* Estilizando o ícone de notificação */
+.notification-container {
+    position: fixed; /* Altera de absolute para fixed */
+    top: 10px;
+    right: 20px;
+    z-index: 1000; /* Garante que o ícone ficará acima de outros elementos */
+}
+
+.notification-icon {
+    font-size: 24px;
+    cursor: pointer;
+    position: relative;
+}
+
+.notification-count {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 8px;
+    font-size: 14px;
+    position: absolute;
+    top: -10px;
+    right: -10px;
+}
+
+/* Estilo para a lista de solicitações */
+#solicitacoesList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#solicitacoesList li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+/* Popup de Solicitações */
+/* Popup de Solicitações */
+.popup-solicitacao {
+    display: none;
+    position: fixed ;
+    z-index: 999 ;
+    top: 0 ;
+    left: 0 ;
+    width: 100% ;
+    height: 100% ;
+    background-color: rgba(0, 0, 0, 0.7) ; /* Escurece o fundo */
+    display: flex ; /* Habilita flexbox */
+    justify-content: center !important; /* Centraliza horizontalmente */
+    align-items: center !important; /* Centraliza verticalmente */
+}
+
+.popup-content-solicitacao {
+    background-color: #fff ;
+    padding: 20px ;
+    border-radius: 10px ;
+    max-width: 600px ; /* Define a largura máxima */
+    width: 90% ; /* Ajusta o tamanho de acordo com a tela */
+    max-height: 90% !important; /* Limita a altura */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1) ;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important; /* Garante que o conteúdo esteja centralizado */
+    position: relative !important; /* Permite o botão de fechar no topo */
+    /* margin-left: 445px; */
+}
+
+.popup-content-solicitacao h3 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-align: center;
+    width: 100%;
+}
+/* Adaptação para telas pequenas - 6,8" */
+@media (max-width: 1080px) {  /* Para telas de largura de até 1080px */
+    
+    /* Ajuste para o ícone de notificação */
+    .notification-container {
+        top: 10px; /* Mantém o ícone um pouco abaixo */
+        right: 10px; /* Ajusta a distância da borda direita */
+        z-index: 1000; /* Certifique-se de que esteja sobre outros elementos */
+    }
+    
+    /* Ajuste do botão de fechar popup */
+    .popup-close {
+        font-size: 20px; /* Reduz o tamanho do ícone de fechar */
+        top: 5px; /* Alinha um pouco mais para cima */
+        left: 10px; /* Alinha mais próximo da borda esquerda */
+        right: auto; /* Remove qualquer alinhamento à direita */
+    }
+
+    
+    /* Ajuste do popup */
+    .popup-content-solicitacao {
+        max-width: 80%; /* Diminui a largura para telas menores */
+        width: 90%; /* Ajusta o tamanho de acordo com a tela */
+        padding: 15px; /* Reduz o espaçamento interno */
+    }
+
+    /* Ajuste para evitar que o conteúdo do popup fique muito apertado */
+    .solicitacao-details {
+        grid-template-columns: 1fr; /* Alinha os itens em uma única coluna */
+        gap: 5px; /* Reduz o espaçamento entre os itens */
+    }
+    
+    /* Ajusta o tamanho do botão */
+    .confirmar-servico-btn {
+        font-size: 0.9rem; /* Ajusta o tamanho da fonte para o botão */
+        padding: 8px 15px; /* Ajusta o tamanho do botão */
+    }
+}
+
+.solicitacao-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Dois itens por linha */
+    gap: 10px;
+    width: 100%;
+}
+
+.solicitacao-details p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.popup-close {
+    position: absolute; /* Para garantir que o botão de fechar fique no topo */
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    color: #f00;
+    cursor: pointer;
+}
+
+.confirmar-servico-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
+.confirmar-servico-btn:hover {
+    background-color: #0056b3;
+}
+
+
+
+
+.popup-content-solicitacao {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 600px; /* Tamanho máximo ajustado */
+    width: 90%; /* Faz o popup ocupar 90% da tela em dispositivos menores */
+    max-height: 80%; /* Limitar a altura */
+    overflow-y: auto; /* Adicionar rolagem se o conteúdo exceder a altura */
+    display: flex; /* Garante que o conteúdo esteja bem ajustado */
+    flex-direction: column; /* Organiza o conteúdo verticalmente */
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adiciona uma sombra suave para dar destaque */
+}
+
+.popup-content-solicitacao h3 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.popup-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    color: #f00;
+    cursor: pointer;
+}
+
+#solicitacoesList {
+    list-style: none;
+    padding: 0;
+}
+
+.solicitacao-item {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.solicitacao-detalhes {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.solicitacao-detalhes p {
+    margin: 5px 0;
+}
+
+.solicitacao-item button {
+    padding: 8px 12px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px; /* Diminuindo o tamanho do botão */
+    transition: background-color 0.3s;
+}
+
+.solicitacao-item button:hover {
+    background-color: #0056b3;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    position: relative;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+.popup-close:hover {
+    color: #ff1a1a;
+}
+
+.certificado-item {
+    width: 100%; /* O item ocupa 100% da célula do grid */
+    padding: 5px;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    position: relative;
+    text-align: center;
+    display: inline-block;
+}
+
+.certificado-item img {
+    max-width: 100%;
+    max-height: 100%; /* Garante que a imagem se ajuste ao container */
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+.btn-remove {
+    background-color: #ff4d4d;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-remove:hover {
+    background-color: #ff1a1a;
+}
+
+
+
+
 /* Animação de destaque para o label */
 .focus-highlight {
     background-color: #ffffcc;  /* Cor de fundo destacada */
@@ -281,6 +601,9 @@ button {
 .response-message.error {
     color: red;  /* Cor para mensagem de erro */
 }
+
+
+
 
 /* Hover no botão */
 button:hover {

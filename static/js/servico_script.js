@@ -88,11 +88,9 @@ document.getElementById('contactMethod').addEventListener('change', function () 
     }
 });
 
-// Função para enviar o formulário de serviço
 document.getElementById('servicoForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    // Coleta o ID do prestador de um input oculto ou outro meio
     const prestadorId = document.getElementById('prestadorId').value;
     const serviceType = document.getElementById('serviceType').value;
     const description = document.getElementById('description').value;
@@ -104,40 +102,47 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
     const city = document.getElementById('city').value;
     const state = document.getElementById('state').value;
     const contactMethod = document.getElementById('contactMethod').value;
-    const contactDetail = document.getElementById('contactInput').value;  // Coletando o valor do campo de contato
+    const contactDetail = document.getElementById('contactInput').value;
     const contactDate = document.getElementById('contactDate').value;
     const comments = document.getElementById('comments').value;
     const providerPreferences = document.getElementById('providerPreferences').value;
 
-    // Verificar se os campos estão preenchidos corretamente (opcional)
-    if (!serviceType || !description || !budget || !urgency || !location || !contactMethod || !contactDetail || !contactDate) {
+    // Verificar se o campo de certificados existe
+    const certificadosElement = document.getElementById('certificados');
+    const certificados = certificadosElement ? certificadosElement.files : [];
+
+    if (!serviceType || !description || !budget || !urgency || !contactMethod || !contactDetail || !contactDate) {
         document.getElementById('response').textContent = 'Por favor, preencha todos os campos obrigatórios.';
         return;
     }
 
-    // Fazer a requisição para a rota /api/cadastrar-servico (Prestador)
+    const formData = new FormData();
+    formData.append('prestadorId', prestadorId);
+    formData.append('serviceType', serviceType);
+    formData.append('description', description);
+    formData.append('budget', budget);
+    formData.append('urgency', urgency);
+    formData.append('location', location);
+    formData.append('street', street);
+    formData.append('neighborhood', neighborhood);
+    formData.append('city', city);
+    formData.append('state', state);
+    formData.append('contactMethod', contactMethod);
+    formData.append('contactDetail', contactDetail);
+    formData.append('contactDate', contactDate);
+    formData.append('comments', comments);
+    formData.append('providerPreferences', providerPreferences);
+
+    // Adicionar certificados se existirem
+    if (certificados.length > 0) {
+        for (let i = 0; i < certificados.length; i++) {
+            formData.append('certificados[]', certificados[i]);
+        }
+    }
+
     fetch('/api/cadastrar-servico', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            prestadorId: prestadorId,
-            serviceType: serviceType,
-            description: description,
-            budget: budget,
-            urgency: urgency,
-            location: location,
-            street: street,
-            neighborhood: neighborhood,
-            city: city,
-            state: state,
-            contactMethod: contactMethod,
-            contactDetail: contactDetail,  // Adiciona o contato fornecido pelo usuário
-            contactDate: contactDate,
-            comments: comments,
-            providerPreferences: providerPreferences
-        })
+        body: formData
     })
     .then(response => {
         if (!response.ok) {
@@ -147,9 +152,9 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
     })
     .then(data => {
         if (data.redirect) {
-            window.location.href = data.redirect; // Redireciona após sucesso
+            window.location.href = data.redirect;
         } else {
-            document.getElementById('response').textContent = data.message; // Mensagem de sucesso
+            document.getElementById('response').textContent = data.message;
         }
     })
     .catch(error => {
