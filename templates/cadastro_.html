@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastro.css') }}">
+    <title>Bem-vindo</title>
+</head>
+<body>
+
+<div class="container" id="initialScreen">
+    <h1>Bem-vindo</h1>
+    <button class="btn" id="loginButton" onclick="window.location.href='/login';">Entrar</button>
+    <button class="btn" id="registerButton">Cadastro</button>
+</div>
+    
+
+<div class="container hidden" id="registerScreen">
+    <h2>Escolha o tipo de cadastro</h2>
+    <button class="btn" id="registerClientButton">Cadastro de Cliente</button>
+    <button class="btn" id="registerProviderButton">Cadastro de Prestador</button>
+</div>
+
+<script src="{{ url_for('static', filename='js/cadastro_script.js') }}"></script>
+</body>
+</html>

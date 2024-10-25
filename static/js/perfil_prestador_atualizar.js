@@ -611,6 +611,34 @@ function atualizarContadorSolicitacoes(count) {
     }
 }
 
+// Função para exibir o status do convite com base no tempo decorrido
+function exibirStatusTempo(statusTimestamp, tipoStatus) {
+    const statusDate = new Date(statusTimestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - statusDate) / 1000);
+
+    let message = "";
+
+    if (diffInSeconds < 60) {
+        message = `${tipoStatus} a poucos segundos.`;
+    } else if (diffInSeconds < 600) { // menos de 10 minutos
+        message = `${tipoStatus} a poucos minutos.`;
+    } else if (diffInSeconds < 3600) { // menos de 1 hora
+        const minutes = Math.floor(diffInSeconds / 60);
+        message = `${tipoStatus} há ${minutes} minutos.`;
+    } else if (diffInSeconds < 86400) { // menos de 24 horas
+        const hours = Math.floor(diffInSeconds / 3600);
+        message = `${tipoStatus} hoje às ${statusDate.getHours()}:${statusDate.getMinutes()}.`;
+    } else if (diffInSeconds < 172800) { // menos de 48 horas
+        message = `${tipoStatus} ontem às ${statusDate.getHours()}:${statusDate.getMinutes()}.`;
+    } else {
+        message = `${tipoStatus} no dia ${statusDate.toLocaleDateString()} às ${statusDate.getHours()}:${statusDate.getMinutes()}.`;
+    }
+
+    return message;
+}
+
+
 function carregarSolicitacoes(solicitacoes) {
     const lista = document.getElementById('solicitacoesList');
     lista.innerHTML = '';  // Limpar a lista antes de adicionar novos itens
@@ -619,8 +647,21 @@ function carregarSolicitacoes(solicitacoes) {
         const li = document.createElement('li');
 
         // Informações principais da solicitação
+        let statusVisto = '';
+        let statusAceito = '';
+
+        if (solicitacao.lido) {
+            statusVisto = exibirStatusTempo(solicitacao.data_visto, "Visto");
+        }
+
+        if (solicitacao.status === 'aceito') {
+            statusAceito = exibirStatusTempo(solicitacao.data_aceito, "Aceito");
+        }
+
+        // Exibir as informações da solicitação
         li.innerHTML = `
-            Solicitação de ${solicitacao.nome_cliente}: ${solicitacao.mensagem}
+            <strong>Solicitação de ${solicitacao.nome_cliente}:</strong> ${solicitacao.mensagem}
+            <br><small>${exibirStatusTempo(solicitacao.data_solicitacao_cliente, "Solicitado")}</small>
             <button onclick="toggleDetalhes(${solicitacao.id})">Ver Mais</button>
             <div id="detalhes-${solicitacao.id}" style="display:none; margin-top:10px;">
                 <p><strong>Orçamento:</strong> ${solicitacao.orcamento}</p>
@@ -628,6 +669,7 @@ function carregarSolicitacoes(solicitacoes) {
                 <p><strong>Data de Contato:</strong> ${solicitacao.data_contato}</p>
                 <p><strong>Hora de Contato:</strong> ${solicitacao.hora_contato}</p>
                 <p><strong>Contato Cliente:</strong> ${solicitacao.contato_cliente}</p>
+                <button onclick="aceitarServico(${solicitacao.id})">Aceitar Serviço</button> <!-- Botão para aceitar o serviço -->
             </div>
         `;
 
@@ -635,6 +677,22 @@ function carregarSolicitacoes(solicitacoes) {
     });
 }
 
+// Função para aceitar o serviço
+function aceitarServico(solicitacaoId) {
+    fetch(`/api/aceitar_servico/${solicitacaoId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert('Serviço aceito com sucesso!');
+            // Aqui você pode fechar o modal ou atualizar o status da solicitação
+        } else {
+            console.error('Erro ao aceitar o serviço:', data.error);
+        }
+    })
+    .catch(error => console.error('Erro na requisição:', error));
+}
 // Função para exibir/esconder os detalhes de uma solicitação e marcar como lida
 function toggleDetalhes(solicitacaoId) {
     const detalhes = document.getElementById(`detalhes-${solicitacaoId}`);

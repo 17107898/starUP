@@ -47,6 +47,15 @@
         </select>
         <br>
 
+        <div class="checkbox-container">
+            <input type="checkbox" id="localizacaoImportante" name="localizacaoImportante" class="toggle-switch">
+            <label for="localizacaoImportante" class="toggle-switch-label"></label>
+            <span class="toggle-text">Localização é importante?</span>
+        </div>
+        <br>
+        
+        
+
         <label for="location">CEP (se aplicável):</label>
         <input type="text" id="location" name="location" placeholder="Digite o CEP" required>
         <br>
@@ -76,7 +85,11 @@
             <option value="whatsapp">WhatsApp</option>
         </select>
         <br>
-
+        <!-- Campo de detalhes de contato -->
+        <div id="contactDetail" style="display:none;">
+            <label id="contactLabel" for="contactInput"></label>
+            <input id="contactInput" name="contactInput" placeholder="Digite seus dados de contato">
+        </div>
         <label for="contactDate">Data/Hora de Contato:</label>
         <input type="datetime-local" id="contactDate" name="contactDate">
         <br>

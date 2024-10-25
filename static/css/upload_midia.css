@@ -1,13 +1,20 @@
 /* Estilo básico do corpo */
-body {
+body, html {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Estilo do contêiner para o conteúdo */
+.container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center; /* Centraliza o conteúdo horizontalmente */
+    align-items: flex-start; /* Alinha o conteúdo ao topo da página */
+    padding-top: 20px; /* Adiciona um pequeno espaço no topo */
 }
 
 /* Estilo do formulário de upload */
@@ -19,7 +26,9 @@ form {
     width: 100%;
     max-width: 500px;
     text-align: center;
+    margin: 0 auto; /* Garante que o formulário seja centralizado horizontalmente */
 }
+
 
 /* Cabeçalho */
 h2 {

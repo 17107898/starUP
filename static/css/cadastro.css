@@ -1,44 +1,110 @@
-        /* Estilos para centralizar os elementos na tela */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-image: url(BackgroundTechInfo.png);
+    background-position: -20px -30px center; 
+    margin-top: 800px;
+}
 
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
 
-        h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
+.container {
+    text-align: center;
+    background-color: rgb(255, 254, 254);
+    padding: 20px 40px;
+    border-radius: 8px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
 
-        .btn {
-            display: inline-block;
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            color: white;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+.container .logo img {
+    height: 50px;
+}
 
-        .btn:hover {
-            background-color: #0056b3;
-        }
+.container nav {
+    display: flex;
+    gap: 20px;
+}
 
-        .hidden {
-            display: none;
-        }
+h1 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    color: #ffffff;
+}
+
+.btn {
+    display: inline-block;
+    margin: 10px;
+    padding: 12px 25px;
+    font-size: 18px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.hidden {
+    display: none;
+}
+
+.texto {
+    display: flex;
+    margin: 20px;
+    width: 100%;
+    gap: 20px;
+}
+
+.clientes, .prestadores {
+    color: white;
+    background-color: #007bff;
+    padding: 30px;
+    width: 80%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+li {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .btn {
+        padding: 10px 15px;
+        font-size: 16px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+}

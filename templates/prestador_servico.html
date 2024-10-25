@@ -14,11 +14,14 @@
         <label for="nome">Olá {{nome_prestador}}</label>
         <br>
         <label for="serviceType">Tipo de Serviço Selecionado:</label>
+        <input type="hidden" id="prestadorId" value="{{ prestador_id }}"> <!-- Input oculto para o ID do prestador -->
+
         <input type="text" id="serviceType" name="serviceType" value="{{ service_type_legivel }}" required>
         <br>
-        <label for="certificado">Carregar Certificado (opcional):</label>
-        <input type="file" id="certificado" name="certificado" accept="application/pdf,image/*">
+        <label for="certificados">Carregar Certificado (opcional):</label>
+        <input type="file" id="certificados" name="certificados" accept="application/pdf,image/*" multiple>
         <br>
+        
         <label for="description">Descrição Detalhada:</label>
         <textarea id="description" name="description" required></textarea>
         <br>
@@ -65,11 +68,13 @@
             <option value="whatsapp">WhatsApp</option>
         </select>
         <br>
-        <!-- Aqui será exibido o campo para o número ou email com base na escolha -->
-        <div id="contactDetail" style="display:none;">
-            <label for="contactInput" id="contactLabel">Por favor, insira seu contato:</label>
-            <input type="text" id="contactInput" name="contactInput" placeholder="Digite seu contato">
+        <!-- Campo de detalhes de contato -->
+        <div id="contactDetail" class="contact-container" style="display:none;">
+            <label id="contactLabel" for="contactInput"></label>
+            <input id="contactInput" name="contactInput" placeholder="Digite seus dados de contato">
         </div>
+        
+        
         
         <label for="contactDate">Data/Hora de Contato:</label>
         <input type="datetime-local" id="contactDate" name="contactDate" required>

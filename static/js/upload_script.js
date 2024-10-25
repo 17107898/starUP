@@ -235,9 +235,15 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
     .then(response => response.json())
     .then(data => {
         document.getElementById('response').textContent = data.message;
+
+        // Verifica se a resposta inclui um redirecionamento
+        if (data.redirect) {
+            window.location.href = data.redirect; // Redireciona para a página de login
+        }
     })
     .catch(error => {
         console.error('Erro:', error);
         document.getElementById('response').textContent = 'Erro ao fazer o upload das mídias.';
     });
 });
+

@@ -16,9 +16,679 @@
         <button class="vertical-prev">↓</button>
         <button class="vertical-next">↑</button>
     </div>
+    <div class="sidebar">
+        <button id="alterarDescricaoBtn">Alterar Descrição/Filtro</button>
+        <button id="checarConviteBtn">Checar Convite Aceito</button>
+        <!-- Bolinha vermelha de notificação -->
+        <span id="notificationDot" style="display:none; width: 10px; height: 10px; background-color: red; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 5px;"></span>
 
+        <button id="avaliarPrestadorBtn" onclick="abrirPopupAvaliacao()">Avaliar Prestador</button>
+    </div>
+<!-- Modal de Avaliação do Prestador -->
+<!-- Modal de Avaliação do Prestador -->
+<div id="popupAvaliacao" class="popup-avaliar">
+    <div class="popup-avaliar-content">
+        <span class="popup-close" onclick="fecharPopupAvaliacao()">&times;</span>
+        <!-- No popup de avaliação -->
+        <h3 class="titulo-avaliacao">Avaliar Prestador</h3>
+
+
+        <!-- Dropdown para selecionar o prestador -->
+        <label for="prestadorSelecionadoDropdown">Prestador:</label>
+        <select id="prestadorSelecionadoDropdown">
+            <!-- Opções serão preenchidas dinamicamente com JavaScript -->
+        </select>
+
+        <!-- Campo para adicionar nota -->
+        <label for="notaAvaliacao">Nota:</label>
+        <select id="notaAvaliacao">
+            <option value="5">5 - Excelente</option>
+            <option value="4">4 - Muito Bom</option>
+            <option value="3">3 - Bom</option>
+            <option value="2">2 - Regular</option>
+            <option value="1">1 - Ruim</option>
+        </select>
+
+        <!-- Campo para adicionar comentário -->
+        <label for="comentarioAvaliacao">Comentário:</label>
+        <textarea id="comentarioAvaliacao" placeholder="Escreva seu comentário..."></textarea>
+
+        <!-- Botão para enviar avaliação -->
+        <button onclick="enviarAvaliacao()">Enviar Avaliação</button>
+    </div>
+</div>
+
+
+
+    
+    <!-- Popup de status do convite -->
+    <div id="statusConvitePopup" class="popup" style="display:none;">
+        <div class="popup-content">
+            <span class="popup-close" onclick="fecharPopup()">&times;</span>
+            <div id="statusConvite"></div>
+        </div>
+    </div>
+    
+    <!-- Overlay para o popup -->
+    <div id="modalOverlay" class="modal-overlay" style="display:none;"></div>
+    <!-- Modal de Alteração de Descrição/Filtro -->
+<!-- Modal de Alteração de Descrição/Filtro -->
+<div id="alterarDescricaoModal" class="modal hidden">
+    <button class="close-btn" onclick="fecharModalAlterarDescricao()">&times;</button>
+    <form id="alterarDescricaoForm">
+        <label for="serviceType">Tipo de Serviço:</label>
+        <select id="serviceType" name="serviceType" required>
+            <option value="">Selecione o serviço</option>
+            <option value="desenvolvimento_software">Desenvolvimento de Software</option>
+            <option value="infraestrutura_ti">Infraestrutura de TI</option>
+            <option value="seguranca_cibernetica">Segurança Cibernética</option>
+            <option value="inteligencia_artificial">Inteligência Artificial</option>
+            <option value="cloud_computing">Computação em Nuvem</option>
+            <option value="data_science">Ciência de Dados</option>
+            <option value="desenvolvimento_web">Desenvolvimento Web</option>
+            <option value="desenvolvimento_mobile">Desenvolvimento Mobile</option>
+            <option value="iot">Internet das Coisas (IoT)</option>
+            <option value="suporte_tecnico">Suporte Técnico</option>
+            <option value="automacao_industrial">Automação Industrial</option>
+            <option value="devops">DevOps</option>
+            <option value="analise_de_dados">Análise de Dados</option>            
+        </select>
+
+        <label for="novaDescricao">Nova Descrição:</label>
+        <textarea id="novaDescricao" name="novaDescricao" rows="4"></textarea>
+
+        <label for="urgencia">Urgência:</label>
+        <select id="urgency" name="urgency" required>
+            <option value="">Selecione a urgência</option>
+            <option value="urgente">Urgente</option>
+            <option value="semana">Dentro de uma semana</option>
+            <option value="mes">Dentro de um mês</option>
+            <option value="sem_prazo">Sem prazo específico</option>
+        </select>
+
+        <label for="localizacaoImportante">
+            <input type="checkbox" id="localizacaoImportante" name="localizacaoImportante"> A Localização é importante?
+        </label>
+
+        <!-- Campos de endereço que serão exibidos se a localização for importante -->
+        <label for="location">CEP (se aplicável):</label>
+        <input type="text" id="location" name="location" placeholder="Digite o CEP" required>
+
+        <label for="street">Rua:</label>
+        <input type="text" id="street" name="street" readonly>
+
+        <label for="neighborhood">Bairro:</label>
+        <input type="text" id="neighborhood" name="neighborhood" readonly>
+
+        <label for="city">Cidade:</label>
+        <input type="text" id="city" name="city" readonly>
+
+        <label for="state">Estado:</label>
+        <input type="text" id="state" name="state" readonly>
+
+        <button type="submit">Salvar Alterações</button>
+    </form>
+</div>
+<!-- Popup de confirmação de solicitação -->
+<div id="popupSolicitacao" class="popup-selecao">
+    <div class="popup-content-solicitacao">
+        <span class="popup-close" onclick="fecharPopupSolicitacao()">&times;</span>
+        <h3>Confirmar Solicitação de Serviço</h3>
+
+        <div class="solicitacao-details">
+            <!-- Tipo de Serviço (não editável) -->
+            <p><strong>Tipo de Serviço:</strong> 
+                <span id="tipoServico"></span>
+            </p>
+
+            <!-- Descrição (não editável) -->
+            <p><strong>Descrição:</strong> 
+                <span id="descricaoServico"></span>
+            </p>
+
+            <!-- Orçamento Editável -->
+            <p><strong>Orçamento:</strong> 
+                <input type="number" id="orcamentoServico" class="editable-field">
+            </p>
+
+            <!-- Urgência Editável -->
+            <p><strong>Urgência:</strong> 
+                <select id="urgenciaServico" class="editable-field">
+                    <option value="urgente">Urgente</option>
+                    <option value="semana">Dentro de uma semana</option>
+                    <option value="mes">Dentro de um mês</option>
+                    <option value="sem_prazo">Sem prazo específico</option>
+                </select>
+            </p>
+
+            <!-- Localização (não editável) -->
+            <p><strong>Localização:</strong> <span id="localizacaoServico"></span></p>
+            <p><strong>Rua:</strong> <span id="ruaServico"></span></p>
+            <p><strong>Bairro:</strong> <span id="bairroServico"></span></p>
+            <p><strong>Cidade:</strong> <span id="cidadeServico"></span></p>
+            <p><strong>Estado:</strong> <span id="estadoServico"></span></p>
+
+            <!-- Método de Contato (não editável) -->
+            <p><strong>Método de Contato:</strong> <span id="metodoContatoServico"></span></p>
+
+            <!-- Data de Contato Editável -->
+            <p><strong>Data de Contato:</strong> 
+                <input type="date" id="dataContatoServico" class="editable-field">
+            </p>
+
+            <!-- Hora de Contato Editável -->
+            <p><strong>Hora de Contato:</strong> 
+                <input type="time" id="horaContatoServico" class="editable-field">
+            </p>
+
+            <!-- Botão para mostrar a área de mensagem -->
+            <p><span class="icon" onclick="toggleMensagem()"> 📝 Adicionar mensagem </span></p>
+
+            <!-- Área de mensagem escondida inicialmente -->
+            <div id="mensagemContainer" style="display: none;">
+                <p><strong>Mensagem ao prestador:</strong></p>
+                <textarea id="mensagemCliente" class="editable-field" placeholder="Escreva sua mensagem..."></textarea>
+            </div>
+        </div>
+
+        <!-- Botão de confirmação -->
+        <!-- Botão de confirmação, passando o prestadorId -->
+        <button id="confirmarBtn" class="confirmar-servico-btn">Confirmar Solicitação</button>
+    </div>
+</div>
+
+
+    <!-- Botão para esconder/aparecer a barra lateral -->
+    <button id="toggleSidebar">◂</button>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script src="{{ url_for('static', filename='js/front.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script_mobie.js') }}"></script>
+    <script>
+// Função para alternar a visibilidade da barra lateral
+const toggleButton = document.getElementById('toggleSidebar');
+const sidebar = document.querySelector('.sidebar');
+
+toggleButton.addEventListener('click', function() {
+    sidebar.classList.toggle('hidden');
+    
+    if (sidebar.classList.contains('hidden')) {
+        toggleButton.innerText = '▸'; // Muda para >
+        toggleButton.style.left = '10px'; // Mover para o canto
+    } else {
+        toggleButton.innerText = '◂'; // Muda para <
+        toggleButton.style.left = '200px'; // Voltar para a posição ao lado da barra
+    }
+});
+document.getElementById('alterarDescricaoBtn').addEventListener('click', function () {
+    document.getElementById('alterarDescricaoModal').classList.toggle('show');
+});
+// Função para abrir o modal e carregar os dados do serviço
+function abrirModalAlterarDescricao(servicoId) {
+    fetch(`/api/obter_dados_servico/${servicoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            // Preencher os campos com os dados recebidos
+            document.getElementById('serviceType').value = data.tipo_servico;
+            document.getElementById('novaDescricao').value = data.descricao;
+            document.getElementById('urgency').value = data.urgencia;
+            document.getElementById('localizacaoImportante').checked = data.localizacao_importante == 1;
+
+            // Se localização for importante, preencher os campos de localização
+            if (data.localizacao_importante == 1) {
+                document.getElementById('location').value = data.cep;
+                document.getElementById('street').value = data.rua;
+                document.getElementById('neighborhood').value = data.bairro;
+                document.getElementById('city').value = data.cidade;
+                document.getElementById('state').value = data.estado;
+            }
+
+            // Atualizar a visibilidade dos campos de localização baseado no checkbox
+            toggleCamposLocalizacao(data.localizacao_importante == 1);
+
+            // Exibir o modal
+            document.getElementById('alterarDescricaoModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Erro ao carregar os dados do serviço:', error);
+        });
+}
+
+
+// Função para alternar a visibilidade dos campos de localização
+function toggleCamposLocalizacao(localizacaoImportante) {
+    const camposLocalizacao = document.querySelectorAll('#location, #street, #neighborhood, #city, #state');
+    const labelsLocalizacao = document.querySelectorAll('label[for="location"], label[for="street"], label[for="neighborhood"], label[for="city"], label[for="state"]');
+
+    if (localizacaoImportante) {
+        // Se a localização for importante, exibe os campos e os torna obrigatórios
+        camposLocalizacao.forEach(campo => {
+            campo.required = true; // Define como obrigatório
+            campo.style.display = 'block'; // Exibe os campos
+        });
+        labelsLocalizacao.forEach(label => {
+            label.style.display = 'block'; // Exibe os labels
+        });
+    } else {
+        // Se a localização não for importante, oculta os campos e remove a obrigatoriedade
+        camposLocalizacao.forEach(campo => {
+            campo.required = false; // Remove obrigatoriedade
+            campo.style.display = 'none'; // Oculta os campos
+            campo.value = ''; // Limpa os valores dos campos
+        });
+        labelsLocalizacao.forEach(label => {
+            label.style.display = 'none'; // Oculta os labels
+        });
+    }
+}
+
+// Evento para mudança manual do checkbox no formulário
+document.getElementById('localizacaoImportante').addEventListener('change', function () {
+    toggleCamposLocalizacao(this.checked);
+});
+
+// Inicializa o formulário ocultando os campos de localização
+if (!document.getElementById('localizacaoImportante').checked) {
+    const camposLocalizacao = document.querySelectorAll('#location, #street, #neighborhood, #city, #state');
+    const labelsLocalizacao = document.querySelectorAll('label[for="location"], label[for="street"], label[for="neighborhood"], label[for="city"], label[for="state"]');
+
+    camposLocalizacao.forEach(campo => {
+        campo.style.display = 'none'; // Oculta os campos
+        campo.removeAttribute('required'); // Remove o atributo required
+    });
+    labelsLocalizacao.forEach(label => {
+        label.style.display = 'none'; // Oculta os labels
+    });
+}
+// Fechar o modal
+function fecharModalAlterarDescricao() {
+    document.getElementById('alterarDescricaoModal').classList.remove('show');
+}
+
+// Exemplo de chamada ao abrir o modal com o ID do serviço (ajuste conforme sua lógica de frontend)
+document.getElementById('alterarDescricaoBtn').addEventListener('click', function() {
+    const servicoId = "{{ cliente_id }}";  // O prestador_id vem diretamente da URL
+    abrirModalAlterarDescricao(servicoId);
+});
+
+// Enviar os dados alterados
+document.getElementById('alterarDescricaoForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const servicoId = "{{ cliente_id }}";  // O cliente vem diretamente da URL
+    const tipoServico = document.getElementById('serviceType').value;
+    const novaDescricao = document.getElementById('novaDescricao').value;
+    const urgencia = document.getElementById('urgency').value;
+
+    const localizacaoImportante = document.getElementById('localizacaoImportante').checked; // Valor do checkbox
+
+    // Verificar se a localização é importante, se não for, definir como null
+    let location = null;
+    let street = null;
+    let neighborhood = null;
+    let city = null;
+    let state = null;
+
+    if (localizacaoImportante) {
+        // Coletar valores dos campos de localização se o checkbox estiver marcado
+        location = document.getElementById('location').value;
+        street = document.getElementById('street').value;
+        neighborhood = document.getElementById('neighborhood').value;
+        city = document.getElementById('city').value;
+        state = document.getElementById('state').value;
+    }
+
+    // Outros campos adicionais, se necessário
+    const contactMethod = document.getElementById('contactMethod')?.value || null;
+    const contactDate = document.getElementById('contactDate')?.value || null;
+    const references = document.getElementById('references')?.files[0] || null;
+    const comments = document.getElementById('comments')?.value || null;
+    const providerPreferences = document.getElementById('providerPreferences')?.value || null;
+
+    try {
+        const formData = new FormData();
+
+        formData.append('tipo_servico', tipoServico);
+        formData.append('descricao', novaDescricao);
+        formData.append('urgencia', urgencia);
+        formData.append('localizacao_importante', localizacaoImportante);
+        formData.append('location', location);
+        formData.append('street', street);
+        formData.append('neighborhood', neighborhood);
+        formData.append('city', city);
+        formData.append('state', state);
+        
+        if (contactMethod) formData.append('contactMethod', contactMethod);
+        if (contactDate) formData.append('contactDate', contactDate);
+        if (references) formData.append('references', references);
+        if (comments) formData.append('comments', comments);
+        if (providerPreferences) formData.append('providerPreferences', providerPreferences);
+
+        const response = await fetch(`/api/alterar_servico/${servicoId}`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            alert("Serviço alterado com sucesso!");
+            fecharModalAlterarDescricao(); // Fechar o modal após a alteração
+
+            // Redirecionar o usuário para a página de login após o sucesso da alteração
+            window.location.href = '/login'; 
+        } else {
+            alert("Erro ao alterar o serviço.");
+        }
+
+    } catch (error) {
+        console.error('Erro ao alterar o serviço:', error);
+    }
+});
+function exibirStatusTempo(statusTimestamp, tipoStatus) {
+    // Verificar se o timestamp é válido
+    const statusDate = new Date(statusTimestamp);
+    
+    // Caso o statusTimestamp não esteja em um formato correto, o statusDate será "Invalid Date"
+    if (isNaN(statusDate)) {
+        console.error(`Data inválida recebida: ${statusTimestamp}`);
+        return `${tipoStatus}: data inválida`;
+    }
+
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - statusDate) / 1000);
+
+    let message = "";
+
+    if (diffInSeconds < 60) {
+        message = `${tipoStatus} a poucos segundos.`;
+    } else if (diffInSeconds < 600) { // menos de 10 minutos
+        message = `${tipoStatus} a poucos minutos.`;
+    } else if (diffInSeconds < 3600) { // menos de 1 hora
+        const minutes = Math.floor(diffInSeconds / 60);
+        message = `${tipoStatus} há ${minutes} minutos.`;
+    } else if (diffInSeconds < 86400) { // menos de 24 horas
+        const hours = Math.floor(diffInSeconds / 3600);
+        message = `${tipoStatus} hoje às ${statusDate.getHours()}:${statusDate.getMinutes() < 10 ? '0' : ''}${statusDate.getMinutes()}.`;
+    } else if (diffInSeconds < 172800) { // menos de 48 horas
+        message = `${tipoStatus} ontem às ${statusDate.getHours()}:${statusDate.getMinutes() < 10 ? '0' : ''}${statusDate.getMinutes()}.`;
+    } else {
+        message = `${tipoStatus} no dia ${statusDate.toLocaleDateString()} às ${statusDate.getHours()}:${statusDate.getMinutes() < 10 ? '0' : ''}${statusDate.getMinutes()}.`;
+    }
+
+    return message;
+}
+
+
+let ultimoStatus = '';
+let ultimoLido = '';
+
+// Função para checar alterações no status e no campo lido
+function checarNovidades() {
+    fetch('/api/checar_convite')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Erro ao checar novidades:', data.error);
+                return;
+            }
+
+            const status = data.status;
+            const lido = data.lido ? 'Sim' : 'Não';
+
+            // Verificar se houve mudanças no status ou no campo lido
+            if (status !== ultimoStatus || lido !== ultimoLido) {
+                mostrarNotificacao();
+            }
+
+            // Atualizar os valores
+            ultimoStatus = status;
+            ultimoLido = lido;
+        })
+        .catch(error => console.error('Erro ao checar novidades:', error));
+}
+
+// Função para mostrar a bolinha vermelha de notificação
+function mostrarNotificacao() {
+    const notificationElement = document.getElementById('notificationDot');
+    notificationElement.style.display = 'block'; // Mostrar a bolinha vermelha
+}
+
+// Função para esconder a bolinha vermelha de notificação
+function esconderNotificacao() {
+    const notificationElement = document.getElementById('notificationDot');
+    notificationElement.style.display = 'none'; // Esconder a bolinha vermelha
+}
+
+// Função para iniciar a checagem automática a cada 10 segundos
+function iniciarChecagemAutomatica() {
+    checarNovidades(); // Checar uma vez imediatamente
+    setInterval(checarNovidades, 10000); // Checar a cada 10 segundos
+}
+
+// Função para abrir o popup de status e esconder a notificação
+function abrirPopup() {
+    fetch('/api/checar_convite')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Obter o elemento onde iremos exibir os resultados
+            const statusElement = document.getElementById('statusConvite');
+
+            // Limpar o conteúdo atual do elemento
+            statusElement.innerHTML = '';
+
+            // Verificar se há dados
+            if (data.length === 0) {
+                statusElement.innerHTML = 'Nenhum convite encontrado.';
+                return;
+            }
+
+            // Iterar sobre os convites recebidos e exibir cada um
+            data.forEach(convite => {
+                const prestadorNome = convite.prestador_nome;
+                const status = convite.status;
+                const lido = convite.lido ? 'Sim' : 'Não';
+                const data_visto_prestador = convite.data_visto_prestador;
+                const data_aceito_prestador = convite.data_aceito_prestador;
+
+                let vistoMensagem = '';
+                let aceitoMensagem = '';
+
+                if (data_visto_prestador) {
+                    vistoMensagem = exibirStatusTempo(data_visto_prestador, "Visto");
+                }
+
+                if (data_aceito_prestador) {
+                    aceitoMensagem = exibirStatusTempo(data_aceito_prestador, "Aceito");
+                }
+
+                // Exibir os detalhes do convite
+                statusElement.innerHTML += `
+                    <div class="convite-item">
+                        <p><strong>Prestador:</strong> ${prestadorNome}</p>
+                        <p><strong>Status:</strong> ${status}</p>
+                        <p><strong>Convite visto:</strong> ${lido} (${vistoMensagem})</p>
+                        ${aceitoMensagem ? `<p><strong>Aceito:</strong> ${aceitoMensagem}</p>` : ''}
+                        <hr>
+                    </div>
+                `;
+            });
+        })
+        .catch(error => console.error('Erro ao checar o status do convite:', error));
+
+    document.getElementById("statusConvitePopup").style.display = "block";
+    document.getElementById("modalOverlay").style.display = "block";
+    esconderNotificacao(); // Esconder a bolinha vermelha quando o popup é aberto
+}
+
+
+// Função para fechar o popup de status
+function fecharPopup() {
+    document.getElementById("statusConvitePopup").style.display = "none";
+    document.getElementById("modalOverlay").style.display = "none";
+}
+
+// Adicionar evento ao botão "Checar Convite Aceito" para abrir o popup
+document.getElementById('checarConviteBtn').addEventListener('click', abrirPopup);
+
+// Iniciar a checagem automática ao carregar a página
+iniciarChecagemAutomatica();
+
+
+// Quando o botão for clicado, inicia a checagem automática
+document.getElementById('checarConviteBtn').addEventListener('click', function() {
+    iniciarChecagemAutomatica();
+});
+
+
+// Função para formatar o CEP enquanto o usuário digita
+function formatarCEP(cep) {
+    // Remove todos os caracteres que não sejam números
+    cep = cep.replace(/\D/g, '');
+    
+    // Formata o CEP para o padrão 'XXXXX-XXX'
+    if (cep.length > 5) {
+        cep = cep.replace(/^(\d{5})(\d)/, '$1-$2');
+    }
+    
+    return cep;
+}
+
+// Função para buscar o endereço via API do ViaCEP
+function buscarEndereco(cep) {
+    // Remover caracteres não numéricos do CEP
+    cep = cep.replace(/\D/g, '');
+
+    // Verificar se o CEP tem 8 dígitos
+    if (cep.length !== 8) {
+        document.getElementById('response').textContent = 'CEP inválido!';
+        return;
+    }
+
+    // Fazer a requisição para a API ViaCEP
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar CEP');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.erro) {
+                document.getElementById('response').textContent = 'CEP não encontrado!';
+                return;
+            }
+
+            // Preencher os campos com os dados retornados pela API
+            document.getElementById('street').value = data.logradouro;
+            document.getElementById('neighborhood').value = data.bairro;
+            document.getElementById('city').value = data.localidade;
+            document.getElementById('state').value = data.uf;
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('response').textContent = 'Erro ao buscar CEP.';
+        });
+}
+
+// Adicionar evento ao campo de CEP para formatar enquanto o usuário digita e buscar o endereço automaticamente ao completar 8 dígitos
+document.getElementById('location').addEventListener('input', function () {
+    const cepInput = document.getElementById('location');
+    cepInput.value = formatarCEP(cepInput.value);
+    
+    // Se o CEP tiver 8 dígitos, buscar o endereço automaticamente
+    const cepLimpo = cepInput.value.replace(/\D/g, '');
+    if (cepLimpo.length === 8) {
+        buscarEndereco(cepLimpo);
+    }
+});
+let prestadorSelecionadoId = null;  // Variável para armazenar o ID do prestador selecionado
+let nomeCliente = null;  // Variável para armazenar o nome do cliente
+
+// Função para abrir o popup de avaliação e preencher os dados
+function abrirPopupAvaliacao() {
+    // Fazer uma requisição para pegar os prestadores aceitos
+    fetch('/api/pegar_prestadores_aceitos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            const dropdown = document.getElementById('prestadorSelecionadoDropdown');
+            dropdown.innerHTML = ''; // Limpar o dropdown
+
+            if (data.length > 0) {
+                data.forEach(prestador => {
+                    const option = document.createElement('option');
+                    option.value = prestador.prestador_id;
+                    option.textContent = prestador.nome_prestador;
+                    dropdown.appendChild(option);
+                });
+
+                prestadorSelecionadoId = dropdown.value;  // Definir o primeiro prestador como selecionado por padrão
+                nomeCliente = data[0].nome_cliente;  // Salvar o nome do cliente para enviar no feedback
+                document.getElementById('popupAvaliacao').style.display = 'flex';
+            } else {
+                alert('Nenhum prestador aceito encontrado.');
+            }
+
+            // Atualizar prestador selecionado quando o dropdown mudar
+            dropdown.addEventListener('change', function () {
+                prestadorSelecionadoId = this.value;
+            });
+        })
+        .catch(error => console.error('Erro ao pegar prestadores aceitos:', error));
+}
+
+// Função para fechar o popup de avaliação
+function fecharPopupAvaliacao() {
+    document.getElementById('popupAvaliacao').style.display = 'none';
+}
+
+// Função para enviar a avaliação
+function enviarAvaliacao() {
+    const nota = document.getElementById('notaAvaliacao').value;
+    const comentario = document.getElementById('comentarioAvaliacao').value;
+
+    if (!prestadorSelecionadoId) {
+        alert('Nenhum prestador selecionado.');
+        return;
+    }
+
+    // Fazer uma requisição para cadastrar o feedback
+    fetch('/api/cadastrar_feedback', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id_prestador: prestadorSelecionadoId,
+            nome_cliente: nomeCliente,  // Passa o nome do cliente capturado dinamicamente
+            comentario: comentario,
+            nota: nota
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Erro ao enviar avaliação: ' + data.error);
+        } else {
+            alert('Avaliação enviada com sucesso!');
+            fecharPopupAvaliacao();  // Fechar o popup após o envio
+        }
+    })
+    .catch(error => console.error('Erro ao enviar avaliação:', error));
+}
+
+    </script>
 </body>
 </html>

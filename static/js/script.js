@@ -48,7 +48,7 @@ async function carregarMaisServicos() {
     if (loading) return;
     loading = true;
 
-    // Obter filtros da URL
+    // Obter os parâmetros da URL
     const urlParams = new URLSearchParams(window.location.search);
     const serviceType = urlParams.get('serviceType');
     const cep = urlParams.get('cep');
@@ -57,18 +57,19 @@ async function carregarMaisServicos() {
     const city = urlParams.get('city');
     const state = urlParams.get('state');
     const urgency = urlParams.get('urgency');
+    const localizacaoImportante = urlParams.get('localizacaoImportante') === 'true';
+    const clienteId = urlParams.get('cliente_id');  // Adicionando o cliente_id
 
-    console.log(`Buscando serviços com os filtros: serviceType=${serviceType}, cep=${cep}, neighborhood=${neighborhood}, city=${city}, state=${state}, urgency=${urgency}`);
 
-    // Fazer a requisição para pegar os serviços paginados com os filtros aplicados
-    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&cep=${cep}&neighborhood=${neighborhood}&city=${city}&state=${state}&urgency=${urgency}`);
+    console.log(`Buscando serviços com os filtros: serviceType=${serviceType}, cep=${cep}, neighborhood=${neighborhood}, city=${city}, state=${state}, urgency=${urgency}, localizacaoImportante=${localizacaoImportante}`);
+
+    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&cep=${cep}&neighborhood=${neighborhood}&city=${city}&state=${state}&urgency=${urgency}&localizacaoImportante=${localizacaoImportante}`);
     const data = await response.json();
 
     console.log(`Número de serviços encontrados: ${data.services.length}`);
 
     const container = document.getElementById('services-container');
 
-    // Verificar se há serviços retornados
     if (!data.services || data.services.length === 0) {
         console.log("Nenhum serviço encontrado.");
         loading = false;
@@ -91,7 +92,8 @@ async function carregarMaisServicos() {
         ).join('');
         console.log('id do prestador', service)
         serviceElement.innerHTML = `
-            <h3>${service.service_name}</h3>
+            <h3 class="tituloAvaliacao">${service.service_name}</h3>
+
             <div class="gallery">
                 ${galleryItems}
                 <div class="video-container">
@@ -126,12 +128,17 @@ async function carregarMaisServicos() {
         // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
         const responsavelInfo = serviceElement.querySelector(`#responsavel-${service.id}`);
 
+
         // Verificação se o elemento foi encontrado
         if (responsavelInfo) {
             responsavelInfo.addEventListener('click', () => {
-                window.location.href = `/perfil_prestador?prestador_id=${service.id}`;
+                const urlParams = new URLSearchParams(window.location.search);
+                const clienteId = urlParams.get('cliente_id');  // Capturar o cliente_id da URL
+                
+                // Redirecionar para o perfil do prestador, passando o prestador_id e cliente_id na URL
+                window.location.href = `/perfil_prestador?prestador_id=${service.id}&cliente_id=${clienteId}`;
             });
-        } else {
+        }else {
             // Adiciona log para verificar se o ID está correto
             console.log(`Elemento #responsavel-${service.id} não encontrado. Verifique o DOM.`);
         }
@@ -141,13 +148,14 @@ async function carregarMaisServicos() {
         console.log(`Serviço adicionado ao container: ${service.person_name}, ID do elemento: ${serviceElement.id}`);
 
         // Configurar os botões e navegação (conforme seu código original)
+        // Configurar os botões e navegação (conforme seu código original)
         const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
         if (solicitarServicoBtn) {
             solicitarServicoBtn.addEventListener('click', () => {
-                alert(`Solicitando o serviço: ${service.name}`);
+                abrirPopupSolicitacao(service.id);  // Passar o objeto `service` como parâmetro
             });
         }
-
+        
         // Adicionar evento de navegação à galeria horizontal
         const gallery = serviceElement.querySelector('.gallery');
         const videoDescription = serviceElement.querySelector('.video-description');
@@ -218,39 +226,199 @@ async function carregarMaisServicos() {
                 }
             }
         }
-
+        function abrirPopupSolicitacao(serviceId) {
+            // Aqui você já tem o prestadorId, que pode ser usado ao confirmar a solicitação
+        // Fazer uma requisição para o servidor buscando os detalhes do serviço pelo ID
+        fetch(`/api/servico/${serviceId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar os detalhes do serviço');
+                }
+                return response.json();
+            })
+            .then(service => {
+                let tipoServicoLegivel = '';
+                
+                switch (service.service_name) {
+                    case 'desenvolvimento_software':
+                        tipoServicoLegivel = 'Desenvolvimento de Software';
+                        break;
+                    case 'infraestrutura_ti':
+                        tipoServicoLegivel = 'Infraestrutura de TI';
+                        break;
+                    case 'seguranca_cibernetica':
+                        tipoServicoLegivel = 'Segurança Cibernética';
+                        break;
+                    case 'inteligencia_artificial':
+                        tipoServicoLegivel = 'Inteligência Artificial';
+                        break;
+                    case 'cloud_computing':
+                        tipoServicoLegivel = 'Computação em Nuvem';
+                        break;
+                    case 'data_science':
+                        tipoServicoLegivel = 'Ciência de Dados';
+                        break;
+                    case 'desenvolvimento_web':
+                        tipoServicoLegivel = 'Desenvolvimento Web';
+                        break;
+                    case 'desenvolvimento_mobile':
+                        tipoServicoLegivel = 'Desenvolvimento Mobile';
+                        break;
+                    case 'iot':
+                        tipoServicoLegivel = 'Internet das Coisas (IoT)';
+                        break;
+                    case 'suporte_tecnico':
+                        tipoServicoLegivel = 'Suporte Técnico';
+                        break;
+                    case 'automacao_industrial':
+                        tipoServicoLegivel = 'Automação Industrial';
+                        break;
+                    case 'devops':
+                        tipoServicoLegivel = 'DevOps';
+                        break;
+                    case 'analise_de_dados':
+                        tipoServicoLegivel = 'Análise de Dados';
+                        break;
+                    default:
+                        tipoServicoLegivel = 'Serviço não especificado';
+                }
+    
+                // Preencher os campos no popup com os dados recebidos
+                document.getElementById('tipoServico').textContent = tipoServicoLegivel;
+                document.getElementById('descricaoServico').textContent = service.descricao || 'Sem descrição disponível';  // Adicionando a descrição
+                document.getElementById('orcamentoServico').value = service.orcamento;
+                document.getElementById('urgenciaServico').value = service.urgencia;
+                document.getElementById('dataContatoServico').value = service.data_contato;
+    
+                // Preencher os novos campos (localização, rua, bairro, etc.)
+                document.getElementById('localizacaoServico').textContent = service.localizacao || 'N/A';
+                document.getElementById('ruaServico').textContent = service.rua || 'N/A';
+                document.getElementById('bairroServico').textContent = service.bairro || 'N/A';
+                document.getElementById('cidadeServico').textContent = service.cidade || 'N/A';
+                document.getElementById('estadoServico').textContent = service.estado || 'N/A';
+                document.getElementById('metodoContatoServico').textContent = service.metodo_contato || 'N/A';
+    
+                // Exibir o popup
+                document.getElementById('popupSolicitacao').style.display = 'flex';
+                            // Passar o serviceId para a função de confirmação
+            document.getElementById('confirmarBtn').onclick = function() {
+                confirmarSolicitacao(serviceId);
+            };
+            })
+            .catch(error => {
+                console.error('Erro ao buscar os detalhes do serviço:', error);
+            });
+    }
+        
         // Verificar se os botões de navegação existem antes de adicionar o evento
         const nextBtn = serviceElement.querySelector('.next');
         const prevBtn = serviceElement.querySelector('.prev');
-
+        
         if (nextBtn && prevBtn) {
             nextBtn.addEventListener('click', showNext);
             prevBtn.addEventListener('click', showPrev);
         }
-
+        
         // Esconder botões de navegação se for um dispositivo móvel
         hideNavigationButtonsIfMobile(serviceElement);
-
+        
         // Adicionar suporte ao swipe no mobile para o carrossel horizontal
         if (isMobileDevice) {
             enableSwipeNavigation(gallery, showNext, showPrev); // Habilitar navegação por swipe
         }
     });
-
+    
     if (data.has_more) {
         page++;
     }
-
+    
     console.log(`Total de perfis carregados até agora: ${servicesElements.length}`);
-
+    
     if (servicesElements.length > 0) {
         servicesElements[0].classList.add('active'); // Ativa o primeiro serviço carregado
         console.log(`Primeiro serviço ativado: ${servicesElements[0].querySelector('h3').textContent}`);
     }
-
+    
     loading = false;
 }
 
+// Função para mostrar ou esconder a caixa de mensagem
+function toggleMensagem() {
+    const mensagemContainer = document.getElementById('mensagemContainer');
+    if (mensagemContainer.style.display === 'none') {
+                mensagemContainer.style.display = 'block';
+            } else {
+                mensagemContainer.style.display = 'none';
+            }
+        }
+
+
+
+        // Função para fechar o popup
+        function fecharPopupSolicitacao() {
+            document.getElementById('popupSolicitacao').style.display = 'none';
+        }
+
+        // Função para confirmar a solicitação de serviço
+        function confirmarSolicitacao(serviceId) {
+            const orcamento = document.getElementById('orcamentoServico').value;
+            const urgencia = document.getElementById('urgenciaServico').value;
+            const dataContato = document.getElementById('dataContatoServico').value;
+            const horaContato = document.getElementById('horaContatoServico').value;
+            const mensagemCliente = document.getElementById('mensagemCliente').value;
+        
+            // Dados adicionais não editáveis
+            const tipoServico = document.getElementById('tipoServico').textContent;
+            const descricao = document.getElementById('descricaoServico').textContent;
+            const localizacao = document.getElementById('localizacaoServico').textContent;
+            const rua = document.getElementById('ruaServico').textContent;
+            const bairro = document.getElementById('bairroServico').textContent;
+            const cidade = document.getElementById('cidadeServico').textContent;
+            const estado = document.getElementById('estadoServico').textContent;
+            const metodoContato = document.getElementById('metodoContatoServico').textContent;
+        
+            if (!serviceId) {
+                alert("Erro: ID do serviço não encontrado!");
+                return;
+            }
+        
+            // Enviar a solicitação ao servidor
+            fetch('/api/solicitar_servico_confirmar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    prestador_id: serviceId,  // Passando o serviceId corretamente
+                    orcamento: orcamento,
+                    urgencia: urgencia,
+                    data_contato: dataContato,
+                    hora_contato: horaContato,
+                    mensagem_cliente: mensagemCliente,
+                    tipo_servico: tipoServico,
+                    descricao: descricao,
+                    localizacao: localizacao,
+                    rua: rua,
+                    bairro: bairro,
+                    cidade: cidade,
+                    estado: estado,
+                    metodo_contato: metodoContato
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Erro: ' + data.error);
+                } else {
+                    alert('Solicitação enviada com sucesso!');
+                    fecharPopupSolicitacao();  // Fecha o popup após a confirmação
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao enviar solicitação:', error);
+            });
+        }
+        
 
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('read-more-btn')) {
@@ -435,3 +603,5 @@ function enableTouchNavigation() {
         }
     });
 }
+
+

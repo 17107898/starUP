@@ -1,6 +1,3 @@
-// Variável global para indicar se é um dispositivo móvel
-let isMobileDevice = false;
-
 document.addEventListener("DOMContentLoaded", function() {
     function isMobile() {
         isMobileDevice = /Mobi|Android|iPhone/i.test(navigator.userAgent);
@@ -16,14 +13,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.log('Botões de navegação vertical removidos.');
             }
 
-            // Remover todas as classes e estilos inline (só depois da remoção dos botões)
-            const allElements = document.querySelectorAll('*');
-            allElements.forEach(element => {
-                element.className = '';  // Remove todas as classes
-                element.removeAttribute('style');  // Remove todos os estilos inline
+            // Remover apenas classes específicas que causam problemas no mobile
+            const elementsToClean = document.querySelectorAll('.some-specific-class-to-remove');
+            elementsToClean.forEach(element => {
+                element.classList.remove('some-specific-class-to-remove');  // Remove apenas as classes específicas
             });
-
-            console.log('Estilos e classes removidos para dispositivos móveis.');
 
             // Carregar o CSS específico para mobile
             const mobileStyle = document.createElement('link');

@@ -32,7 +32,69 @@ input, select, textarea {
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    box-sizing: border-box; /* Para garantir que o padding não ultrapasse o tamanho do campo */
 }
+
+
+
+
+
+/* Container para o checkbox e o label */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+}
+
+/* Esconder o checkbox padrão */
+.toggle-switch {
+    display: none;
+}
+
+/* Estilo para o interruptor */
+.toggle-switch + .toggle-switch-label {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 34px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* O círculo dentro do interruptor */
+.toggle-switch + .toggle-switch-label:before {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: white;
+    top: 1px;
+    left: 1px;
+    transition: transform 0.3s;
+}
+
+/* Cor de fundo quando o checkbox estiver selecionado (ativado) */
+.toggle-switch:checked + .toggle-switch-label {
+    background-color: #4CAF50;
+}
+
+/* Movendo o círculo para a direita quando o checkbox estiver ativado */
+.toggle-switch:checked + .toggle-switch-label:before {
+    transform: translateX(26px);
+}
+
+/* Estilo para o texto ao lado do interruptor */
+.toggle-text {
+    margin-left: 15px;
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+}
+
 
 textarea {
     resize: vertical;

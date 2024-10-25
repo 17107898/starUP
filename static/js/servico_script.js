@@ -60,33 +60,35 @@ document.getElementById('location').addEventListener('input', function () {
     }
 });
 
-// Função para exibir o campo de contato baseado na escolha do método
-document.getElementById('contactMethod').addEventListener('change', function () {
-    const selectedMethod = this.value;
-    const contactDetailDiv = document.getElementById('contactDetail');
-    const contactLabel = document.getElementById('contactLabel');
-    const contactInput = document.getElementById('contactInput');
-    
-    // Exibe o campo e define o placeholder e o label conforme o método escolhido
-    if (selectedMethod === 'email') {
-        contactLabel.innerHTML = 'Por favor, insira seu email:';
-        contactInput.placeholder = 'Digite seu email';
-        contactInput.type = 'email';
-        contactDetailDiv.style.display = 'block';  // Exibe o campo
-    } else if (selectedMethod === 'telefone') {
-        contactLabel.innerHTML = 'Por favor, insira seu número de telefone:';
-        contactInput.placeholder = 'Digite seu número de telefone';
-        contactInput.type = 'tel';  // Define como campo de telefone
-        contactDetailDiv.style.display = 'block';
-    } else if (selectedMethod === 'whatsapp') {
-        contactLabel.innerHTML = 'Por favor, insira seu número do WhatsApp:';
-        contactInput.placeholder = 'Digite seu número do WhatsApp';
-        contactInput.type = 'tel';  // Define como campo de telefone
-        contactDetailDiv.style.display = 'block';
-    } else {
-        contactDetailDiv.style.display = 'none';  // Oculta o campo se nenhum método for selecionado
-    }
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('contactMethod').addEventListener('change', function () {
+        const selectedMethod = this.value;
+        const contactDetailDiv = document.querySelector('.contact-container #contactDetail');
+        const contactLabel = document.querySelector('.contact-container #contactLabel');
+        const contactInput = document.querySelector('.contact-container #contactInput');
+        
+        if (selectedMethod === 'email') {
+            contactLabel.innerHTML = 'Por favor, insira seu email:';
+            contactInput.placeholder = 'Digite seu email';
+            contactInput.type = 'email';
+            contactDetailDiv.style.display = 'block';
+        } else if (selectedMethod === 'telefone') {
+            contactLabel.innerHTML = 'Por favor, insira seu número de telefone:';
+            contactInput.placeholder = 'Digite seu número de telefone';
+            contactInput.type = 'tel';
+            contactDetailDiv.style.display = 'block';
+        } else if (selectedMethod === 'whatsapp') {
+            contactLabel.innerHTML = 'Por favor, insira seu número do WhatsApp:';
+            contactInput.placeholder = 'Digite seu número do WhatsApp';
+            contactInput.type = 'tel';
+            contactDetailDiv.style.display = 'block';
+        } else {
+            contactDetailDiv.style.display = 'none';
+        }
+    });
 });
+
+
 
 document.getElementById('servicoForm').addEventListener('submit', function(event) {
     event.preventDefault();
@@ -107,17 +109,8 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
     const comments = document.getElementById('comments').value;
     const providerPreferences = document.getElementById('providerPreferences').value;
 
-    // Verificar se o campo de certificados existe
-    const certificadosElement = document.getElementById('certificados');
-    const certificados = certificadosElement ? certificadosElement.files : [];
-
-    if (!serviceType || !description || !budget || !urgency || !contactMethod || !contactDetail || !contactDate) {
-        document.getElementById('response').textContent = 'Por favor, preencha todos os campos obrigatórios.';
-        return;
-    }
-
     const formData = new FormData();
-    formData.append('prestadorId', prestadorId);
+    formData.append('prestadorId', prestadorId);  // Aqui o ID do prestador é incluído no formulário
     formData.append('serviceType', serviceType);
     formData.append('description', description);
     formData.append('budget', budget);
@@ -133,10 +126,13 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
     formData.append('comments', comments);
     formData.append('providerPreferences', providerPreferences);
 
-    // Adicionar certificados se existirem
+    // Verificar se o campo de certificados existe e se possui arquivos
+    const certificados = document.getElementById('certificados').files;  // Certificados
+
+    // Adicionar os certificados ao FormData
     if (certificados.length > 0) {
         for (let i = 0; i < certificados.length; i++) {
-            formData.append('certificados[]', certificados[i]);
+            formData.append('certificados[]', certificados[i]); // Adicionar múltiplos com '[]' no nome do campo
         }
     }
 
@@ -162,3 +158,4 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
         document.getElementById('response').textContent = 'Erro ao enviar o serviço.';
     });
 });
+

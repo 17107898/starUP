@@ -8,6 +8,7 @@ from datetime import datetime, date, time
 import secrets
 from itsdangerous import URLSafeTimedSerializer
 import smtplib
+import random
 app = Flask(__name__)
 
 
@@ -51,15 +52,14 @@ def connect_to_db():
 db = connect_to_db()
 cursor = db.cursor()
 
-def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=None, city=None, state=None, urgency=None):
-    # Log dos parâmetros recebidos
-    print(f"Recebendo parâmetros: service_type={service_type}, cep={cep}, street={street}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}")
+def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=None, city=None, state=None, urgency=None, localizacao_importante=True):
+    print(f"Recebendo parâmetros: service_type={service_type}, cep={cep}, street={street}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}, localizacao_importante={localizacao_importante}")
 
     db = connect_to_db()
     cursor = db.cursor(dictionary=True)
 
     query = """
-    SELECT prestadores.id AS prestador_id, 
+    SELECT prestadores.prestador_id AS prestador_id, 
         prestadores.nome, 
         servicos.tipo_servico AS servico, 
         servicos.descricao, 
@@ -72,13 +72,13 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
         servicos.bairro, 
         servicos.cidade, 
         servicos.estado,
-        prestadores.nota,  -- Modificado para pegar a nota de `prestadores`
+        prestadores.nota,  
         prestadores.contato
     FROM bd_servicos.prestadores
     JOIN bd_servicos.servicos 
-        ON prestadores.id = servicos.prestador_id
+        ON prestadores.prestador_id = servicos.prestador_id
     LEFT JOIN bd_servicos.uploads 
-        ON prestadores.id = uploads.prestador_id
+        ON prestadores.prestador_id = uploads.prestador_id
     WHERE 1=1
     """
     
@@ -94,26 +94,22 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
         query += " AND servicos.urgencia = %s"
         params.append(urgency)
 
-    # Prioridade de localização: Primeiro CEP, depois bairro, depois cidade, depois estado
-    if cep:
-        query += """
-        ORDER BY (servicos.localizacao = %s) DESC, 
-                 (servicos.bairro = %s) DESC, 
-                 (servicos.cidade = %s) DESC, 
-                 (servicos.estado = %s) DESC
-        """
-        params.extend([cep, neighborhood, city, state])
+    # Filtro de localização, mas apenas se a localização for importante para o cliente
+    if localizacao_importante:
+        if cep or neighborhood or city or state:
+            query += """
+            ORDER BY (servicos.localizacao = %s) DESC, 
+                    (servicos.bairro = %s) DESC, 
+                    (servicos.cidade = %s) DESC, 
+                    (servicos.estado = %s) DESC
+            """
+            params.extend([cep, neighborhood, city, state])
 
-    # Log da query e parâmetros
     print(f"Query final: {query}")
     print(f"Parâmetros da query: {params}")
 
-    # Executar a query
     cursor.execute(query, params)
     prestadores_servicos_uploads = cursor.fetchall()
-
-    # Log do número de resultados encontrados
-    print(f"Número de resultados encontrados: {len(prestadores_servicos_uploads)}")
 
     services = []
     prestadores_ids = set()
@@ -122,7 +118,6 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
         if prestador['prestador_id'] not in prestadores_ids:
             prestadores_ids.add(prestador['prestador_id'])
 
-            # Obter perfil, imagens e vídeos do prestador
             perfil_foto = next((upload['upload_id'] for upload in prestadores_servicos_uploads
                                 if upload['prestador_id'] == prestador['prestador_id'] and
                                 upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
@@ -133,9 +128,9 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
 
             videos = [upload['upload_id'] for upload in prestadores_servicos_uploads
                       if upload['prestador_id'] == prestador['prestador_id'] and upload['tipo_arquivo'] == 'video']
-                    # Mapeia o serviço para o valor legível
+
             service_type_legivel = SERVICE_LABELS.get(prestador['servico'], "Serviço Desconhecido")
-            # Criar objeto de serviço completo
+
             service = {
                 "id": prestador['prestador_id'],
                 "perfil_foto": perfil_foto,
@@ -152,14 +147,11 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
                     "state": prestador['estado']
                 },
                 "person_name": prestador['nome'],
-                "rating": prestador['nota'],  # Atribuindo a nota ao campo rating
+                "rating": prestador['nota'],
                 "bio": prestador['preferencias_prestador']
             }
 
             services.append(service)
-
-    # Log do número de serviços retornados
-    print(f"Número de serviços retornados: {len(services)}")
 
     cursor.close()
     db.close()
@@ -168,48 +160,54 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
 
 
 
-# Rota principal para renderizar a página HTML
+
 @app.route('/carrossel', methods=['GET'])
 def carrossel():
     service_type = request.args.get('serviceType')
-    cep = request.args.get('cep')  # Novo parâmetro
-    street = request.args.get('street')  # Novo parâmetro
-    neighborhood = request.args.get('neighborhood')  # Novo parâmetro
-    city = request.args.get('city')  # Novo parâmetro
-    state = request.args.get('state')  # Novo parâmetro
+    cep = request.args.get('cep')
+    street = request.args.get('street')
+    neighborhood = request.args.get('neighborhood')
+    city = request.args.get('city')
+    state = request.args.get('state')
     urgency = request.args.get('urgency')
-
-    # Log para verificar os filtros recebidos
-    print(f"Rota /carrossel - Filtros recebidos: serviceType={service_type}, cep={cep}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}")
+    localizacao_importante = request.args.get('localizacaoImportante', default='true') == 'true'
+    cliente_id = request.args.get('cliente_id')  # Obtenha o cliente_id dos parâmetros da URL
     
-    # Renderiza a página de carrossel com os novos filtros aplicados
+    # Log para verificar os filtros recebidos
+    print(f"Rota /carrossel - Filtros recebidos: serviceType={service_type}, cep={cep}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}, localizacao_importante={localizacao_importante}, cliente_id={cliente_id}")
+    
+    # Renderizar a página de carrossel com os novos filtros aplicados, incluindo cliente_id
     return render_template(
         'index.html', 
+        cliente_id=cliente_id,
         serviceType=service_type, 
         cep=cep, 
         street=street, 
         neighborhood=neighborhood, 
         city=city, 
         state=state, 
-        urgency=urgency
+        urgency=urgency,
+        localizacaoImportante=localizacao_importante
     )
-# Rota para fornecer serviços sem paginação
+
 @app.route('/get_services', methods=['GET'])
 def get_services():
-    # Obter filtros da URL
+    # Obter filtros da URL, incluindo cliente_id
+    cliente_id = request.args.get('cliente_id')
     service_type = request.args.get('serviceType')
-    cep = request.args.get('cep')  # Novo parâmetro
-    street = request.args.get('street')  # Novo parâmetro
-    neighborhood = request.args.get('neighborhood')  # Novo parâmetro
-    city = request.args.get('city')  # Novo parâmetro
-    state = request.args.get('state')  # Novo parâmetro
+    cep = request.args.get('cep')
+    street = request.args.get('street')
+    neighborhood = request.args.get('neighborhood')
+    city = request.args.get('city')
+    state = request.args.get('state')
     urgency = request.args.get('urgency')
+    localizacao_importante = request.args.get('localizacaoImportante', default='true') == 'true'
 
     # Log para verificar os filtros recebidos
-    print(f"Rota /get_services - Filtros recebidos: serviceType={service_type}, cep={cep}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}")
+    print(f"Rota /get_services - Filtros recebidos: serviceType={service_type}, cep={cep}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}, localizacao_importante={localizacao_importante}, cliente_id={cliente_id}")
 
-    # Buscar serviços filtrados com base nas preferências do cliente
-    all_services = get_services_from_db(service_type, cep, street, neighborhood, city, state, urgency)
+    # Buscar serviços filtrados com base nas preferências do cliente, incluindo cliente_id
+    all_services = get_services_from_db(service_type, cep, street, neighborhood, city, state, urgency, localizacao_importante)
     
     # Log para verificar quantos serviços foram encontrados
     print(f"Total de serviços encontrados: {len(all_services)}")
@@ -219,9 +217,11 @@ def get_services():
         "services": all_services
     })
 
+
 @app.route('/perfil_prestador', methods=['GET'])
 def perfil_prestador():
     prestador_id_url = request.args.get('prestador_id')
+    cliente_id_url = request.args.get('cliente_id')  # Pega o cliente_id da URL
 
     if not prestador_id_url:
         return "ID do prestador não fornecido", 400
@@ -232,33 +232,32 @@ def perfil_prestador():
 
     # Consulta ao banco de dados para obter os dados do prestador e seus serviços
     cursor.execute("""
-SELECT prestadores.id AS prestador_id, 
-       prestadores.nome, 
-       prestadores.email, 
-       prestadores.contato,
-       servicos.tipo_servico AS service_type, 
-       servicos.descricao, 
-       servicos.orcamento, 
-       servicos.urgencia, 
-       servicos.localizacao, 
-       servicos.rua, 
-       servicos.bairro, 
-       servicos.cidade, 
-       servicos.estado,  -- Mudando para servicos.estado
-       servicos.metodo_contato, 
-       servicos.data_contato, 
-       servicos.comentarios, 
-       uploads.id AS upload_id, 
-       uploads.tipo_arquivo, 
-       uploads.perfil_foto,
-       uploads.tipo_certificado
-FROM bd_servicos.prestadores
-JOIN bd_servicos.servicos 
-    ON prestadores.id = servicos.prestador_id
-LEFT JOIN bd_servicos.uploads 
-    ON prestadores.id = uploads.prestador_id
-WHERE prestadores.id = %s
-
+        SELECT prestadores.prestador_id AS prestador_id, 
+               prestadores.nome, 
+               prestadores.email, 
+               prestadores.contato,
+               servicos.tipo_servico AS service_type, 
+               servicos.descricao, 
+               servicos.orcamento, 
+               servicos.urgencia, 
+               servicos.localizacao, 
+               servicos.rua, 
+               servicos.bairro, 
+               servicos.cidade, 
+               servicos.estado, 
+               servicos.metodo_contato, 
+               servicos.data_contato, 
+               servicos.comentarios, 
+               uploads.id AS upload_id, 
+               uploads.tipo_arquivo, 
+               uploads.perfil_foto,
+               uploads.tipo_certificado
+        FROM bd_servicos.prestadores
+        JOIN bd_servicos.servicos 
+            ON prestadores.prestador_id = servicos.prestador_id
+        LEFT JOIN bd_servicos.uploads 
+            ON prestadores.prestador_id = uploads.prestador_id  
+        WHERE prestadores.prestador_id = %s;
     """, (prestador_id_url,))
     
     prestador = cursor.fetchall()
@@ -275,6 +274,32 @@ WHERE prestadores.id = %s
     
     feedbacks = cursor.fetchall()
 
+    # Verificar se o cliente_id_url foi passado e consultar se for o caso
+    is_owner = False  # Inicializar como falso
+    
+    if cliente_id_url:
+        cursor.execute("""
+            SELECT cliente_id, nome, 'cliente' AS tipo_usuario
+            FROM bd_servicos.clientes
+            WHERE cliente_id = %s
+        """, (cliente_id_url,))
+        cliente = cursor.fetchone()
+        
+        if cliente:
+            is_owner = False  # O cliente nunca será o dono do prestador, apenas um visitante
+
+    else:
+        # Consultar se o usuário logado é o prestador
+        cursor.execute("""
+            SELECT prestador_id, nome, 'prestador' AS tipo_usuario
+            FROM bd_servicos.prestadores
+            WHERE prestador_id = %s
+        """, (prestador_id_url,))
+        
+        prestador_logado = cursor.fetchone()
+        if prestador_logado:
+            is_owner = True  # Se o prestador acessando o perfil é o mesmo que o prestador_id da URL, então ele é o dono
+
     cursor.close()
     db.close()
 
@@ -285,10 +310,26 @@ WHERE prestadores.id = %s
         soma_notas = sum(feedback['nota'] for feedback in feedbacks)
         media_nota = round(soma_notas / total_feedbacks, 2)
 
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Atualizar a média de nota no prestador
+    cursor.execute("""
+        UPDATE bd_servicos.prestadores 
+        SET nota = %s 
+        WHERE prestador_id = %s
+    """, (media_nota, prestador_id_url))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+
     prestador_dados = {
         'nome': prestador[0]['nome'],
         'email': prestador[0]['email'],
-        'contato':prestador[0]['contato'],
+        'contato': prestador[0]['contato'],
         'nota': media_nota,  # Usamos a nova média calculada
         'service_type': prestador[0]['service_type'],
         'descricao': prestador[0]['descricao'],
@@ -308,7 +349,7 @@ WHERE prestadores.id = %s
     perfil_foto = next((upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
     images = [upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['upload_id'] != perfil_foto]
     videos = [upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'video']
-    # Coletar os certificados do prestador e enviar para o frontend
+
     # Coletar os certificados do prestador e enviar para o frontend
     certificados = [(upload['upload_id'], upload['tipo_certificado'].decode('utf-8') if isinstance(upload['tipo_certificado'], bytes) else upload['tipo_certificado'])
                     for upload in prestador if upload['tipo_certificado']]
@@ -316,12 +357,7 @@ WHERE prestadores.id = %s
     # Remover duplicatas de certificados
     certificados_unicos = list(dict.fromkeys(certificados))  # Remove duplicatas
 
-    print(f'Certificados: {certificados_unicos}')
-
-    is_owner = 'prestador_id' in session and str(session['prestador_id']) == str(prestador_id_url)
-
-    return render_template('perfil_prestador.html', prestador_id=prestador_id_url,prestador=prestador_dados, certificados=certificados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
-
+    return render_template('perfil_prestador.html', prestador_id=prestador_id_url, prestador=prestador_dados, certificados=certificados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
 
 
 # Mapeamento dos meses para português
@@ -353,21 +389,22 @@ def get_solicitacoes():
     if not prestador_id:
         return jsonify({'error': 'Prestador não autenticado'}), 401
     
-    # Conectar ao banco de dados e buscar as solicitações
+    # Conectar ao banco de dados e buscar as solicitações ordenadas
     db = connect_to_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
-        SELECT id, nome_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato, contato_cliente, lido 
+        SELECT id, nome_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato, contato_cliente, lido, status, data_solicitacao_cliente 
         FROM solicitacao 
         WHERE prestador_id = %s
+        ORDER BY lido ASC, status = 'aceito', data_solicitacao_cliente DESC
     """, (prestador_id,))
+    
     solicitacoes = cursor.fetchall()
     
     # Formatar datas e horas
     for solicitacao in solicitacoes:
         if 'data_contato' in solicitacao and solicitacao['data_contato']:
             data_contato = solicitacao['data_contato']
-            # Certifique-se de que a data está no formato datetime ou date antes de formatar
             if isinstance(data_contato, (datetime, date)):
                 solicitacao['data_contato'] = formatar_data_brasileira(data_contato)
         if 'hora_contato' in solicitacao and solicitacao['hora_contato']:
@@ -380,7 +417,6 @@ def get_solicitacoes():
 
 
 
-
 @app.route('/api/marcar_lido/<int:solicitacao_id>', methods=['POST'])
 def marcar_lido(solicitacao_id):
     prestador_id = session.get('prestador_id')
@@ -388,20 +424,95 @@ def marcar_lido(solicitacao_id):
     if not prestador_id:
         return jsonify({'error': 'Prestador não autenticado'}), 401
 
-    # Conectar ao banco de dados e marcar a solicitação como lida
+    # Conectar ao banco de dados
     db = connect_to_db()
     cursor = db.cursor()
+
+    # Verificar se a solicitação já foi marcada como lida
+    cursor.execute("""
+        SELECT lido FROM solicitacao WHERE id = %s AND prestador_id = %s
+    """, (solicitacao_id, prestador_id))  # Aqui usa 'id', pois solicitacao_id refere-se ao campo id da solicitacao
+    resultado = cursor.fetchone()
+
+    if resultado and resultado[0] == 1:  # Se já estiver lido, não faça update
+        cursor.close()
+        db.close()
+        return jsonify({'message': 'Solicitação já foi marcada como lida anteriormente.'})
+
+    # Atualizar o status de lido e registrar a data e hora
     cursor.execute("""
         UPDATE solicitacao 
-        SET lido = TRUE 
+        SET lido = TRUE, data_visto_prestador = NOW() 
         WHERE id = %s AND prestador_id = %s
-    """, (solicitacao_id, prestador_id))
+    """, (solicitacao_id, prestador_id))  # Aqui também, usa 'id'
 
     db.commit()
     cursor.close()
     db.close()
 
     return jsonify({'message': 'Solicitação marcada como lida'})
+
+
+
+@app.route('/api/aceitar_servico/<int:solicitacao_id>', methods=['POST'])
+def aceitar_servico(solicitacao_id):
+    prestador_id = session.get('prestador_id')
+
+    if not prestador_id:
+        return jsonify({'error': 'Prestador não autenticado'}), 401
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Verificar se o serviço já foi aceito
+    cursor.execute("""
+        SELECT status FROM solicitacao WHERE id = %s AND prestador_id = %s
+    """, (solicitacao_id, prestador_id))  # Alterado para usar o `id` da solicitação (solicitacao_id)
+    resultado = cursor.fetchone()
+
+    if resultado and resultado[0] == 'aceito':  # Se já estiver aceito, não faça update
+        cursor.close()
+        db.close()
+        return jsonify({'message': 'Serviço já foi aceito anteriormente.'})
+
+    # Atualizar o status de aceito e registrar a data e hora
+    cursor.execute("""
+        UPDATE solicitacao 
+        SET status = 'aceito', data_aceito_prestador = NOW() 
+        WHERE id = %s AND prestador_id = %s
+    """, (solicitacao_id, prestador_id))  # Alterado para usar `id` da solicitação
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({'message': 'Serviço aceito com sucesso!'})
+
+@app.route('/api/servico/<int:service_id>', methods=['GET'])
+def get_service(service_id):
+    print(f'o que chegou: {service_id}')
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+    
+    # Consultar os dados do serviço pelo ID do serviço
+    cursor.execute("""
+        SELECT tipo_servico AS service_name, descricao, orcamento, urgencia, data_contato, localizacao, rua, bairro, cidade, estado, metodo_contato 
+        FROM bd_servicos.servicos 
+        WHERE prestador_id = %s
+    """, (service_id,))
+    
+    service = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not service:
+        # Retornar uma mensagem de erro em formato JSON
+        return jsonify({'error': 'Serviço não encontrado'}), 404
+
+    # Retornar os dados do serviço como JSON
+    return jsonify(service)
 
 
 
@@ -525,7 +636,7 @@ def editar_prestador():
     cursor.execute("""
         UPDATE bd_servicos.prestadores
         SET contato = %s
-        WHERE id = %s
+        WHERE prestador_id = %s
     """, (contato, prestador_id))
 
     cursor.execute("""
@@ -534,6 +645,7 @@ def editar_prestador():
         WHERE prestador_id = %s
     """, (service_type, descricao, orcamento, urgencia, localizacao, rua, bairro, cidade, estado, metodo_contato, data_contato, prestador_id))
 
+    # Verificar se uma nova foto de perfil foi enviada
     # Verificar se uma nova foto de perfil foi enviada
     if 'perfil_foto' in request.files:
         perfil_foto = request.files['perfil_foto']
@@ -545,7 +657,6 @@ def editar_prestador():
                 VALUES (%s, %s, 'imagem', 'perfil', NOW())
                 ON DUPLICATE KEY UPDATE arquivo = %s
             """, (prestador_id, perfil_foto_binario, perfil_foto_binario))
-
     # Verificar se os documentos foram enviados
     if 'documents' in request.files:
         documents = request.files.getlist('documents')
@@ -556,7 +667,6 @@ def editar_prestador():
             WHERE prestador_id = %s AND tipo_arquivo = 'imagem'
         """, (prestador_id,))
         db.commit()
-
         # Inserir novos documentos
         for document in documents:
             if document.filename != '':
@@ -565,7 +675,6 @@ def editar_prestador():
                     INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, created_at)
                     VALUES (%s, %s, 'imagem', NOW())
                 """, (prestador_id, document_binario))
-
     # Verificar se o vídeo foi enviado
     if 'video' in request.files:
         video = request.files['video']
@@ -687,11 +796,11 @@ def login():
     cursor.execute("""
         SELECT id, nome, email, senha, tipo_usuario 
         FROM (
-            SELECT id, nome, email, senha, 'cliente' AS tipo_usuario 
+            SELECT cliente_id AS id, nome, email, senha, 'cliente' AS tipo_usuario 
             FROM bd_servicos.clientes 
             WHERE email = %s
             UNION
-            SELECT id, nome, email, senha, 'prestador' AS tipo_usuario 
+            SELECT prestador_id AS id, nome, email, senha, 'prestador' AS tipo_usuario 
             FROM bd_servicos.prestadores 
             WHERE email = %s
         ) AS usuarios
@@ -718,21 +827,29 @@ def login():
             elif tipo_usuario == 'cliente':
                 cliente_id = result['id']
                 session['cliente_id'] = cliente_id  # Armazenar ID do cliente
+                
+                # Buscar a preferência de localização e os serviços
                 cursor.execute("""
-                    SELECT servicos.* 
+                    SELECT servicos.*, clientes.localizacao_importante 
                     FROM bd_servicos.servicos 
-                    WHERE cliente_id = %s
+                    JOIN bd_servicos.clientes ON clientes.cliente_id = servicos.cliente_id
+                    WHERE servicos.cliente_id = %s
                 """, (cliente_id,))
+                
                 servicos = cursor.fetchall()
 
                 if servicos:
-                    redirect_url = url_for('carrossel', serviceType=servicos[0]['tipo_servico'], 
+                    localizacao_importante = servicos[0]['localizacao_importante']
+                    redirect_url = url_for('carrossel', 
+                                           cliente_id=cliente_id,
+                                           serviceType=servicos[0]['tipo_servico'], 
                                            cep=servicos[0]['localizacao'], 
                                            street=servicos[0]['rua'], 
                                            neighborhood=servicos[0]['bairro'], 
                                            city=servicos[0]['cidade'], 
                                            state=servicos[0]['estado'], 
-                                           urgency=servicos[0]['urgencia'])
+                                           urgency=servicos[0]['urgencia'], 
+                                           localizacaoImportante=localizacao_importante)
                     return jsonify({'redirectUrl': redirect_url})
                 else:
                     return jsonify({'message': 'Nenhum serviço encontrado para este cliente'}), 404
@@ -756,9 +873,9 @@ def esqueceu_senha():
 
         # Verificar se o email está cadastrado em clientes ou prestadores
         cursor.execute("""
-            SELECT id, 'cliente' as tipo_usuario FROM bd_servicos.clientes WHERE email = %s
+            SELECT cliente_id, 'cliente' as tipo_usuario FROM bd_servicos.clientes WHERE email = %s
             UNION
-            SELECT id, 'prestador' as tipo_usuario FROM bd_servicos.prestadores WHERE email = %s
+            SELECT prestador_id, 'prestador' as tipo_usuario FROM bd_servicos.prestadores WHERE email = %s
         """, (email, email))
 
         user = cursor.fetchone()
@@ -770,12 +887,12 @@ def esqueceu_senha():
             # Salvar o token no banco, associado ao usuário
             if user['tipo_usuario'] == 'cliente':
                 cursor.execute("""
-                    UPDATE bd_servicos.clientes SET reset_token = %s WHERE id = %s
-                """, (token, user['id']))
+                    UPDATE bd_servicos.clientes SET reset_token = %s WHERE cliente_id = %s
+                """, (token, user['cliente_id']))
             elif user['tipo_usuario'] == 'prestador':
                 cursor.execute("""
-                    UPDATE bd_servicos.prestadores SET reset_token = %s WHERE id = %s
-                """, (token, user['id']))
+                    UPDATE bd_servicos.prestadores SET reset_token = %s WHERE prestador_id = %s
+                """, (token, user['prestador_id']))
 
             db.commit()
 
@@ -813,9 +930,9 @@ def reset_senha(token):
 
     # Verificar o token tanto em clientes quanto prestadores
     cursor.execute("""
-        SELECT id, 'cliente' as tipo_usuario FROM bd_servicos.clientes WHERE reset_token = %s
+        SELECT cliente_id, 'cliente' as tipo_usuario FROM bd_servicos.clientes WHERE reset_token = %s
         UNION
-        SELECT id, 'prestador' as tipo_usuario FROM bd_servicos.prestadores WHERE reset_token = %s
+        SELECT prestador_id, 'prestador' as tipo_usuario FROM bd_servicos.prestadores WHERE reset_token = %s
     """, (token, token))
 
     user = cursor.fetchone()
@@ -831,12 +948,12 @@ def reset_senha(token):
 
         if user['tipo_usuario'] == 'cliente':
             cursor.execute("""
-                UPDATE bd_servicos.clientes SET senha = %s, reset_token = NULL WHERE id = %s
-            """, (senha_hash, user['id']))
+                UPDATE bd_servicos.clientes SET senha = %s, reset_token = NULL WHERE cliente_id = %s
+            """, (senha_hash, user['cliente_id']))
         elif user['tipo_usuario'] == 'prestador':
             cursor.execute("""
-                UPDATE bd_servicos.prestadores SET senha = %s, reset_token = NULL WHERE id = %s
-            """, (senha_hash, user['id']))
+                UPDATE bd_servicos.prestadores SET senha = %s, reset_token = NULL WHERE prestador_id = %s
+            """, (senha_hash, user['prestador_id']))
 
         db.commit()
 
@@ -861,15 +978,16 @@ def register():
     senha = data['password']
 
     # Buscar o cliente pelo email
-    cursor.execute("SELECT id, senha FROM clientes WHERE email = %s", (email,))
+    cursor.execute("SELECT id, senha, cliente_id FROM clientes WHERE email = %s", (email,))
     result = cursor.fetchone()
 
     if result and check_password_hash(result[1], senha):
-        # Armazene o ID do cliente na sessão
-        session['cliente_id'] = result[0]
+        # Armazene o `cliente_id` na sessão
+        session['cliente_id'] = result[2]  # Aqui salvamos o cliente_id gerado anteriormente
         return jsonify({'message': 'Login bem-sucedido'})
     else:
         return jsonify({'message': 'Credenciais inválidas'}), 401
+
 
 
 @app.route('/api/cadastrar-cliente', methods=['POST'])
@@ -894,13 +1012,6 @@ def cadastrar_cliente():
         cursor.execute("SELECT id FROM clientes WHERE cnpj = %s", (cnpj,))
         cliente_existente_cnpj = cursor.fetchone()
 
-    # Verificar se o ID do cliente já está cadastrado (supondo que o ID seja fornecido pelo cliente)
-    cliente_id = data.get('cliente_id', None)
-    cliente_existente_id = None
-    if cliente_id:
-        cursor.execute("SELECT id FROM clientes WHERE id = %s", (cliente_id,))
-        cliente_existente_id = cursor.fetchone()
-
     # Se o e-mail já estiver cadastrado, retornar uma mensagem de erro
     if cliente_existente_email:
         return jsonify({
@@ -915,18 +1026,25 @@ def cadastrar_cliente():
             'success': False
         }), 400  # Código de erro HTTP 400 - Bad Request
 
-    # Inserir o novo cliente no banco de dados com tipo_usuario = 'cliente'
+    # Gerar um `cliente_id` aleatório de 7 dígitos
+    cliente_id = random.randint(1000000, 9999999)
+
+    # Inserir o novo cliente no banco de dados com tipo_usuario = 'cliente' e o `cliente_id` gerado
     cursor.execute(
-        "INSERT INTO clientes (nome, email, senha, cnpj, tipo_usuario) VALUES (%s, %s, %s, %s, 'cliente')",
-        (nome, email, senha_hash, cnpj)
+        "INSERT INTO clientes (nome, email, senha, cnpj, tipo_usuario, cliente_id) VALUES (%s, %s, %s, %s, 'cliente', %s)",
+        (nome, email, senha_hash, cnpj, cliente_id)
     )
     db.commit()
+
+    # Armazenar o `cliente_id` gerado na sessão para futuras requisições
+    session['cliente_id'] = cliente_id
 
     return jsonify({
         'message': 'Cliente cadastrado com sucesso!',
         'redirect': url_for('solicitar_servico'),
         'success': True
     })
+
 
 # Rota para a página de solicitação de serviço
 @app.route('/solicitar_servico', methods=['GET'])
@@ -965,12 +1083,26 @@ def api_solicitar_servico():
     comments = request.form.get('comments')
     provider_preferences = request.form.get('providerPreferences')
     references = request.files.get('references')  # Arquivo opcional
+    localizacao_importante = request.form.get('localizacaoImportante')  # Valor do checkbox
+
+    # Converter o valor do checkbox para True ou False
+    if localizacao_importante == 'on':
+        localizacao_importante = True
+    else:
+        localizacao_importante = False
 
     # Salvar o arquivo de referência, se existir
     referencia_arquivo = None
     if references:
         referencia_arquivo = f'salvar/arquivos/{references.filename}'
         references.save(referencia_arquivo)
+
+    # Atualizar a coluna localizacao_importante no cadastro do cliente
+    cursor.execute("""
+        UPDATE bd_servicos.clientes 
+        SET localizacao_importante = %s
+        WHERE id = %s
+    """, (localizacao_importante, cliente_id))
 
     # Verificar se já existe uma solicitação de serviço para este cliente e tipo de serviço
     cursor.execute("""
@@ -979,13 +1111,12 @@ def api_solicitar_servico():
     servico_existente = cursor.fetchone()
 
     if servico_existente:
-        # Se já existir um serviço do mesmo tipo para este cliente, retornar erro
         return jsonify({
             'message': 'Você já solicitou este tipo de serviço. Por favor, aguarde o processamento ou entre em contato para mais informações.',
             'success': False
-        }), 400  # Código de erro HTTP 400 - Bad Request
+        }), 400
 
-    # Inserir os dados no banco de dados, incluindo as informações de endereço
+    # Inserir os dados do serviço no banco de dados, incluindo as informações de localização e urgência
     cursor.execute(
         """
         INSERT INTO servicos (cliente_id, tipo_servico, descricao, orcamento, urgencia, localizacao, 
@@ -998,10 +1129,181 @@ def api_solicitar_servico():
     )
     db.commit()
 
-    # Redirecionar para a página principal com os filtros aplicados
-    return redirect(url_for('carrossel', serviceType=service_type, cep=cep, street=street, neighborhood=neighborhood, city=city, state=state, urgency=urgency))
+    return redirect(url_for('carrossel', cliente_id=cliente_id, serviceType=service_type, cep=cep, street=street, neighborhood=neighborhood, city=city, state=state, urgency=urgency, localizacaoImportante=localizacao_importante))
 
-# solicitar serviço
+@app.route('/api/checar_convite', methods=['GET'])
+def checar_convite():
+    cliente_id = session.get('cliente_id')
+    print(f'coleta_status: {cliente_id}')
+    
+    if not cliente_id:
+        return jsonify({'error': 'Cliente não autenticado'}), 401
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    # Buscar o status do convite relacionado ao cliente
+    cursor.execute("""
+    SELECT s.status, s.lido, s.data_visto_prestador, s.data_aceito_prestador, p.nome AS prestador_nome
+    FROM bd_servicos.solicitacao s
+    JOIN bd_servicos.prestadores p ON s.prestador_id = p.prestador_id
+    WHERE s.cliente_id = %s
+    ORDER BY s.data_solicitacao DESC
+    """, (cliente_id,))
+
+    convites = cursor.fetchall()  # Buscar todos os resultados, não apenas um
+
+    cursor.close()
+    db.close()
+
+    if convites:
+        # Retornar todos os convites em um array
+        return jsonify(convites)
+    else:
+        return jsonify({'error': 'Nenhum convite encontrado.'}), 404
+
+@app.route('/api/pegar_prestadores_aceitos', methods=['GET'])
+def pegar_prestadores_aceitos():
+    cliente_id = session.get('cliente_id')
+
+    if not cliente_id:
+        return jsonify({'error': 'Cliente não autenticado'}), 401
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    # Buscar os prestadores que aceitaram o serviço do cliente e que ainda não foram avaliados
+    cursor.execute("""
+    SELECT s.prestador_id, s.cliente_id, s.nome_cliente, p.nome AS nome_prestador
+    FROM bd_servicos.solicitacao s
+    JOIN bd_servicos.prestadores p ON s.prestador_id = p.prestador_id
+    LEFT JOIN bd_servicos.feedback f ON s.prestador_id = f.id_prestador AND s.cliente_id = f.id_cliente
+    WHERE s.cliente_id = %s AND s.status = 'aceito' AND f.id_prestador IS NULL
+    """, (cliente_id,))
+    
+    prestadores_aceitos = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    if not prestadores_aceitos:
+        return jsonify({'error': 'Nenhum prestador encontrado ou todos já foram avaliados.'}), 404
+
+    return jsonify(prestadores_aceitos)
+
+
+    return jsonify(prestadores_aceitos)
+@app.route('/api/cadastrar_feedback', methods=['POST'])
+def cadastrar_feedback():
+    cliente_id = session.get('cliente_id')
+    data = request.get_json()
+
+    comentario = data.get('comentario')
+    nota = data.get('nota')
+    id_prestador = data.get('id_prestador')
+    nome_cliente = data.get('nome_cliente')
+
+    if not cliente_id:
+        return jsonify({'error': 'Cliente não autenticado'}), 401
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Inserir o feedback na tabela
+    cursor.execute("""
+    INSERT INTO bd_servicos.feedback (comentario, nota, id_prestador, nome_cliente, id_cliente)
+    VALUES (%s, %s, %s, %s, %s)
+    """, (comentario, nota, id_prestador, nome_cliente, cliente_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({'message': 'Feedback cadastrado com sucesso!'})
+
+
+@app.route('/api/obter_dados_servico/<int:servico_id>', methods=['GET'])
+def obter_dados_servico(servico_id):
+    print('test')
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+    
+    # Buscar os dados do serviço com base no ID do serviço e associar com o cliente
+    cursor.execute("""
+        SELECT s.tipo_servico, s.descricao, s.urgencia, c.localizacao_importante,
+               s.localizacao AS cep, s.rua, s.bairro, s.cidade, s.estado
+        FROM bd_servicos.servicos s
+        LEFT JOIN bd_servicos.clientes c ON s.cliente_id = c.cliente_id
+        WHERE c.cliente_id = %s
+    """, (servico_id,))
+    
+    servico = cursor.fetchone()
+    
+    if servico:
+        return jsonify(servico)
+    else:
+        return jsonify({'error': 'Serviço não encontrado.'}), 404
+
+
+
+    
+@app.route('/api/alterar_servico/<int:servico_id>', methods=['POST'])
+def alterar_servico(servico_id):
+    tipo_servico = request.form.get('tipo_servico')
+    descricao = request.form.get('descricao')
+    urgencia = request.form.get('urgencia')
+    localizacao_importante = request.form.get('localizacao_importante') == 'true'  # Converter para booleano
+
+    # Dados de localização (se aplicável)
+    cep = request.form.get('location')  # Supondo que location seja cep no banco
+    rua = request.form.get('street')  # Supondo que street seja rua no banco
+    bairro = request.form.get('neighborhood')  # Supondo que neighborhood seja bairro no banco
+    cidade = request.form.get('city')
+    estado = request.form.get('state')
+
+    # Conecte-se ao banco de dados e atualize as informações
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Atualizar os campos na tabela 'servicos'
+    cursor.execute("""
+        UPDATE bd_servicos.servicos 
+        SET tipo_servico = %s, descricao = %s, urgencia = %s
+        WHERE cliente_id = %s
+    """, (tipo_servico, descricao, urgencia, servico_id))
+
+    # Atualizar o campo 'localizacao_importante' na tabela 'clientes'
+    cursor.execute("""
+        UPDATE bd_servicos.clientes 
+        SET localizacao_importante = %s
+        WHERE cliente_id = %s
+    """, (localizacao_importante, servico_id))  # Atualiza localizacao_importante no cliente
+
+    # Se a localização não for importante, apagar os campos de localização (definir como NULL)
+    if not localizacao_importante:
+        cursor.execute("""
+            UPDATE bd_servicos.servicos
+            SET localizacao = NULL, rua = NULL, bairro = NULL, cidade = NULL, estado = NULL
+            WHERE cliente_id = %s
+        """, (servico_id,))
+    else:
+        # Se a localização for importante, atualizar os campos com os valores fornecidos
+        cursor.execute("""
+            UPDATE bd_servicos.servicos
+            SET localizacao = %s, rua = %s, bairro = %s, cidade = %s, estado = %s
+            WHERE cliente_id = %s
+        """, (cep, rua, bairro, cidade, estado, servico_id))
+
+    db.commit()
+
+    return jsonify({'message': 'Serviço alterado com sucesso!'})
+
+
+
 
 @app.route('/api/solicitar_servico_confirmar', methods=['POST'])
 def solicitar_servico_confirmar():
@@ -1029,7 +1331,7 @@ def solicitar_servico_confirmar():
     cursor.execute("""
         SELECT nome, email 
         FROM bd_servicos.clientes 
-        WHERE id = %s
+        WHERE cliente_id = %s
     """, (cliente_id,))
     cliente_info = cursor.fetchone()
 
@@ -1042,9 +1344,9 @@ def solicitar_servico_confirmar():
     # Inserir a solicitação no banco de dados
     cursor.execute("""
         INSERT INTO solicitacao 
-        (prestador_id, nome_cliente, contato_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (prestador_id, nome_cliente, contato_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato))
+        (prestador_id, nome_cliente, contato_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato, status, data_solicitacao_cliente, cliente_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+    """, (prestador_id, nome_cliente, contato_cliente, mensagem, orcamento, urgencia, data_contato, hora_contato, "pendente", cliente_id))
 
     db.commit()
     cursor.close()
@@ -1081,7 +1383,8 @@ def cadastrar_prestador():
     # Verificar se o e-mail já está cadastrado
     cursor.execute("SELECT id FROM prestadores WHERE email = %s", (email,))
     prestador_existente_email = cursor.fetchone()
-
+        # Gerar um prestador_id aleatório de 7 dígitos (1000000 a 9999999)
+    prestador_id = random.randint(1000000, 9999999)
     if prestador_existente_email:
         # Fechar conexão com o banco de dados
         cursor.close()
@@ -1095,13 +1398,13 @@ def cadastrar_prestador():
 
     # Inserir o novo prestador no banco de dados (o ID será gerado automaticamente)
     cursor.execute(
-        "INSERT INTO prestadores (nome, email, senha, servico, tipo_usuario) VALUES (%s, %s, %s, %s, 'prestador')",
-        (nome, email, senha_hash, servico)
+        "INSERT INTO prestadores (nome, email, senha, servico, tipo_usuario, prestador_id) VALUES (%s, %s, %s, %s, 'prestador', %s)",
+        (nome, email, senha_hash, servico, prestador_id)
     )
     db.commit()
 
     # Pegar o ID do prestador que acabou de ser inserido
-    prestador_id = cursor.lastrowid
+
 
     # Armazenar o ID do prestador na sessão
     session['prestador_id'] = prestador_id
@@ -1129,11 +1432,11 @@ def cadastro_prestador():
 @app.route('/prestador_servico', methods=['GET'])
 def prestador_servico():
     prestador_id = session.get('prestador_id')  # Ou qualquer outro método para obter o ID do prestador
-
+    print(f'o que está indo: {prestador_id}')
     # Consultar o tipo de serviço do prestador no banco de dados
 
     # Consultar o tipo de serviço e o nome do prestador no banco de dados
-    cursor.execute("SELECT servico, nome FROM prestadores WHERE id = %s", (prestador_id,))
+    cursor.execute("SELECT servico, nome FROM prestadores WHERE prestador_id = %s", (prestador_id,))
     resultado = cursor.fetchone()
 
     # Se o prestador tiver um serviço e nome cadastrados, extraia os valores
@@ -1158,11 +1461,10 @@ def prestador_servico():
 # Rota para tratar a solicitação de serviço do prestador
 @app.route('/api/cadastrar-servico', methods=['POST'])
 def api_prestador_solicitar_servico():
-    # Coletar dados do formulário ao invés de JSON
+    # Coletar dados do formulário
     data = request.form
+    prestador_id = data.get('prestadorId')  # Obter o ID do prestador do formulário ao invés da sessão
 
-    # Coletar o ID do prestador e os outros dados enviados
-    prestador_id = data.get('prestadorId')
     service_type_legivel = data.get('serviceType')  # Este é o valor legível recebido do front-end
     description = data.get('description')
     budget = data.get('budget')
@@ -1224,17 +1526,30 @@ def api_prestador_solicitar_servico():
 
     db.commit()
 
-    # Aqui, o upload de mídia (certificados) será manipulado.
+    # Verificar se os certificados foram enviados
     if 'certificados' in request.files:
         certificados = request.files.getlist('certificados')
-        
+
         for certificado in certificados:
             if certificado.filename != '':
-                certificado_binario = certificado.read()  # Ler conteúdo binário
+                # Verificar se já existe um certificado com o mesmo nome para evitar duplicação
+                cursor.execute("""
+                    SELECT id FROM bd_servicos.uploads 
+                    WHERE prestador_id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
+                """, (prestador_id, certificado.filename))
+
+                duplicado = cursor.fetchone()
+
+                if duplicado:
+                    print(f"Certificado {certificado.filename} já existe. Pulando inserção.")
+                    continue
+
+                certificado_binario = certificado.read()
                 cursor.execute("""
                     INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
-                    VALUES (%s, %s, 'certificado', 'certificado', NOW())
-                """, (prestador_id, certificado_binario))
+                    VALUES (%s, %s, 'certificado', %s, NOW())
+                """, (prestador_id, certificado_binario, certificado.filename))
+
 
     # Confirmar a transação final
     db.commit()
@@ -1244,7 +1559,6 @@ def api_prestador_solicitar_servico():
         'redirect': url_for('upload_midia'),  # Redirecionar para uma página de upload de mídia (opcional)
         'success': True
     })
-
 
 
 # ------------------------------------
@@ -1289,7 +1603,8 @@ def api_upload_midia():
         db.commit()
 
     return jsonify({
-        'message': 'Mídia enviada com sucesso!'
+        'message': 'Mídia enviada com sucesso!',
+        'redirect': url_for('login_page')  # Adiciona a URL de redirecionamento no JSON
     })
 
 

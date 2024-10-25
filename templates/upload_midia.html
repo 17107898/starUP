@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/upload_midia.css') }}">
-    <title>Upload de Mídia</title>
 </head>
 <body>
-    <h2>Carregar Documentos e Mídias</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
+    <div class="container">
+        <form id="uploadForm" enctype="multipart/form-data">
+        <h2>Carregar Documentos e Mídias</h2>
+        <title>Upload de Mídia</title>
         <label for="perfil_foto">Selecione a Foto de Perfil:</label>
         <input type="file" id="perfil_foto" name="perfil_foto" accept="image/*">
         <br>
 
-        <label for="documents">Selecione até 4 Imagens/Documentos:</label>
+        <label for="documents">Selecione até 4 Imagens:</label>
         <input type="file" id="documents" name="documents" accept="image/*,.pdf" multiple>
         <br>
 
@@ -24,10 +25,9 @@
         <div id="preview"></div> <!-- Área para pré-visualização -->
 
         <button type="submit">Enviar Mídia</button>
+        <p id="response"></p>
     </form>
-
-    <p id="response"></p>
-
+</div>
     <script src="{{ url_for('static', filename='js/upload_script.js') }}"></script>
 </body>
 </html>

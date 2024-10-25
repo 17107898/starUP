@@ -9,16 +9,48 @@
 <body>
 
 <div class="container" id="initialScreen">
-    <h1>Bem-vindo</h1>
-    <button class="btn" id="loginButton" onclick="window.location.href='/login';">Entrar</button>
-    <button class="btn" id="registerButton">Cadastro</button>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/LOGGO.png') }}" alt="Logo do Site">
+    </div>
+    <nav>
+        <button class="btn" id="loginButton" onclick="window.location.href='/login';">Entrar</button>
+        <button class="btn" id="registerButton">Cadastro</button>
+    </nav>
 </div>
-    
+
+<div class="texto">
+    <div class="clientes">
+        <h1>Para Clientes:</h1>
+        <ul>
+            <li><strong>Facilidade na Contratação de Serviços:</strong> O sistema de "matchmaking" conecta as empresas rapidamente aos profissionais de TI que melhor atendem suas necessidades, economizando tempo e esforço no processo de busca.</li>
+            <li><strong>Acesso a Profissionais Qualificados:</strong> A plataforma fornece perfis detalhados com competências, certificações e avaliações anteriores, ajudando a garantir que a empresa contrate profissionais qualificados e experientes.</li>
+            <li><strong>Experiência de Usuário Aprimorada:</strong> A interface intuitiva e o suporte técnico eficaz tornam o uso da plataforma fácil e satisfatório, com um processo de contratação e navegação fluído.</li>
+            <li><strong>Monitoramento Centralizado:</strong> As empresas podem gerenciar solicitações de serviços, acompanhar assistências técnicas e monitorar necessidades de TI em um único lugar.</li>
+            <li><strong>Informações Analíticas:</strong> A plataforma oferece dados sobre a qualidade dos serviços e feedback contínuo, possibilitando ajustes e melhorias nos processos internos de TI.</li>
+        </ul>
+    </div>
+
+    <div class="prestadores">   
+        <h1>Para Prestadores de Serviços:</h1>
+        <ul>
+            <li><strong>Oportunidades de Trabalho Direcionadas:</strong> O sistema de "matchmaking" ajuda os profissionais a encontrarem oportunidades que correspondem às suas qualificações e experiência, aumentando as chances de contratação.</li>
+            <li><strong>Exposição no Mercado:</strong> A plataforma aumenta a visibilidade dos profissionais, permitindo que suas habilidades e histórico sejam apresentados para várias empresas que estão em busca de especialistas.</li>
+            <li><strong>Feedback e Avaliações:</strong> Os profissionais recebem avaliações de seus serviços, o que pode melhorar sua reputação e ajudar a atrair mais clientes no futuro.</li>
+            <li><strong>Base de Dados Completa:</strong> Os profissionais podem registrar informações detalhadas sobre suas habilidades, certificações e experiências, facilitando a comunicação com os empregadores.</li>
+            <li><strong>Flexibilidade e Crescimento Profissional:</strong> A plataforma permite que os prestadores busquem projetos compatíveis com sua disponibilidade, além de abrir portas para novas oportunidades no mercado de TI.</li>
+        </ul>
+    </div> 
+</div>
+
 
 <div class="container hidden" id="registerScreen">
     <h2>Escolha o tipo de cadastro</h2>
     <button class="btn" id="registerClientButton">Cadastro de Cliente</button>
     <button class="btn" id="registerProviderButton">Cadastro de Prestador</button>
+</div>
+
+<div>
+
 </div>
 
 <script src="{{ url_for('static', filename='js/cadastro_script.js') }}"></script>

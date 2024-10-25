@@ -60,30 +60,82 @@ document.getElementById('location').addEventListener('input', function () {
     }
 });
 
+document.getElementById('localizacaoImportante').addEventListener('change', function () {
+    const camposLocalizacao = document.querySelectorAll('#location, #street, #neighborhood, #city, #state');
+    const labelsLocalizacao = document.querySelectorAll('label[for="location"], label[for="street"], label[for="neighborhood"], label[for="city"], label[for="state"]');
+
+    if (this.checked) {
+        // Se o checkbox estiver marcado, exibe os campos de localização e adiciona o atributo "required"
+        camposLocalizacao.forEach(campo => {
+            campo.required = true; // Define como obrigatório
+            campo.style.display = 'block'; // Exibe os campos
+        });
+        labelsLocalizacao.forEach(label => {
+            label.style.display = 'block'; // Exibe os labels
+        });
+    } else {
+        // Se o checkbox estiver desmarcado, oculta os campos de localização e remove a obrigatoriedade
+        camposLocalizacao.forEach(campo => {
+            campo.required = false; // Remove obrigatoriedade
+            campo.style.display = 'none'; // Oculta os campos
+            campo.value = ''; // Limpa os valores dos campos
+        });
+        labelsLocalizacao.forEach(label => {
+            label.style.display = 'none'; // Oculta os labels
+        });
+    }
+});
+
+// Inicializa o formulário com os campos de localização ocultos, se o checkbox não estiver marcado
+if (!document.getElementById('localizacaoImportante').checked) {
+    const camposLocalizacao = document.querySelectorAll('#location, #street, #neighborhood, #city, #state');
+    const labelsLocalizacao = document.querySelectorAll('label[for="location"], label[for="street"], label[for="neighborhood"], label[for="city"], label[for="state"]');
+    
+    camposLocalizacao.forEach(campo => {
+        campo.style.display = 'none'; // Oculta os campos
+        campo.removeAttribute('required'); // Remove o atributo required quando oculto
+    });
+    labelsLocalizacao.forEach(label => {
+        label.style.display = 'none'; // Oculta os labels
+    });
+}
+
+
 // Função para enviar o formulário de solicitação de serviço
-document.getElementById('serviceRequestForm').addEventListener('submit', function(event) {
+document.getElementById('serviceRequestForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
-    // Coleta o ID do cliente de um campo oculto
+    // Coleta os dados do formulário
     const clienteId = document.getElementById('clienteId').value;
-
-    // Coleta os demais dados do formulário
     const serviceType = document.getElementById('serviceType').value;
     const description = document.getElementById('description').value;
     const budget = document.getElementById('budget').value;
     const urgency = document.getElementById('urgency').value;
-    const location = document.getElementById('location').value;
-    const street = document.getElementById('street').value;
-    const neighborhood = document.getElementById('neighborhood').value;
-    const city = document.getElementById('city').value;
-    const state = document.getElementById('state').value;
+    const localizacaoImportante = document.getElementById('localizacaoImportante').checked; // Valor do checkbox
+
+    // Verificar se a localização é importante, se não for, definir como null
+    let location = null;
+    let street = null;
+    let neighborhood = null;
+    let city = null;
+    let state = null;
+
+    if (localizacaoImportante) {
+        // Coletar valores dos campos de localização se o checkbox estiver marcado
+        location = document.getElementById('location').value;
+        street = document.getElementById('street').value;
+        neighborhood = document.getElementById('neighborhood').value;
+        city = document.getElementById('city').value;
+        state = document.getElementById('state').value;
+    }
+
     const contactMethod = document.getElementById('contactMethod').value;
     const contactDate = document.getElementById('contactDate').value;
-    const references = document.getElementById('references').files[0]; // Arquivo opcional
+    const references = document.getElementById('references').files[0];
     const comments = document.getElementById('comments').value;
     const providerPreferences = document.getElementById('providerPreferences').value;
 
-    // Criar um objeto FormData para envio de arquivos
+    // Criar um objeto FormData para enviar os dados, incluindo o checkbox
     const formData = new FormData();
     formData.append('cliente_id', clienteId);
     formData.append('serviceType', serviceType);
@@ -97,43 +149,33 @@ document.getElementById('serviceRequestForm').addEventListener('submit', functio
     formData.append('state', state);
     formData.append('contactMethod', contactMethod);
     formData.append('contactDate', contactDate);
+    formData.append('localizacaoImportante', localizacaoImportante); // Adiciona o valor do checkbox
     if (references) {
-        formData.append('references', references); // Arquivo opcional
+        formData.append('references', references);
     }
     formData.append('comments', comments);
     formData.append('providerPreferences', providerPreferences);
 
-    // Limpar mensagens anteriores
-    document.getElementById('response').textContent = '';
-
-    // Enviar a solicitação para o back-end
+    // Enviar o formulário via POST para o backend
     fetch('/api/solicitar-servico', {
         method: 'POST',
         body: formData,
     })
     .then(response => {
+        // Verifica se a resposta foi um redirecionamento
         if (response.redirected) {
-            // Redirecionar o navegador se o servidor retornou um redirecionamento
-            window.location.href = response.url;
+            window.location.href = response.url; // Seguir o redirecionamento
         } else {
-            // Verificar se a resposta é JSON e lidar com ela
-            return response.json().then(data => {
-                if (!response.ok) {
-                    // Exibir mensagem de erro se a resposta não for sucesso (HTTP status != 2xx)
-                    throw new Error(data.message || 'Erro ao processar a solicitação.');
-                }
-                return data;
-            });
+            return response.json(); // Processar como JSON se não for redirecionamento
         }
     })
     .then(data => {
-        if (data && data.message) {
-            // Exibir a mensagem de sucesso ou qualquer outra resposta do servidor
+        if (data) {
             document.getElementById('response').textContent = data.message;
         }
     })
     .catch(error => {
         console.error('Erro:', error);
-        document.getElementById('response').textContent = error.message || 'Erro ao solicitar o serviço.';
+        document.getElementById('response').textContent = 'Erro ao enviar a solicitação de serviço.';
     });
 });
