@@ -34,7 +34,10 @@
 
         <!-- Foto de Perfil -->
         <div class="profile-header">
-            <div class="profile-photo" style="background-image: url('/uploads/img/{{ perfil_foto }}');"></div>
+            <div class="profile-photo" 
+            data-id="{{ perfil_foto }}" 
+            style="background-image: url('/uploads/img/{{ perfil_foto }}');"></div>
+            
             <h1>{{ prestador.nome }}</h1>
             {% if is_owner %}
             <!-- Campo dinâmico para editar o método de contato -->

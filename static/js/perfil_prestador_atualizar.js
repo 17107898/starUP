@@ -820,8 +820,34 @@ verificarNovasSolicitacoes();
 
 
 
-// Lógica para remoção da foto de perfil
 document.getElementById('remove-foto').addEventListener('click', function () {
-    document.querySelector('.profile-photo').style.backgroundImage = 'none';  // Remove a foto de perfil
-    document.getElementById('perfil_foto').value = '';  // Limpa o campo de upload
+    const prestadorId = prestador.prestador_id;
+    const fotoId = document.querySelector('.profile-photo').getAttribute('data-id');
+
+    if (!fotoId) {
+        console.error('ID da foto de perfil não encontrado.');
+        return;
+    }
+
+    fetch('/api/remover_foto_perfil', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            'prestador_id': prestadorId,
+            'foto_id': fotoId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector('.profile-photo').style.backgroundImage = 'none';  // Remove a foto de perfil
+            document.getElementById('perfil_foto').value = '';  // Limpa o campo de upload
+            console.log(data.message);
+        } else {
+            console.error(data.message);
+        }
+    })
+    .catch(error => console.error('Erro ao remover a foto de perfil:', error));
 });

@@ -778,6 +778,43 @@ def editar_prestador():
 
     # Responder com uma mensagem de sucesso
     return jsonify({'message': 'Dados e mídias atualizados com sucesso.'})
+
+from flask import request, jsonify
+
+@app.route('/api/remover_foto_perfil', methods=['POST'])
+def remover_foto_perfil():
+    prestador_id = request.form.get('prestador_id')
+    foto_id = request.form.get('foto_id')  # ID do registro da foto de perfil
+
+    if not prestador_id or not foto_id:
+        return jsonify({'success': False, 'message': 'ID do prestador e ID da foto são necessários.'}), 400
+
+    try:
+        # Verifica se o registro existe e é uma foto de perfil
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM bd_servicos.uploads
+            WHERE id = %s AND prestador_id = %s AND perfil_foto = 'perfil'
+        """, (foto_id, prestador_id))
+        
+        (exists,) = cursor.fetchone()
+
+        if exists == 0:
+            return jsonify({'success': False, 'message': 'Foto de perfil não encontrada.'}), 404
+
+        # Remove o registro da foto de perfil
+        cursor.execute("""
+            DELETE FROM bd_servicos.uploads
+            WHERE id = %s AND prestador_id = %s AND perfil_foto = 'perfil'
+        """, (foto_id, prestador_id))
+        db.commit()
+
+        return jsonify({'success': True, 'message': 'Foto de perfil removida com sucesso.'})
+    except Exception as e:
+        print("Erro ao remover a foto de perfil:", e)
+        return jsonify({'success': False, 'message': 'Erro ao remover a foto de perfil.'}), 500
+
+
 # Rota para obter imagens do banco de dados (LONGBLOB)
 @app.route('/uploads/img/<int:upload_id>')
 def get_image_from_db(upload_id):
