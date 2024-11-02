@@ -8,66 +8,130 @@ function updatePreview(isExistingFile = false) {
 
     const preview = document.getElementById('preview');
     preview.innerHTML = '';  // Limpa a pré-visualização de imagens
+// Mostrar pré-visualização dos documentos
+storedDocuments.forEach((file, index) => {
+    console.log("Processando documento:", file.name);
 
-    // Mostrar pré-visualização dos documentos
-    storedDocuments.forEach((file, index) => {
-        console.log("Processando documento:", file.name);
+    const fileElement = document.createElement('div');
+    fileElement.classList.add('file-preview');
 
-        const fileElement = document.createElement('div');
-        fileElement.classList.add('file-preview');
+    const img = document.createElement('img');
 
-        const img = document.createElement('img');
+    // Verificar se o arquivo é do tipo 'File' antes de criar a URL
+    if (file instanceof File) {
         img.src = URL.createObjectURL(file);
         img.classList.add('thumbnail');  // Classe 'thumbnail' é usada para prestador (dono do perfil)
-        fileElement.appendChild(img);
+    } else {
+        console.error("Elemento não é do tipo File:", file);
+        return; // Pula este item se não for um objeto File
+    }
 
-        const removeButton = document.createElement('button');
-        removeButton.innerHTML = '&times;';  // Ícone de "X"
-        removeButton.classList.add('remove-btn');  // Classe para estilização do botão "X"
-        removeButton.addEventListener('click', function () {
-            console.log("Removendo documento:", file.name);
-            storedDocuments.splice(index, 1);
-            updateFileInput();  // Atualiza o input de arquivos
-            updatePreview();  // Atualiza a pré-visualização
-            checkMediaLimit();
-        });
+    fileElement.appendChild(img);
 
-        fileElement.appendChild(removeButton);
-        preview.appendChild(fileElement);
+    const removeButton = document.createElement('button');
+    removeButton.innerHTML = '&times;';  // Ícone de "X"
+    removeButton.classList.add('remove-btn');  // Classe para estilização do botão "X"
+    removeButton.addEventListener('click', function () {
+        // Extrair o ID da URL usando expressão regular
+        const idMatch = file.url.match(/\/(\d+)(?!.*\d)/);
+        const imageID = idMatch ? idMatch[1] : null;
+
+        if (imageID) {
+            console.log(`Removendo documento: ${file.name}, ID: ${imageID}`);
+            
+            // Enviar requisição para o backend para remover a mídia
+            fetch('/api/remover_midia', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'image_id': imageID
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(data.message);
+                    // Remove o arquivo da lista e atualiza a visualização
+                    storedDocuments.splice(index, 1);
+                    updateFileInput();  // Atualiza o input de arquivos
+                    updatePreview();  // Atualiza a pré-visualização
+                    checkMediaLimit();
+                } else {
+                    console.error(data.message);
+                }
+            })
+            .catch(error => console.error('Erro ao remover mídia:', error));
+        } else {
+            console.error("ID da imagem não encontrado na URL.");
+        }
     });
 
-    const videoPreview = document.getElementById('video-preview');
-    videoPreview.innerHTML = '';  // Limpa a pré-visualização de vídeo
+    fileElement.appendChild(removeButton);
+    preview.appendChild(fileElement);
+});
 
-    if (storedVideo) {
-        console.log("Processando vídeo:", storedVideo.name);
 
-        const fileElement = document.createElement('div');
-        fileElement.classList.add('file-preview');
+const videoPreview = document.getElementById('video-preview');
+videoPreview.innerHTML = '';  // Limpa a pré-visualização de vídeo
 
-        const videoElement = document.createElement('video');
-        videoElement.src = URL.createObjectURL(storedVideo);
-        videoElement.controls = true;
-        videoElement.classList.add('thumbnail');
-        fileElement.appendChild(videoElement);
+if (storedVideo) {
+    console.log("Processando vídeo:", storedVideo.name);
 
-        const removeButton = document.createElement('button');
-        removeButton.innerHTML = '&times;';
-        removeButton.classList.add('remove-btn');
-        removeButton.addEventListener('click', function () {
-            if (storedVideo) {
-                console.log("Removendo vídeo:", storedVideo.name);  // Primeiro faz o log
-                storedVideo = null;  // Depois seta o valor como null
-                document.getElementById('video').value = '';  // Limpa o campo de vídeo
-                updatePreview();  // Atualiza a pré-visualização
-                checkMediaLimit();  // Revalida o limite de mídia
-            }
-        });
-        
+    const fileElement = document.createElement('div');
+    fileElement.classList.add('file-preview');
 
-        fileElement.appendChild(removeButton);
-        videoPreview.appendChild(fileElement);
-    }
+    const videoElement = document.createElement('video');
+    videoElement.src = URL.createObjectURL(storedVideo);
+    videoElement.controls = true;
+    videoElement.classList.add('thumbnail');
+    fileElement.appendChild(videoElement);
+
+    const removeButton = document.createElement('button');
+    removeButton.innerHTML = '&times;';
+    removeButton.classList.add('remove-btn');
+    removeButton.addEventListener('click', function () {
+        // Extrair o ID da URL do vídeo usando expressão regular
+        const idMatch = storedVideo.url.match(/\/(\d+)(?!.*\d)/);
+        const videoID = idMatch ? idMatch[1] : null;
+
+        if (videoID) {
+            console.log(`Removendo vídeo: ${storedVideo.name}, ID: ${videoID}`);
+            
+            // Enviar requisição para o backend para remover o vídeo
+            fetch('/api/remover_midia', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'image_id': videoID  // 'image_id' assume que a API espera o mesmo parâmetro para imagens e vídeos
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(data.message);
+                    // Remove o vídeo da variável e atualiza a visualização
+                    storedVideo = null;
+                    document.getElementById('video').value = '';  // Limpa o campo de vídeo
+                    updatePreview();  // Atualiza a pré-visualização
+                    checkMediaLimit();  // Revalida o limite de mídia
+                } else {
+                    console.error(data.message);
+                }
+            })
+            .catch(error => console.error('Erro ao remover mídia:', error));
+        } else {
+            console.error("ID do vídeo não encontrado na URL.");
+        }
+    });
+
+    fileElement.appendChild(removeButton);
+    videoPreview.appendChild(fileElement);
+}
+
 
     console.log("Finalizando pré-visualização");
     
@@ -285,15 +349,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 const imageUrl = img.src;
                 const fileName = img.alt;
                 console.log("Adicionando imagem existente:", fileName);
-
-                // Verifica se o arquivo já foi adicionado
+        
+                // Verifica se o arquivo já foi adicionado usando o nome
                 if (!storedDocuments.some(doc => doc.name === fileName)) {
                     fetch(imageUrl)
                         .then(res => res.blob())
                         .then(blob => {
                             const file = new File([blob], fileName, { type: blob.type });
+        
+                            // Adiciona a URL como uma propriedade ao objeto File
+                            Object.defineProperty(file, 'url', {
+                                value: imageUrl,
+                                writable: false,  // Torna a propriedade não mutável (opcional)
+                                configurable: true,  // Permite que seja removida se necessário
+                                enumerable: true  // Permite que apareça ao exibir o objeto
+                            });
+        
+                            // Armazena o arquivo diretamente no array storedDocuments
                             storedDocuments.push(file);
-                            updatePreview(true);  // Indicar que é um arquivo existente
+                            updatePreview(true);  // Indica que é um arquivo existente
                         });
                 }
             });
@@ -303,14 +377,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 const videoUrl = existingVideo.querySelector('source').src;
                 const fileName = "video.mp4";
                 console.log("Adicionando vídeo existente:", fileName);
-
+                
                 // Verifica se o vídeo já foi adicionado
                 if (!storedVideo) {
                     fetch(videoUrl)
                         .then(res => res.blob())
                         .then(blob => {
-                            storedVideo = new File([blob], fileName, { type: blob.type });
-                            updatePreview(true);  // Indicar que é um arquivo existente
+                            // Cria um objeto File para o vídeo
+                            const videoFile = new File([blob], fileName, { type: blob.type });
+                
+                            // Adiciona a URL como uma propriedade ao objeto File
+                            Object.defineProperty(videoFile, 'url', {
+                                value: videoUrl,
+                                writable: false,  // Torna a propriedade não mutável (opcional)
+                                configurable: true,  // Permite que seja removida se necessário
+                                enumerable: true  // Permite que apareça ao exibir o objeto
+                            });
+                
+                            // Armazena o arquivo diretamente na variável storedVideo
+                            storedVideo = videoFile;
+                            updatePreview(true);  // Indica que é um arquivo existente
                         });
                 }
             }
@@ -466,39 +552,33 @@ document.getElementById('location').addEventListener('input', function () {
 });
 
 
-// Função para remover o certificado
-function removerCertificado(certificadoNome) {
-    fetch('/api/remover_certificado', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ certificado_nome: certificadoNome })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro ao remover certificado');
-        }
-        return response.json();
-    })
-    .then(data => {
-        alert(data.message);
-        // Atualizar a página ou remover o certificado da UI
-        window.location.reload();
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        alert('Erro ao remover o certificado.');
-    });
+// Função para exibir mensagem de sucesso
+function mostrarMensagemSucesso(mensagem) {
+    const responseMessage = document.getElementById('response-message');
+    responseMessage.textContent = mensagem;
+    responseMessage.classList.remove('error');  // Remove a classe de erro, caso ela tenha sido adicionada
+    responseMessage.classList.add('success');  // Adiciona uma classe de sucesso para estilizar a mensagem
 }
 
 // Evento de submissão do formulário
 document.getElementById('uploadForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
+    const totalMidias = getTotalMediaCount();
+    
+    // Verificar se o usuário carregou pelo menos 4 mídias
+    if (totalMidias < 4) {
+        const responseMessage = document.getElementById('response-message');
+        responseMessage.textContent = 'Você deve carregar pelo menos 4 mídias (excluindo foto de perfil e certificados).';
+        responseMessage.classList.add('error');  // Adiciona a classe de erro para estilizar a mensagem
+        return;  // Impede o envio do formulário
+    }
+
     const formData = new FormData(this);  // Cria o FormData diretamente do formulário
     const perfilFoto = document.getElementById('perfil_foto').files[0];
     const documents = document.getElementById('documents').files;
+    console.log("Quantidade de documentos selecionados:", documents.length);
+    
     const video = document.getElementById('video').files[0];
     const certificados = document.getElementById('certificados').files;  // Certificados
 
@@ -532,6 +612,7 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
         const responseMessage = document.getElementById('response-message');
         responseMessage.textContent = data.message;
         responseMessage.classList.remove('error');  // Remove a classe de erro, caso ela tenha sido adicionada
+        responseMessage.classList.add('success');  // Adiciona uma classe de sucesso para estilizar a mensagem
     })
     .catch(error => {
         console.error('Erro:', error);
@@ -540,6 +621,7 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
         responseMessage.classList.add('error');  // Adiciona a classe de erro para estilizar a mensagem
     });
 });
+
 
 // Função para remover certificado
 function removerCertificado(certificadoId, certificadoNome) {
@@ -743,37 +825,3 @@ document.getElementById('remove-foto').addEventListener('click', function () {
     document.querySelector('.profile-photo').style.backgroundImage = 'none';  // Remove a foto de perfil
     document.getElementById('perfil_foto').value = '';  // Limpa o campo de upload
 });
-// // Evento de mudança no input de arquivos (imagens/documentos)
-// document.getElementById('documents').addEventListener('change', function () {
-//     const newFiles = Array.from(this.files);
-
-//     // Adicionando novos arquivos à lista armazenada
-//     storedDocuments = storedDocuments.concat(newFiles);
-
-//     // Atualiza a pré-visualização e validação
-//     updatePreview();
-//     validateImages();
-//     checkMediaLimit();  // Verifica se o limite de mídias foi atingido
-// });
-
-// // Evento de mudança no input de vídeo
-// document.getElementById('video').addEventListener('change', function () {
-//     if (this.files.length > 0) {
-//         storedVideo = this.files[0];  // Armazena o vídeo
-//     }
-
-//     // Validação da duração do vídeo (1 minuto no máximo)
-//     const videoElement = document.createElement('video');
-//     videoElement.src = URL.createObjectURL(storedVideo);
-//     videoElement.onloadedmetadata = function () {
-//         if (videoElement.duration > 60) {
-//             showTemporaryMessage("O vídeo pode ter no máximo 1 minuto.");
-//             storedVideo = null;  // Limpa o vídeo armazenado
-//             document.getElementById('video').value = '';  // Limpa o campo de vídeo
-//         } else {
-//             updatePreview();  // Atualiza a pré-visualização com o vídeo
-//         }
-//     };
-
-//     checkMediaLimit();  // Verifica se o limite de mídias foi atingido
-// });

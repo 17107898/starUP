@@ -179,13 +179,14 @@
             {% else %}
                 {% for feedback in prestador.feedbacks[:2] %}
                 <div class="feedback-item">
+                    <h3>Feedback Cliente</h3>
                     <p><strong>Cliente:</strong> {{ feedback.nome_cliente }}</p>
                     <p><strong>Comentário:</strong> {{ feedback.comentario }}</p>
                     <p><strong>Nota:</strong> {{ feedback.nota }}</p>
                 </div>
                 {% endfor %}
                 {% if prestador.feedbacks|length > 2 %}
-                <button id="open-modal-btn">Ler mais</button>
+                <button id="open-modal-btn" type="button">Ler mais</button>
                 {% endif %}
             {% endif %}
         </div>
@@ -193,6 +194,15 @@
         <!-- Modal -->
         <div id="modal" class="modal">
             <div class="modal-content">
+                <div class="texto-content">
+                    <div class="top-content">
+                        <span class="nome">{{ prestador.nome }}</span>
+                        <span class="nota">{{ prestador.nota }}⭐</span>
+                    </div>
+                    <div class="bottom-content">
+                        <h2>Notas & Avaliações</h2>
+                    </div>
+                </div>
                 <span class="close">&times;</span>
                 <div id="modal-feedbacks"></div>
             </div>
@@ -308,8 +318,9 @@
                         <div class="gallery-item">
                             <img src="/uploads/img/{{ image_id }}" alt="Imagem do documento" class="{% if is_owner %}thumbnail{% else %}gallery-item img{% endif %}">
                             {% if is_owner %}
-                                <button class="remove-image" data-image-id="{{ image_id }}">&times;</button>
+                                <button type="button" class="remove-image" data-file-id="{{ image_id }}">&times;</button>
                             {% endif %}
+
                         </div>
                     {% endfor %}
                 </div>
@@ -435,6 +446,9 @@
         var isOwner = {{ is_owner | tojson }};
         // Os dados de feedback já estão disponíveis no lado do servidor, você pode renderizá-los no JavaScript como um array JSON
         var feedbacks = {{ prestador.feedbacks | tojson }};
+
+
+
         // Defina uma variável global no HTML com o valor dos dados do prestador
     // Agora você pode capturar o 'prestador_id' diretamente
     const prestador = {

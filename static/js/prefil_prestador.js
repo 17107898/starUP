@@ -4,16 +4,13 @@ document.addEventListener("DOMContentLoaded", function() {
     var closeModal = document.getElementsByClassName("close")[0];
     var modalFeedbacks = document.getElementById("modal-feedbacks");
 
-    // Verificação para garantir que todos os elementos necessários existam
     if (modal && closeModal && modalFeedbacks) {
         if (openModalBtn) {
             openModalBtn.onclick = function() {
-                // Limpa o conteúdo do modal
-                modalFeedbacks.innerHTML = "";
-                
+                modalFeedbacks.innerHTML = ""; // Limpa o conteúdo do modal
+
                 // Certifique-se de que 'feedbacks' está definido corretamente
                 if (typeof feedbacks !== 'undefined') {
-                    // Carregar feedbacks no modal
                     feedbacks.forEach(function(feedback) {
                         modalFeedbacks.innerHTML += `
                             <div class="feedback-item">
@@ -26,20 +23,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 } else {
                     console.error("A variável 'feedbacks' não está definida.");
                 }
-                
-                // Exibir o modal
+
                 modal.style.display = "block";
-                document.body.classList.add("no-scroll");  // Desativa o scroll
+                document.body.classList.add("no-scroll");
             };
         }
 
-        // Fechar o modal e reativar o scroll
         closeModal.onclick = function() {
             modal.style.display = "none";
             document.body.classList.remove("no-scroll");
         };
 
-        // Fechar o modal ao clicar fora dele
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
@@ -50,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error("Um ou mais elementos necessários para o modal não foram encontrados.");
     }
 });
+
 
 
 function abrirPopup(imageSrc) {
@@ -70,7 +65,6 @@ function fecharPopup() {
     popup.style.display = 'none';
 }
 
-// Função para abrir o popup com as informações do serviço
 // Função para abrir o popup com as informações do serviço
 function abrirPopupSolicitacao() {
     let tipoServicoLegivel = '';

@@ -130,22 +130,48 @@ h1, h2 {
     background-color: rgba(0, 0, 0, 0.4);
     padding-top: 60px;
 }
-
 .modal-content {
     background-color: #fff;
-    margin: 5% auto;
+    position: fixed;
+    top: 3%; /* Define o topo do modal */
+    left: 50%;
+    transform: translate(-50%, 0);
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
     border-radius: 8px;
+    z-index: 1000;
+    max-height: 80vh; /* Define uma altura máxima para o modal */
+    overflow-y: auto; /* Adiciona o scroll vertical */
 }
 
+.texto-content {
+    color: #aaa;
+    margin-bottom: -40px; /* Ajuste conforme necessário */
+    background: white;
+    position: sticky; /* Permite que ele fique fixo ao rolar */
+    top: 0; /* Fixa no topo do contêiner ao rolar */
+    z-index: 10; /* Garante que o texto esteja acima de outros conteúdos */
+    padding: 10px; /* Adiciona um pouco de espaço ao redor do texto */
+}
 .close {
     color: #aaa;
-    float: right;
     font-size: 28px;
     font-weight: bold;
+    position: sticky; /* Permite que ele fique visível enquanto rola */
+    top: 0; /* Fixa no topo do modal */
+    margin-left: auto; /* Alinha à direita */
+    background: transparent; /* Torna o fundo transparente */
+    padding: 5px; /* Ajuste para tornar o clique mais preciso */
+    z-index: 10; /* Mantém o botão acima do conteúdo do modal */
+    cursor: pointer;
+    border: none;
+    outline: none;
+    display: inline-block; /* Garante que apenas o "X" seja clicável */
+    margin-left: 1170px;
 }
+
+
 
 .close:hover,
 .close:focus {
@@ -622,5 +648,12 @@ label {
 @media screen and (max-width: 768px) {
     input[type="text"], input[type="number"], input[type="date"], input[type="email"], textarea {
         width: 100%;  /* Inputs ocupam 100% da largura do container */
+    }
+}
+
+/* Adaptação para telas pequenas - 6,8" */
+@media (max-width: 1080px) {  /* Para telas de largura de até 1080px */
+    .close {
+        margin-left: 333px !important;
     }
 }

@@ -9,6 +9,8 @@ import secrets
 from itsdangerous import URLSafeTimedSerializer
 import smtplib
 import random
+from werkzeug.datastructures import FileStorage  # Certifique-se de que o FileStorage está importado
+
 app = Flask(__name__)
 
 
@@ -610,6 +612,27 @@ def remover_certificado():
 
     return jsonify({'message': 'Certificado removido com sucesso.'})
 
+@app.route('/api/remover_midia', methods=['POST'])
+def remover_midia():
+    image_id = request.form.get('image_id')
+    prestador_id = session.get('prestador_id')
+    print(f"Image ID received: {image_id}")
+    print(f"Prestador ID received: {prestador_id}")
+    
+    if image_id:
+        # Corrigir o parâmetro para uma tupla (image_id,)
+        cursor.execute("""
+            DELETE FROM bd_servicos.uploads
+            WHERE id = %s AND (tipo_arquivo = 'imagem' OR tipo_arquivo = 'video') AND perfil_foto IS NULL
+        """, (image_id,))  # Colocar uma vírgula para indicar que é uma tupla
+        db.commit()
+
+        return jsonify({'success': True, 'message': 'Mídia removida com sucesso.'})
+    else:
+        return jsonify({'success': False, 'message': 'ID da mídia não fornecido.'}), 400
+
+
+
 @app.route('/api/editar_prestador', methods=['POST'])
 def editar_prestador():
     prestador_id = session.get('prestador_id')
@@ -658,23 +681,53 @@ def editar_prestador():
                 ON DUPLICATE KEY UPDATE arquivo = %s
             """, (prestador_id, perfil_foto_binario, perfil_foto_binario))
     # Verificar se os documentos foram enviados
+    # Verificar se os documentos foram enviados
     if 'documents' in request.files:
+        # Simulação do recebimento de arquivos
         documents = request.files.getlist('documents')
-        
-        # Apagar documentos antigos
-        cursor.execute("""
-            DELETE FROM bd_servicos.uploads
-            WHERE prestador_id = %s AND tipo_arquivo = 'imagem'
-        """, (prestador_id,))
-        db.commit()
-        # Inserir novos documentos
-        for document in documents:
-            if document.filename != '':
-                document_binario = document.read()  # Ler conteúdo binário
-                cursor.execute("""
-                    INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, created_at)
-                    VALUES (%s, %s, 'imagem', NOW())
-                """, (prestador_id, document_binario))
+
+        # Remover duplicatas com base no nome dos arquivos
+        unique_documents = []
+        file_names = set()
+
+        for doc in documents:
+            if doc.filename not in file_names:
+                unique_documents.append(doc)
+                file_names.add(doc.filename)
+
+        print(f"Documentos recebidos sem duplicatas: {unique_documents}")
+
+        # Verificação para evitar caso de lista vazia ou arquivo vazio específico
+        if not (len(unique_documents) == 1 and unique_documents[0].filename == ''):
+            print(f"Documentos válidos para inserção: {unique_documents}")
+
+            # Inserir novos documentos
+            for document in unique_documents:
+                if document.filename != '':  # Verificação para evitar arquivos sem nome
+                    document_binario = document.read()  # Ler conteúdo binário
+
+                    # Verificar se o documento já existe no banco de dados com base no conteúdo binário e prestador_id
+                    cursor.execute("""
+                        SELECT COUNT(*)
+                        FROM bd_servicos.uploads
+                        WHERE prestador_id = %s AND tipo_arquivo = 'imagem' AND arquivo = %s
+                    """, (prestador_id, document_binario))
+                    
+                    (exists,) = cursor.fetchone()
+                    
+                    if exists == 0:
+                        # O arquivo não existe, então o inserimos
+                        cursor.execute("""
+                            INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, created_at)
+                            VALUES (%s, %s, 'imagem', NOW())
+                        """, (prestador_id, document_binario))
+                        db.commit()  # Confirma a inserção
+                        print(f"Documento '{document.filename}' inserido com sucesso.")
+                    else:
+                        print(f"O documento '{document.filename}' já existe no banco de dados e não será inserido novamente.")
+        else:
+            print("Nenhum documento válido para inserção.")
+
     # Verificar se o vídeo foi enviado
     if 'video' in request.files:
         video = request.files['video']
@@ -725,8 +778,6 @@ def editar_prestador():
 
     # Responder com uma mensagem de sucesso
     return jsonify({'message': 'Dados e mídias atualizados com sucesso.'})
-
-
 # Rota para obter imagens do banco de dados (LONGBLOB)
 @app.route('/uploads/img/<int:upload_id>')
 def get_image_from_db(upload_id):
@@ -1479,7 +1530,8 @@ def api_prestador_solicitar_servico():
     contact_date = data.get('contactDate')
     comments = data.get('comments')
     provider_preferences = data.get('providerPreferences')
-
+    certificados = request.files.getlist('certificados[]')
+    print(f'como está cegando: {contact_detail}')
     # Mapeamento reverso: pegar a chave correspondente ao valor legível
     SERVICE_LABELS_REVERSE = {v: k for k, v in SERVICE_LABELS.items()}
     service_type = SERVICE_LABELS_REVERSE.get(service_type_legivel, None)
@@ -1508,7 +1560,7 @@ def api_prestador_solicitar_servico():
     cursor.execute("""
         UPDATE bd_servicos.prestadores
         SET contato = %s
-        WHERE id = %s
+        WHERE prestador_id = %s
     """, (contact_detail, prestador_id))
 
     db.commit()
@@ -1526,33 +1578,38 @@ def api_prestador_solicitar_servico():
 
     db.commit()
 
-    # Verificar se os certificados foram enviados
-    if 'certificados' in request.files:
-        certificados = request.files.getlist('certificados')
+    # Iterando sobre os arquivos de certificados recebidos
+    for certificado in certificados:
+        if certificado and certificado.filename != '':
+            # Verificar se já existe um certificado com o mesmo nome para evitar duplicação
+            cursor.execute("""
+                SELECT id FROM bd_servicos.uploads 
+                WHERE prestador_id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
+            """, (prestador_id, certificado.filename))
 
-        for certificado in certificados:
-            if certificado.filename != '':
-                # Verificar se já existe um certificado com o mesmo nome para evitar duplicação
-                cursor.execute("""
-                    SELECT id FROM bd_servicos.uploads 
-                    WHERE prestador_id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
-                """, (prestador_id, certificado.filename))
+            duplicado = cursor.fetchone()
 
-                duplicado = cursor.fetchone()
+            if duplicado:
+                print(f"Certificado {certificado.filename} já existe. Pulando inserção.")
+                continue
 
-                if duplicado:
-                    print(f"Certificado {certificado.filename} já existe. Pulando inserção.")
-                    continue
+            # Ler o conteúdo binário do certificado para armazenar no banco de dados
+            certificado_binario = certificado.read()
+            
+            # Inserir o novo certificado no banco de dados
+            cursor.execute("""
+                INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
+                VALUES (%s, %s, 'certificado', %s, NOW())
+            """, (prestador_id, certificado_binario, certificado.filename))
 
-                certificado_binario = certificado.read()
-                cursor.execute("""
-                    INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
-                    VALUES (%s, %s, 'certificado', %s, NOW())
-                """, (prestador_id, certificado_binario, certificado.filename))
+            print(f"Certificado {certificado.filename} foi inserido com sucesso.")
+        
+        else:
+            print(f"Certificado inválido ou sem nome. Pulando.")
 
-
-    # Confirmar a transação final
+    # Realizar o commit para salvar as alterações
     db.commit()
+    print("Todos os certificados foram processados e o banco de dados foi atualizado.")
 
     return jsonify({
         'message': 'Serviço enviado com sucesso!',

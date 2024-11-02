@@ -388,8 +388,8 @@ document.getElementById('alterarDescricaoForm').addEventListener('submit', async
     }
 });
 function exibirStatusTempo(statusTimestamp, tipoStatus) {
-    // Verificar se o timestamp é válido
-    const statusDate = new Date(statusTimestamp);
+    // Verificar se o timestamp é válido e tratar como UTC
+    const statusDate = new Date(Date.parse(statusTimestamp));
     
     // Caso o statusTimestamp não esteja em um formato correto, o statusDate será "Invalid Date"
     if (isNaN(statusDate)) {
@@ -409,17 +409,39 @@ function exibirStatusTempo(statusTimestamp, tipoStatus) {
     } else if (diffInSeconds < 3600) { // menos de 1 hora
         const minutes = Math.floor(diffInSeconds / 60);
         message = `${tipoStatus} há ${minutes} minutos.`;
-    } else if (diffInSeconds < 86400) { // menos de 24 horas
-        const hours = Math.floor(diffInSeconds / 3600);
-        message = `${tipoStatus} hoje às ${statusDate.getHours()}:${statusDate.getMinutes() < 10 ? '0' : ''}${statusDate.getMinutes()}.`;
-    } else if (diffInSeconds < 172800) { // menos de 48 horas
-        message = `${tipoStatus} ontem às ${statusDate.getHours()}:${statusDate.getMinutes() < 10 ? '0' : ''}${statusDate.getMinutes()}.`;
+    } else if (statusDate.toDateString() === now.toDateString()) { // mesmo dia
+        const timeString = statusDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        });
+        message = `${tipoStatus} hoje às ${timeString}.`;
+    } else if (now.getDate() - statusDate.getDate() === 1 && now.getMonth() === statusDate.getMonth() && now.getFullYear() === statusDate.getFullYear()) {
+        // Foi ontem
+        const timeString = statusDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        });
+        message = `${tipoStatus} ontem às ${timeString}.`;
     } else {
-        message = `${tipoStatus} no dia ${statusDate.toLocaleDateString()} às ${statusDate.getHours()}:${statusDate.getMinutes() < 10 ? '0' : ''}${statusDate.getMinutes()}.`;
+        const dateFormatted = statusDate.toLocaleDateString('pt-BR');
+        const timeString = statusDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        });
+        message = `${tipoStatus} no dia ${dateFormatted} às ${timeString}.`;
     }
 
     return message;
 }
+
+
+
 
 
 let ultimoStatus = '';
@@ -508,13 +530,15 @@ function abrirPopup() {
                 if (data_aceito_prestador) {
                     aceitoMensagem = exibirStatusTempo(data_aceito_prestador, "Aceito");
                 }
+                console.log("como está", data_aceito_prestador)
+                console.log("mensagem hora", aceitoMensagem)
 
                 // Exibir os detalhes do convite
                 statusElement.innerHTML += `
                     <div class="convite-item">
                         <p><strong>Prestador:</strong> ${prestadorNome}</p>
                         <p><strong>Status:</strong> ${status}</p>
-                        <p><strong>Convite visto:</strong> ${lido} (${vistoMensagem})</p>
+                        <p><strong>Convite visto:</strong> ${lido} ${vistoMensagem}</p>
                         ${aceitoMensagem ? `<p><strong>Aceito:</strong> ${aceitoMensagem}</p>` : ''}
                         <hr>
                     </div>

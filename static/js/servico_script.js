@@ -60,82 +60,95 @@ document.getElementById('location').addEventListener('input', function () {
     }
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('contactMethod').addEventListener('change', function () {
-        const selectedMethod = this.value;
-        const contactDetailDiv = document.querySelector('.contact-container #contactDetail');
-        const contactLabel = document.querySelector('.contact-container #contactLabel');
-        const contactInput = document.querySelector('.contact-container #contactInput');
-        
-        if (selectedMethod === 'email') {
-            contactLabel.innerHTML = 'Por favor, insira seu email:';
-            contactInput.placeholder = 'Digite seu email';
-            contactInput.type = 'email';
-            contactDetailDiv.style.display = 'block';
-        } else if (selectedMethod === 'telefone') {
-            contactLabel.innerHTML = 'Por favor, insira seu número de telefone:';
-            contactInput.placeholder = 'Digite seu número de telefone';
-            contactInput.type = 'tel';
-            contactDetailDiv.style.display = 'block';
-        } else if (selectedMethod === 'whatsapp') {
-            contactLabel.innerHTML = 'Por favor, insira seu número do WhatsApp:';
-            contactInput.placeholder = 'Digite seu número do WhatsApp';
-            contactInput.type = 'tel';
-            contactDetailDiv.style.display = 'block';
-        } else {
-            contactDetailDiv.style.display = 'none';
-        }
-    });
+document.getElementById('contactMethod').addEventListener('change', function () {
+    const selectedMethod = this.value;
+    const contactDetailDiv = document.getElementById('contactDetail');
+    const contactLabel = document.getElementById('contactLabel');
+    const contactInput = document.getElementById('contactInput');
+    
+    if (selectedMethod === 'email') {
+        contactLabel.innerHTML = 'Por favor, insira seu email:';
+        contactInput.placeholder = 'Digite seu email';
+        contactInput.type = 'email';
+        contactDetailDiv.style.display = 'block';
+    } else if (selectedMethod === 'telefone') {
+        contactLabel.innerHTML = 'Por favor, insira seu número de telefone:';
+        contactInput.placeholder = 'Digite seu número de telefone';
+        contactInput.type = 'tel';
+        contactDetailDiv.style.display = 'block';
+    } else if (selectedMethod === 'whatsapp') {
+        contactLabel.innerHTML = 'Por favor, insira seu número do WhatsApp:';
+        contactInput.placeholder = 'Digite seu número do WhatsApp';
+        contactInput.type = 'tel';
+        contactDetailDiv.style.display = 'block';
+    } else {
+        contactDetailDiv.style.display = 'none';
+    }
 });
-
-
 
 document.getElementById('servicoForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const prestadorId = document.getElementById('prestadorId').value;
-    const serviceType = document.getElementById('serviceType').value;
-    const description = document.getElementById('description').value;
-    const budget = document.getElementById('budget').value;
-    const urgency = document.getElementById('urgency').value;
-    const location = document.getElementById('location').value;
-    const street = document.getElementById('street').value;
-    const neighborhood = document.getElementById('neighborhood').value;
-    const city = document.getElementById('city').value;
-    const state = document.getElementById('state').value;
-    const contactMethod = document.getElementById('contactMethod').value;
-    const contactDetail = document.getElementById('contactInput').value;
-    const contactDate = document.getElementById('contactDate').value;
-    const comments = document.getElementById('comments').value;
-    const providerPreferences = document.getElementById('providerPreferences').value;
+    // Função de validação dos campos
+    function validarCampos() {
+        const prestadorId = document.getElementById('prestadorId').value.trim();
+        const serviceType = document.getElementById('serviceType').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const budget = document.getElementById('budget').value.trim();
+        const urgency = document.getElementById('urgency').value.trim();
+        const location = document.getElementById('location').value.trim();
+        const street = document.getElementById('street').value.trim();
+        const neighborhood = document.getElementById('neighborhood').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const state = document.getElementById('state').value.trim();
+        const contactMethod = document.getElementById('contactMethod').value.trim();
+        const contactDetail = document.getElementById('contactInput').value.trim();
+        const contactDate = document.getElementById('contactDate').value.trim();
+        const comments = document.getElementById('comments').value.trim();
+        const providerPreferences = document.getElementById('providerPreferences').value.trim();
 
+        if (!prestadorId || !serviceType || !description || !budget || !urgency || !location ||
+            !street || !neighborhood || !city || !state || !contactMethod || !contactDetail ||
+            !contactDate || !comments || !providerPreferences) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Verifica se todos os campos foram preenchidos antes de enviar
+    if (!validarCampos()) {
+        return; // Se a validação falhar, interrompe o envio
+    }
+
+    // Coleta os dados para enviar
     const formData = new FormData();
-    formData.append('prestadorId', prestadorId);  // Aqui o ID do prestador é incluído no formulário
-    formData.append('serviceType', serviceType);
-    formData.append('description', description);
-    formData.append('budget', budget);
-    formData.append('urgency', urgency);
-    formData.append('location', location);
-    formData.append('street', street);
-    formData.append('neighborhood', neighborhood);
-    formData.append('city', city);
-    formData.append('state', state);
-    formData.append('contactMethod', contactMethod);
-    formData.append('contactDetail', contactDetail);
-    formData.append('contactDate', contactDate);
-    formData.append('comments', comments);
-    formData.append('providerPreferences', providerPreferences);
+    formData.append('prestadorId', document.getElementById('prestadorId').value);
+    formData.append('serviceType', document.getElementById('serviceType').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('budget', document.getElementById('budget').value);
+    formData.append('urgency', document.getElementById('urgency').value);
+    formData.append('location', document.getElementById('location').value);
+    formData.append('street', document.getElementById('street').value);
+    formData.append('neighborhood', document.getElementById('neighborhood').value);
+    formData.append('city', document.getElementById('city').value);
+    formData.append('state', document.getElementById('state').value);
+    formData.append('contactMethod', document.getElementById('contactMethod').value);
+    formData.append('contactDetail', document.getElementById('contactInput').value);
+    formData.append('contactDate', document.getElementById('contactDate').value);
+    formData.append('comments', document.getElementById('comments').value);
+    formData.append('providerPreferences', document.getElementById('providerPreferences').value);
 
-    // Verificar se o campo de certificados existe e se possui arquivos
-    const certificados = document.getElementById('certificados').files;  // Certificados
-
-    // Adicionar os certificados ao FormData
+    // Adicionar os certificados, se existirem
+    const certificados = document.getElementById('certificados').files;
     if (certificados.length > 0) {
         for (let i = 0; i < certificados.length; i++) {
-            formData.append('certificados[]', certificados[i]); // Adicionar múltiplos com '[]' no nome do campo
+            formData.append('certificados[]', certificados[i]);
         }
     }
 
+    // Enviar os dados usando fetch
     fetch('/api/cadastrar-servico', {
         method: 'POST',
         body: formData
@@ -158,4 +171,3 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
         document.getElementById('response').textContent = 'Erro ao enviar o serviço.';
     });
 });
-
