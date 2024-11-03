@@ -1,14 +1,14 @@
 body {
-    display: flex;
+    /* display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
+    margin: 0; */
     font-family: 'Arial', sans-serif;
-    background-image: url(BackgroundTechInfo.png);
-    background-position: -20px -30px center; 
-    margin-top: 800px;
+    /* background-image: url(BackgroundTechInfo.png); */
+    /* background-position: -20px -30px center;  */
+    overflow-x: hidden;
 }
 
 
@@ -64,9 +64,37 @@ h1 {
 .hidden {
     display: none;
 }
+.imagem-fundo {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-top: 111px;
+    padding: 300px;
+    margin-left: -300px;
+}
+
+.carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+.carousel-image.active {
+    opacity: 1;
+}
+
+
 
 .texto {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     margin: 20px;
     width: 100%;
     gap: 20px;
@@ -82,7 +110,30 @@ h1 {
     margin-top: 20px;
     margin-bottom: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.8s ease; /* Transição mais longa para efeito mais suave */
 }
+
+/* Posição inicial para clientes: bem fora à esquerda */
+.clientes {
+    transform: translateX(-100%); /* Em vez de -100vw */
+}
+
+.prestadores {
+    transform: translateX(100%); /* Em vez de 100vw */
+}
+
+/* Animação para clientes: da esquerda para o centro */
+.animate-left {
+    transform: translateX(0); /* Move o elemento para o centro */
+}
+
+/* Animação para prestadores: da direita para o centro */
+.animate-right {
+    transform: translateX(0); /* Move o elemento para o centro */
+}
+
+
+
 
 h2 {
     font-size: 22px;
@@ -108,3 +159,72 @@ li {
         font-size: 18px;
     }
 }
+
+/* Adaptação para telas pequenas - 6,8" */
+@media (max-width: 1080px) {
+    /* Definição básica para ocultar o overflow horizontal */
+    html, body {
+        overflow-x: hidden;
+        margin: 0;
+        padding-top: 0px; /* Espaço para afastar do topo e evitar sobreposição */
+    }
+
+    /* Ajuste para a imagem de fundo no mobile como banner de tela cheia */
+    .imagem-fundo {
+        width: 130vw;
+        height: calc(260% - 0px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0px;
+        margin-bottom: -180px;
+        margin-top: -50px;
+        margin-left: -365px;
+    }
+    .carousel-image {
+        width: 100vw; /* Ocupa toda a largura da viewport */
+        height: 60vw;
+        object-fit: cover; /* Ajusta a imagem para cobrir o espaço sem distorção */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: absolute;
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+    
+    .carousel-image.active {
+        opacity: 1;
+    }
+    /* Estilização para as seções de clientes e prestadores */
+    .texto {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px;
+        width: 100%;
+        gap: 15px; /* Reduz o espaçamento entre os blocos */
+    }
+
+    .clientes, .prestadores {
+        color: white;
+        background-color: #007bff;
+        padding: 20px; /* Reduz o padding para economizar espaço */
+        width: 90%; /* Aumenta a largura para preencher melhor a tela */
+        font-size: 0.9em; /* Reduz o tamanho da fonte para caber melhor em telas menores */
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+
+    /* Ajusta as animações para manter o efeito de entrada e saída */
+    .clientes {
+        transform: translateX(-100vw);
+    }
+
+    .prestadores {
+        transform: translateX(100vw);
+    }
+
+    .animate-left, .animate-right {
+        transform: translateX(0); /* Move o elemento para o centro */
+    }
+}
+

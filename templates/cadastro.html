@@ -10,13 +10,21 @@
 
 <div class="container" id="initialScreen">
     <div class="logo">
-        <img src="{{ url_for('static', filename='images/LOGGO.png') }}" alt="Logo do Site">
+        <img src="{{ url_for('static', filename='images/Logo/LOGGO.png') }}" alt="Logo do Site">
     </div>
     <nav>
         <button class="btn" id="loginButton" onclick="window.location.href='/login';">Entrar</button>
         <button class="btn" id="registerButton">Cadastro</button>
     </nav>
 </div>
+
+<div class="imagem-fundo">
+    <img src="{{ url_for('static', filename='images/back_end_img.jpg') }}" alt="Imagem de Fundo" class="carousel-image">
+    <img src="{{ url_for('static', filename='images/front_img.jpg') }}" alt="Imagem de Fundo" class="carousel-image">
+    <img src="{{ url_for('static', filename='images/infra_img.jpg') }}" alt="Imagem de Fundo" class="carousel-image">
+    <img src="{{ url_for('static', filename='images/teste_fundo.webp') }}" alt="Imagem de Fundo" class="carousel-image">
+</div>
+    
 
 <div class="texto">
     <div class="clientes">

@@ -31,36 +31,58 @@ registerProviderButton.addEventListener('click', () => {
     window.location.href = "/cadastro_prestador"; // Rota da página de cadastro de prestador
 });
 
-// Adicionando evento de envio do formulário de login
-document.getElementById('loginForm').addEventListener('submit', function (event) {
-    event.preventDefault();  // Evitar o comportamento padrão do formulário
 
-    // Coletar os dados do formulário
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
 
-    // Fazer a requisição POST para o endpoint de login
-    fetch('/api/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            email: email,
-            password: password
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message === 'Login bem-sucedido') {
-            // Redireciona para a página de solicitação de serviço
-            window.location.href = "/solicitar_servico";
+document.addEventListener('DOMContentLoaded', function () {
+    const images = document.querySelectorAll('.carousel-image');
+    let currentIndex = 0;
+
+    function showNextImage() {
+        images[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % images.length;
+        images[currentIndex].classList.add('active');
+    }
+
+    // Inicializa o carrossel
+    images[currentIndex].classList.add('active');
+
+    // Define a mudança de imagem a cada 5 segundos
+    setInterval(showNextImage, 5000);
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const clientes = document.querySelector('.clientes');
+    const prestadores = document.querySelector('.prestadores');
+
+    // Função para verificar se o elemento está visível na tela
+    function isElementInViewport(el) {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.bottom > 0
+        );
+    }
+
+    // Função para aplicar a animação
+    function checkScroll() {
+        if (isElementInViewport(clientes)) {
+            clientes.classList.add('animate-left');
         } else {
-            // Exibir mensagem de erro
-            alert(data.message);
+            clientes.classList.remove('animate-left'); // Remove animação ao rolar para cima
         }
-    })
-    .catch(error => {
-        console.error('Erro no login:', error);
-    });
+
+        if (isElementInViewport(prestadores)) {
+            prestadores.classList.add('animate-right');
+        } else {
+            prestadores.classList.remove('animate-right'); // Remove animação ao rolar para cima
+        }
+    }
+
+    // Verificar o scroll sempre que o usuário rolar a página
+    window.addEventListener('scroll', checkScroll);
+
+    // Executa uma verificação inicial para ver se os elementos já estão na viewport
+    checkScroll();
 });
