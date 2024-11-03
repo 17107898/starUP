@@ -2,47 +2,78 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, orientation=portrait">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prestador.css') }}">
 </head>
 <body>
-    <form id="prestadorForm">
-        <title>Cadastro de Prestador</title>
-        <h2>Cadastro de Prestador de Serviços</h2>
-        <label for="name">Nome:</label>
-        <input type="text" id="name" name="name" required>
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <br>
-        <label for="password">Senha:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <label for="confirmPassword">Confirmar Senha:</label>
-        <input type="password" id="confirmPassword" name="confirmPassword" required>
-        <br>
-        <!-- Primeira tela: Cadastro do serviço -->
-        <label for="service">Tipo de Serviço:</label>
-        <select id="service" name="service" required>
-            <option value="">Selecione o serviço</option>
-            <option value="desenvolvimento_software">Desenvolvimento de Software</option>
-            <option value="infraestrutura_ti">Infraestrutura de TI</option>
-            <option value="seguranca_cibernetica">Segurança Cibernética</option>
-            <option value="inteligencia_artificial">Inteligência Artificial</option>
-            <option value="cloud_computing">Computação em Nuvem</option>
-            <option value="data_science">Ciência de Dados</option>
-            <option value="desenvolvimento_web">Desenvolvimento Web</option>
-            <option value="desenvolvimento_mobile">Desenvolvimento Mobile</option>
-            <option value="iot">Internet das Coisas (IoT)</option>
-            <option value="suporte_tecnico">Suporte Técnico</option>
-            <option value="automacao_industrial">Automação Industrial</option>
-            <option value="devops">DevOps</option>
-            <option value="analise_de_dados">Análise de Dados</option>
-        </select>
-        <br>
-        <button type="submit">Cadastrar</button>
-    </form>
+    <div class="container-principal">
+        <div class="imagem-fundo">
+            <img src="{{ url_for('static', filename='images/prestador_servico.webp') }}" alt="Imagem" class="imagem-lado">
+        </div>
+        <form id="prestadorForm">
+            <h2>Cadastro de Prestador de Serviços</h2>
+            
+            <!-- Campo Nome -->
+            <div class="input-container">
+                <input type="text" id="name" name="name" placeholder="Nome" required>
+                <img src="{{ url_for('static', filename='images/do-utilizador.png') }}" alt="User Icon" class="icon">
+            </div>
+            
+            <!-- Campo Email -->
+            <div class="input-container">
+                <input type="email" id="email" name="email" placeholder="Email" required>
+                <img src="{{ url_for('static', filename='images/o-email.png') }}" alt="Email Icon" class="icon">
+            </div>
+            
+            <!-- Campo Senha -->
+            <div class="input-container">
+                <input type="password" id="password" name="password" placeholder="Senha" required>
+                <img src="{{ url_for('static', filename='images/cadeado.png') }}" alt="Lock Icon" class="icon">
+            </div>
+            
+            <!-- Campo Confirmar Senha -->
+            <div class="input-container">
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirmar Senha" required>
+                <img src="{{ url_for('static', filename='images/cadeado.png') }}" alt="Lock Icon" class="icon">
+            </div>
+            
+            <!-- Campo Tipo de Serviço -->
+            <div class="input-container">
+                <select id="service" name="service" required>
+                    <option value="">Selecione o tipo de serviço</option>
+                    <option value="desenvolvimento_software">Desenvolvimento de Software</option>
+                    <option value="infraestrutura_ti">Infraestrutura de TI</option>
+                    <option value="seguranca_cibernetica">Segurança Cibernética</option>
+                    <option value="inteligencia_artificial">Inteligência Artificial</option>
+                    <option value="cloud_computing">Computação em Nuvem</option>
+                    <option value="data_science">Ciência de Dados</option>
+                    <option value="desenvolvimento_web">Desenvolvimento Web</option>
+                    <option value="desenvolvimento_mobile">Desenvolvimento Mobile</option>
+                    <option value="iot">Internet das Coisas (IoT)</option>
+                    <option value="suporte_tecnico">Suporte Técnico</option>
+                    <option value="automacao_industrial">Automação Industrial</option>
+                    <option value="devops">DevOps</option>
+                    <option value="analise_de_dados">Análise de Dados</option>
+                </select>
+                <img src="{{ url_for('static', filename='images/servico-de-gestao.png') }}" alt="Service Icon" class="icon">
+            </div>
+            
+            <!-- Checkbox de Termos e Condições -->
+            <div class="terms-container">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">Concordo com os <a href="#">Termos e Condições</a> e a <a href="#">Política de Privacidade</a></label>
+            </div>
+        
+            <button type="submit">Cadastrar</button>
+            <p>Já é membro? <a href="{{ url_for('login_page') }}">Login</a></p>
+            <p>Ou, <a href="{{ url_for('cadastro_cliente') }}">Inscreva-se como Cliente</a></p>
+        </form>
+        <!-- Adicione ao seu HTML -->
+<div class="landscape-notice">
+    Por favor, gire o dispositivo para o modo retrato para uma melhor experiência.
+</div>
 
+</div>
     <p id="response"></p>
 
     <script src="{{ url_for('static', filename='js/prestador_script_cadastro.js') }}"></script>
