@@ -3,28 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <title>Scroll Infinito</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/formato.css') }}">
 </head>
 <body>
-    <h1>Serviços Disponíveis</h1>
     
-    <div id="services-container"></div>
+    <div id="services-container"> </div>
     <!-- Botões para navegação vertical -->
     <div class="navigation-buttons-vertical">
         <button class="vertical-prev">↓</button>
         <button class="vertical-next">↑</button>
     </div>
     <div class="sidebar">
-        <button id="alterarDescricaoBtn">Alterar Descrição/Filtro</button>
-        <button id="checarConviteBtn">Checar Convite Aceito</button>
-        <!-- Bolinha vermelha de notificação -->
-        <span id="notificationDot" style="display:none; width: 10px; height: 10px; background-color: red; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 5px;"></span>
-
-        <button id="avaliarPrestadorBtn" onclick="abrirPopupAvaliacao()">Avaliar Prestador</button>
+        <!-- Logo no topo da sidebar -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="{{ url_for('static', filename='images/Empresa.png') }}" alt="Tech Informatic Logo" style="width: 100px; height: auto;">
+        </div>
+    
+        <button id="alterarDescricaoBtn">
+            <img src="{{ url_for('static', filename='images/filtro_alterar.png') }}" alt="Alterar Filtro" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+            Alterar Descrição/Filtro
+        </button>
+    
+        <button id="checarConviteBtn">
+            <img src="{{ url_for('static', filename='images/recebido.png') }}" alt="Checar Convite" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+            Checar Convite Aceito
+            <!-- Bolinha vermelha de notificação -->
+            <span id="notificationDot" style="display:none; width: 10px; height: 10px; background-color: red; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 5px;"></span>
+        </button>
+    
+        <button id="avaliarPrestadorBtn" onclick="abrirPopupAvaliacao()">
+            <img src="{{ url_for('static', filename='images/avaliacao.png') }}" alt="Avaliar Prestador" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+            Avaliar Prestador
+        </button>
+    
+        <button id="toggleViewBtn" onclick="toggleView()">
+            <img src="{{ url_for('static', filename='images/zoom_mais.png') }}" alt="Ver Imagem Completa" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+            Ver Imagem Completa
+        </button>
     </div>
-<!-- Modal de Avaliação do Prestador -->
+    
+    
+    
+
 <!-- Modal de Avaliação do Prestador -->
 <div id="popupAvaliacao" class="popup-avaliar">
     <div class="popup-avaliar-content">
@@ -76,7 +98,10 @@
 <div id="alterarDescricaoModal" class="modal hidden">
     <button class="close-btn" onclick="fecharModalAlterarDescricao()">&times;</button>
     <form id="alterarDescricaoForm">
-        <label for="serviceType">Tipo de Serviço:</label>
+        <label for="serviceType">
+            <img src="{{ url_for('static', filename='images/servico-de-gestao.png') }}" alt="Tipo de Serviço" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Tipo de Serviço:
+        </label>
         <select id="serviceType" name="serviceType" required>
             <option value="">Selecione o serviço</option>
             <option value="desenvolvimento_software">Desenvolvimento de Software</option>
@@ -94,10 +119,16 @@
             <option value="analise_de_dados">Análise de Dados</option>            
         </select>
 
-        <label for="novaDescricao">Nova Descrição:</label>
+        <label for="novaDescricao">
+            <img src="{{ url_for('static', filename='images/politica.png') }}" alt="Descrição" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Nova Descrição:
+        </label>
         <textarea id="novaDescricao" name="novaDescricao" rows="4"></textarea>
 
-        <label for="urgencia">Urgência:</label>
+        <label for="urgency">
+            <img src="{{ url_for('static', filename='images/urgencia.png') }}" alt="Urgência" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Urgência:
+        </label>
         <select id="urgency" name="urgency" required>
             <option value="">Selecione a urgência</option>
             <option value="urgente">Urgente</option>
@@ -107,23 +138,40 @@
         </select>
 
         <label for="localizacaoImportante">
-            <input type="checkbox" id="localizacaoImportante" name="localizacaoImportante"> A Localização é importante?
+            <input type="checkbox" id="localizacaoImportante" name="localizacaoImportante">
+            <img src="{{ url_for('static', filename='images/localizacao.png') }}" alt="Localização Importante" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            A Localização é importante?
         </label>
 
         <!-- Campos de endereço que serão exibidos se a localização for importante -->
-        <label for="location">CEP (se aplicável):</label>
+        <label for="location">
+            <img src="{{ url_for('static', filename='images/CEP.png') }}" alt="CEP" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            CEP (se aplicável):
+        </label>
         <input type="text" id="location" name="location" placeholder="Digite o CEP" required>
 
-        <label for="street">Rua:</label>
+        <label for="street">
+            <img src="{{ url_for('static', filename='images/rua.png') }}" alt="Rua" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Rua:
+        </label>
         <input type="text" id="street" name="street" readonly>
 
-        <label for="neighborhood">Bairro:</label>
+        <label for="neighborhood">
+            <img src="{{ url_for('static', filename='images/BAIRRO.png') }}" alt="Bairro" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Bairro:
+        </label>
         <input type="text" id="neighborhood" name="neighborhood" readonly>
 
-        <label for="city">Cidade:</label>
+        <label for="city">
+            <img src="{{ url_for('static', filename='images/CIDADE.png') }}" alt="Cidade" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Cidade:
+        </label>
         <input type="text" id="city" name="city" readonly>
 
-        <label for="state">Estado:</label>
+        <label for="state">
+            <img src="{{ url_for('static', filename='images/BRASIL_regial.png') }}" alt="Estado" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            Estado:
+        </label>
         <input type="text" id="state" name="state" readonly>
 
         <button type="submit">Salvar Alterações</button>
@@ -207,6 +255,8 @@
 // Função para alternar a visibilidade da barra lateral
 const toggleButton = document.getElementById('toggleSidebar');
 const sidebar = document.querySelector('.sidebar');
+const zoomIconPath = "{{ url_for('static', filename='images/zoom_mais.png') }}";
+const zoomIconPathLess = "{{ url_for('static', filename='images/zoom_menos.png') }}";
 
 toggleButton.addEventListener('click', function() {
     sidebar.classList.toggle('hidden');
@@ -221,6 +271,8 @@ toggleButton.addEventListener('click', function() {
 });
 document.getElementById('alterarDescricaoBtn').addEventListener('click', function () {
     document.getElementById('alterarDescricaoModal').classList.toggle('show');
+    // Adicionar classe para desativar o scroll do body
+    document.body.classList.add('no-scroll');
 });
 // Função para abrir o modal e carregar os dados do serviço
 function abrirModalAlterarDescricao(servicoId) {
@@ -247,11 +299,11 @@ function abrirModalAlterarDescricao(servicoId) {
                 document.getElementById('state').value = data.estado;
             }
 
-            // Atualizar a visibilidade dos campos de localização baseado no checkbox
             toggleCamposLocalizacao(data.localizacao_importante == 1);
-
-            // Exibir o modal
             document.getElementById('alterarDescricaoModal').classList.remove('hidden');
+            
+            // Adicionar classe para desativar o scroll do body
+            document.body.classList.add('no-scroll');
         })
         .catch(error => {
             console.error('Erro ao carregar os dados do serviço:', error);
@@ -305,9 +357,13 @@ if (!document.getElementById('localizacaoImportante').checked) {
     });
 }
 // Fechar o modal
+// Função para fechar o modal e reativar o scroll
 function fecharModalAlterarDescricao() {
+    document.getElementById('alterarDescricaoModal').classList.add('hidden');
     document.getElementById('alterarDescricaoModal').classList.remove('show');
+    document.body.classList.remove('no-scroll');
 }
+
 
 // Exemplo de chamada ao abrir o modal com o ID do serviço (ajuste conforme sua lógica de frontend)
 document.getElementById('alterarDescricaoBtn').addEventListener('click', function() {
@@ -490,7 +546,6 @@ function iniciarChecagemAutomatica() {
     setInterval(checarNovidades, 10000); // Checar a cada 10 segundos
 }
 
-// Função para abrir o popup de status e esconder a notificação
 function abrirPopup() {
     fetch('/api/checar_convite')
         .then(response => response.json())
@@ -517,29 +572,51 @@ function abrirPopup() {
                 const prestadorNome = convite.prestador_nome;
                 const status = convite.status;
                 const lido = convite.lido ? 'Sim' : 'Não';
-                const data_visto_prestador = convite.data_visto_prestador;
-                const data_aceito_prestador = convite.data_aceito_prestador;
+                const data_visto_prestador = convite.data_visto_prestador || 'Não disponível';
+                const dta_feed_back_prestador = convite.dta_feed_back_prestador || 'Não disponível';
 
-                let vistoMensagem = '';
-                let aceitoMensagem = '';
+                // Ícones
+                const aceitoIcon = `<img src="{{ url_for('static', filename='images/Aceito_azul.png') }}" alt="Aceito" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+                const naoAceitoIcon = `<img src="{{ url_for('static', filename='images/não_aceito_azul.png') }}" alt="Não Aceito" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+                const vistoIcon = `<img src="{{ url_for('static', filename='images/visualizado.png') }}" alt="Visualizado" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+                const recebidoIcon = `<img src="{{ url_for('static', filename='images/recebido.png') }}" alt="Recebido" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+
+                // Selecionando o ícone baseado no status
+                let statusIcon;
+                if (status === 'aceito') {
+                    statusIcon = aceitoIcon;
+                } else if (status === 'não aceito') {
+                    statusIcon = naoAceitoIcon;
+                } else {
+                    statusIcon = recebidoIcon; // Ícone padrão caso o status seja diferente
+                }
+
+                let vistoMensagem_ = "";
+                let aceitoMensagem_ = "";
 
                 if (data_visto_prestador) {
-                    vistoMensagem = exibirStatusTempo(data_visto_prestador, "Visto");
+                    vistoMensagem_ = exibirStatusTempo(data_visto_prestador, "Visto");
                 }
 
-                if (data_aceito_prestador) {
-                    aceitoMensagem = exibirStatusTempo(data_aceito_prestador, "Aceito");
+                if (dta_feed_back_prestador) {
+                    aceitoMensagem_ = exibirStatusTempo(dta_feed_back_prestador, "Aceito");
                 }
-                console.log("como está", data_aceito_prestador)
-                console.log("mensagem hora", aceitoMensagem)
+                
+                // Definindo as mensagens com os ícones
+                const vistoMensagem = convite.lido 
+                    ? `${vistoIcon} ${vistoMensagem_}`
+                    : `${recebidoIcon} Ainda não visto`;
 
-                // Exibir os detalhes do convite
+                    const aceitoMensagem = status === 'aceito' 
+                    ? `${aceitoIcon} ${aceitoMensagem_}`
+                    : `${naoAceitoIcon} Não aceito`; // Exibe o ícone "não aceito" dos dois lados
+
+                // Construção do HTML com ícones
                 statusElement.innerHTML += `
                     <div class="convite-item">
                         <p><strong>Prestador:</strong> ${prestadorNome}</p>
-                        <p><strong>Status:</strong> ${status}</p>
-                        <p><strong>Convite visto:</strong> ${lido} ${vistoMensagem}</p>
-                        ${aceitoMensagem ? `<p><strong>Aceito:</strong> ${aceitoMensagem}</p>` : ''}
+                        <p><strong>Convite visto:</strong> ${vistoMensagem}</p>
+                        <p><strong>Resposta:</strong> ${aceitoMensagem}</p> <!-- Mensagem com ícone para aceito ou não aceito -->
                         <hr>
                     </div>
                 `;
@@ -553,10 +630,13 @@ function abrirPopup() {
 }
 
 
-// Função para fechar o popup de status
+// Função para fechar o popup de status e reativar o scroll principal
 function fecharPopup() {
     document.getElementById("statusConvitePopup").style.display = "none";
     document.getElementById("modalOverlay").style.display = "none";
+
+    // Remover classe para reativar o scroll do body
+    document.body.classList.remove('no-scroll');
 }
 
 // Adicionar evento ao botão "Checar Convite Aceito" para abrir o popup
@@ -673,9 +753,10 @@ function abrirPopupAvaliacao() {
         .catch(error => console.error('Erro ao pegar prestadores aceitos:', error));
 }
 
-// Função para fechar o popup de avaliação
+// Função para fechar o popup de avaliação e reativar o scroll
 function fecharPopupAvaliacao() {
     document.getElementById('popupAvaliacao').style.display = 'none';
+    document.body.classList.remove('no-scroll'); // Reativar o scroll do body
 }
 
 // Função para enviar a avaliação

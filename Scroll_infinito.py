@@ -481,7 +481,7 @@ def aceitar_servico(solicitacao_id):
     # Atualizar o status de aceito e registrar a data e hora
     cursor.execute("""
         UPDATE solicitacao 
-        SET status = 'aceito', data_aceito_prestador = NOW() 
+        SET status = 'aceito', dta_feed_back_prestador = NOW() 
         WHERE id = %s AND prestador_id = %s
     """, (solicitacao_id, prestador_id))  # Alterado para usar `id` da solicitação
 
@@ -490,6 +490,43 @@ def aceitar_servico(solicitacao_id):
     db.close()
 
     return jsonify({'message': 'Serviço aceito com sucesso!'})
+
+@app.route('/api/nao_aceitar_servico/<int:solicitacao_id>', methods=['POST'])
+def nao_aceitar_servico(solicitacao_id):
+    prestador_id = session.get('prestador_id')
+
+    if not prestador_id:
+        return jsonify({'error': 'Prestador não autenticado'}), 401
+
+    # Conectar ao banco de dados
+    db = connect_to_db()
+    cursor = db.cursor()
+
+    # Verificar se o serviço já foi recusado
+    cursor.execute("""
+        SELECT status FROM solicitacao WHERE id = %s AND prestador_id = %s
+    """, (solicitacao_id, prestador_id))
+    resultado = cursor.fetchone()
+
+    if resultado and resultado[0] == 'não aceito':  # Se já estiver recusado, não faça update
+        cursor.close()
+        db.close()
+        return jsonify({'message': 'Serviço já foi recusado anteriormente.'})
+
+    # Atualizar o status para não aceito e registrar a data e hora
+    cursor.execute("""
+        UPDATE solicitacao 
+        SET status = 'não aceito', dta_feed_back_prestador = NOW() 
+        WHERE id = %s AND prestador_id = %s
+    """, (solicitacao_id, prestador_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({'message': 'Serviço recusado com sucesso!'})
+
+
 
 @app.route('/api/servico/<int:service_id>', methods=['GET'])
 def get_service(service_id):
@@ -1233,7 +1270,7 @@ def checar_convite():
 
     # Buscar o status do convite relacionado ao cliente
     cursor.execute("""
-    SELECT s.status, s.lido, s.data_visto_prestador, s.data_aceito_prestador, p.nome AS prestador_nome
+    SELECT s.status, s.lido, s.data_visto_prestador, s.dta_feed_back_prestador, p.nome AS prestador_nome
     FROM bd_servicos.solicitacao s
     JOIN bd_servicos.prestadores p ON s.prestador_id = p.prestador_id
     WHERE s.cliente_id = %s

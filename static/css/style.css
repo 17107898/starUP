@@ -1,15 +1,28 @@
-body {
+/* Remover margens e padding padrão */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Impedir rolagem horizontal */
     font-family: Arial, sans-serif;
+
+}
+/* Desativa o scroll do body */
+.no-scroll {
+    overflow: hidden;
 }
 
+
+/* Ajustar o container principal para ocupar a altura total */
 #services-container {
     display: flex;
     flex-direction: column;
     gap: 30px;
     position: relative;
     overflow: hidden;
-    height: 80vh; /* Limitar a altura visível */
+    height: 100vh; /* Ajuste para ocupar a altura total da viewport */
+    box-sizing: border-box;
 }
+
 
 .service {
     text-align: center;
@@ -28,7 +41,9 @@ body {
 .service.active {
     opacity: 1;
     transform: translateY(0); /* Voltar para a posição visível */
+    height: 100%;
 }
+
 
 .service.prev {
     transform: translateY(-100%); /* Fora da tela (em cima) */
@@ -45,19 +60,63 @@ body {
     align-items: center;
     overflow: hidden;
     position: relative;
-    width: 80%;  /* Ajuste conforme necessário */
+    width: 100%;
     margin: 0 auto;
-    height: 400px; /* Definir uma altura fixa */
+    height: 80vh;
+    flex-direction: column;
 }
 
+/* Estilo padrão da galeria (como você já configurou) */
 .gallery img, .gallery video {
     position: absolute;
+    width: 300px;
+    height: 490px;
     max-width: 100%;
     max-height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease, opacity 0.5s ease;
     opacity: 0;
+    border: 5px solid #ccc;
+    border-radius: 10px;
 }
+
+/* Estilo alternativo para a exibição completa do contêiner da galeria */
+.gallery.full-view {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 20px;
+    background-color: #fff;
+
+}
+
+/* Estilo para a mídia dentro do contêiner full-view */
+.gallery.full-view img,
+.gallery.full-view video {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    border: 5px solid #555;
+    border-radius: 10px;
+    object-fit: contain;
+
+}
+/* Define a opacidade para os botões "next" e "prev" quando invisíveis */
+.invisible {
+    opacity: 0.1; /* Torna quase invisível */
+    transition: opacity 0.5s ease; /* Suaviza a transição da opacidade */
+}
+
+.gallery.full-view button.full-view-next {
+    right: -260px !important;
+    left: auto !important; /* Para garantir que 'left' seja ignorado */
+}
+
+button.full-view-prev {
+    left: -260px; /* Ajuste conforme necessário para mais espaço */
+}
+
 
 .gallery img.active, .gallery video.active {
     opacity: 1;
@@ -72,6 +131,42 @@ body {
 .gallery img.slide-right, .gallery video.slide-right {
     transform: translateX(100%);
     opacity: 0;
+}
+
+/* Estilo para o container do título */
+.titulo-container {
+    text-align: center;
+    margin-bottom: 20px; /* Ajuste a distância entre o título e o conteúdo principal */
+}
+
+/* Estilo para o título principal */
+.titulo-container h1  {
+    font-size: 2em;
+    color: #333;
+    font-weight: bold;
+    margin: 0; /* Remove margens padrão */
+    margin-bottom: 5px; /* Ajuste para dar uma pequena separação */
+}
+
+/* Estilo para o subtítulo */
+.tituloAvaliacao {
+    font-size: 1.5em;
+    color: #555;
+    margin: 0;
+    margin-bottom: 20px; 
+}
+
+
+.icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+img {
+    /* padding: 0px; */
+    border-radius: 20px;
 }
 
 
@@ -124,11 +219,70 @@ button.vertical-btn:hover {
     background-color: rgba(0, 0, 0, 0.7);
 }
 button.next {
-    margin-left: 340px;
+    left: 220px;
+}
+button.prev {
+    left: -144px;
 }
 
+button.next, 
 button.prev {
-    margin-left: -150px;
+    position: absolute;
+    top: 50%; /* Centraliza verticalmente */
+    transform: translateY(-50%); /* Ajuste para manter os botões centralizados */
+    background-color: rgba(0, 0, 0, 0.5); /* Cor de fundo semitransparente */
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 24px; /* Tamanho da fonte maior para melhor visibilidade */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%; /* Torna os botões redondos */
+}
+/* Efeitos de hover para os botões */
+button.next:hover, 
+button.prev:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+    transform: translateY(-50%) scale(1.1); /* Aumenta o botão um pouco quando hover */
+}
+
+/* Estilizando o botão de navegação vertical superior (seta para cima) */
+button.vertical-prev {
+    position: absolute;
+    top: 10px; /* Posiciona o botão no topo da galeria */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translateX(-50%); /* Mantém o botão centralizado */
+    background-color: rgba(0, 0, 0, 0.5); /* Cor de fundo semitransparente */
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 24px; /* Tamanho da fonte para visibilidade */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%; /* Botão redondo */
+}
+
+/* Estilizando o botão de navegação vertical inferior (seta para baixo) */
+button.vertical-next {
+    position: absolute;
+    bottom: 10px; /* Posiciona o botão no fundo da galeria */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translateX(-50%); /* Mantém o botão centralizado */
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%;
+}
+
+/* Efeito hover para os botões verticais */
+button.vertical-prev:hover, 
+button.vertical-next:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+    transform: translateX(-50%) scale(1.1); /* Aumenta o botão levemente */
 }
 
 .video-container {
@@ -354,13 +508,13 @@ button.prev {
 }
 
 .modal button[type="submit"] {
-    background-color: #28a745;
+    background-color:#007bff;
     color: #fff;
     cursor: pointer;
 }
 
 .modal button[type="submit"]:hover {
-    background-color: #218838;
+    background-color:  #0461c4;
 }
 
 .modal button[type="button"] {
@@ -517,7 +671,7 @@ button.prev {
     width: 100%;
     padding: 10px;
     border: none;
-    background-color: #28a745;
+    background-color: #007bff;
     color: white;
     border-radius: 5px;
     cursor: pointer;
@@ -525,7 +679,7 @@ button.prev {
 }
 
 .confirmar-servico-btn:hover {
-    background-color: #218838;
+    background-color: #0755a8;
 }
 
 .icon {
@@ -620,4 +774,19 @@ button.prev {
 
 .popup-close:hover {
     color: #ff1a1a;
+}
+
+
+
+
+/* Ajuste para telas menores (dispositivos móveis) */
+@media (max-width: 768px) {
+    .navigation-buttons-vertical {
+        right: 10px; /* Ajusta a posição para mais perto da lateral */
+    }
+
+    .navigation-buttons-vertical button {
+        padding: 10px; /* Botões menores */
+        font-size: 20px;
+    }
 }

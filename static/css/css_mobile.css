@@ -3,9 +3,15 @@
 *::before,
 *::after {
     box-sizing: border-box;
-}
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
 
-/* Geral */
+    
+}
+.service.active {
+    top: -20px;
+}
 html, body {
     margin: 0;
     padding: 0;
@@ -372,12 +378,13 @@ html, body {
 }
 
 
-/* Estilo para o container principal */
 #services-container {
-    position: relative; /* Para permitir que os filhos usem posicionamento absoluto */
-    width: 100vw; /* Largura da tela inteira */
-    height: 100vh; /* Altura da tela inteira */
-    overflow: hidden; /* Para esconder qualquer conteúdo que ultrapasse a tela */
+    margin: 0; /* Adicione essa linha se não estiver no código */
+    padding: 0; /* Adicione essa linha para garantir */
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 
 /* Estilo para os serviços */
@@ -409,10 +416,11 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100vw; /* Garante que a galeria ocupe 100% da largura */
-    height: 100vh; /* A galeria ocupa toda a altura da tela */
-    position: relative;
-    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: #000;
 }
 
 /* Imagens ocupando a tela toda (Zoom Máximo) */
@@ -556,7 +564,7 @@ html, body {
 }
 
 /* Estilo para o título (h1) */
-h1 {
+.titulo-container h1  {
     position: absolute;
     top: 20px;
     left: 50%;
@@ -565,6 +573,8 @@ h1 {
     z-index: 1;
     font-size: 1.7rem !important;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    margin: 0; /* Remove qualquer margem */
+    line-height: 1; /* Ajusta o espaçamento interno do texto */
     
     /* Balão transparente */
     background-color: rgba(255, 255, 255, 0.2);  /* Fundo branco transparente */
@@ -573,11 +583,12 @@ h1 {
     border-radius: 20px;  /* Bordas arredondadas para parecer um balão */
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);  /* Sombra leve para destacar */
 }
-/* Estilo para o título (h1) - lado esquerdo */
-h1 {
+.titulo-container h1  {
     position: absolute;
     top: 20px;
     left: 35%;  /* Posiciona o h1 mais à esquerda */
+    margin: 0; /* Remove qualquer margem */
+    line-height: 1; /* Ajusta o espaçamento interno do texto */
     transform: translateX(-50%);
     color: white;
     z-index: 1;
@@ -631,8 +642,10 @@ h1 {
         height: 100vh; /* Ocupa toda a tela */
     }
 
-    h1 {
+    .titulo-container h1  {
         font-size: 2rem; /* Texto menor em dispositivos menores */
+        margin: 0; /* Remove qualquer margem */
+        line-height: 1; /* Ajusta o espaçamento interno do texto */
     }
 
     .video-description {
@@ -647,13 +660,17 @@ h1 {
 
 /* Adaptação para telas pequenas - 6,8" */
 @media (max-width: 1080px) {  /* Para telas de largura de até 1080px */
-    h1, .tituloAvaliacao {
+    .titulo-container h1, .tituloAvaliacao {
         font-size: 1.2rem !important;  /* Reduz tamanho da fonte */
         padding: 5px 10px;  /* Ajuste do padding para caber na tela */
+        margin: 0; /* Remove qualquer margem */
+        line-height: 1; /* Ajusta o espaçamento interno do texto */
     }
 
-    h1 {
+    .titulo-container h1  {
         left: 35%;  /* Ajuste fino do posicionamento do h1 */
+        margin: 0; /* Remove qualquer margem */
+        line-height: 1; /* Ajusta o espaçamento interno do texto */
     }
 
     .tituloAvaliacao {

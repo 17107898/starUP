@@ -5,6 +5,17 @@ document.addEventListener("DOMContentLoaded", function() {
         if (isMobileDevice) {
             console.log('Dispositivo móvel detectado.');
 
+            // Ocultar o botão de alternância de visualização no mobile
+            const toggleViewButton = document.getElementById('toggleViewBtn');
+            if (toggleViewButton) {
+                toggleViewButton.style.display = 'none'; // Oculta o botão no mobile
+            }
+
+            window.addEventListener("load", function() {
+                window.scrollTo(0, 1); // Rola a página para cima, minimizando a barra de endereço
+            });
+            
+
             // Remover os botões de navegação vertical diretamente pelo container pai
             const verticalNav = document.querySelector('.navigation-buttons-vertical');
             if (verticalNav) {

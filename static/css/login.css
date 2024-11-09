@@ -7,60 +7,148 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
+    overflow: hidden; /* Remove o scroll */
 }
 
-/* Estilo do formulário de login */
 form {
+    position: absolute;
+    right: 0; /* Alinha o formulário à direita */
+    top: 0;
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
+    height: 100vh; /* Ocupa toda a altura da viewport */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
-/* Estilo do título */
 h2 {
-    text-align: center;
     color: #333;
     margin-bottom: 20px;
 }
 
-/* Estilos para os rótulos */
-label {
-    font-weight: bold;
-    color: #555;
-    display: block;
-    margin-bottom: 8px;
+.input-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
 }
 
-/* Estilos para os campos de input */
-input[type="email"],
-input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
+.input-container input {
+    width: 90%;
+    padding: 10px 40px 10px 10px; /* Ajuste para o ícone */
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 16px;
 }
 
-/* Estilo do botão de envio */
-button[type="submit"] {
-    width: 100%;
-    padding: 10px;
-    background-color: #28a745;
+.input-container .icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+}
+
+.terms-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.terms-container input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.terms-container label a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.terms-container label a:hover {
+    text-decoration: underline;
+}
+
+button {
+    background-color: #007bff;
     color: white;
+    padding: 10px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    text-align: center;
+    width: 100%;
+    font-weight: bold;
+    font-size: 1em;
+    margin-top: 10px;
 }
 
-/* Hover no botão */
-button[type="submit"]:hover {
-    background-color: #218838;
+button:hover {
+    background-color:#007bff;
+}
+
+p {
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+
+p a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+p a:hover {
+    text-decoration: underline;
+}
+/* CSS para ocultar o formulário e exibir a mensagem no modo landscape */
+.landscape-notice {
+    display: none;
+    text-align: center;
+    font-size: 1.2em;
+    color: #333;
+    padding: 20px;
+    background-color: #ebf8f8;
+}
+@media (max-width: 1080px) {
+    form {
+        height: 65vh; /* Mantém a altura */
+        margin-top:100px; /* Ajuste este valor para mover o formulário mais para baixo */
+    }
+
+    .imagem-fundo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; /* Ocupa toda a largura da tela */
+        height: 100%; /* Ocupa toda a altura da tela */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    
+    .imagem-lado {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Garante que a imagem preencha o contêiner sem distorção */
+    }
+
+}
+
+/* Exibir mensagem apenas para dispositivos móveis em modo landscape */
+@media (orientation: landscape) and (max-width: 1080px) {
+    form, .imagem-fundo {
+        display: none;
+    }
+    .landscape-notice {
+        display: block;
+    }
 }
 
 /* Estilo para dispositivos móveis */

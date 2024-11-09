@@ -67,7 +67,6 @@ async function carregarMaisServicos() {
     const data = await response.json();
 
     console.log(`Número de serviços encontrados: ${data.services.length}`);
-
     const container = document.getElementById('services-container');
 
     if (!data.services || data.services.length === 0) {
@@ -92,7 +91,10 @@ async function carregarMaisServicos() {
         ).join('');
         console.log('id do prestador', service)
         serviceElement.innerHTML = `
-            <h3 class="tituloAvaliacao">${service.service_name}</h3>
+            <div class="titulo-container">
+                <h1>Serviços Disponíveis</h1>
+                <h3 class="tituloAvaliacao">${service.service_name}</h3>
+            </div>
 
             <div class="gallery">
                 ${galleryItems}
@@ -127,7 +129,33 @@ async function carregarMaisServicos() {
         // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
         // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
         const responsavelInfo = serviceElement.querySelector(`#responsavel-${service.id}`);
-
+                // Adiciona os listeners aos botões de navegação após criá-los
+                const nextButton = serviceElement.querySelector('.next');
+                const prevButton = serviceElement.querySelector('.prev');
+        
+                // Função para mostrar os botões quando o mouse está sobre eles
+                const mostrarBotoes = () => {
+                    clearTimeout(inactivityTimeout);
+                    nextButton.classList.remove('invisible');
+                    prevButton.classList.remove('invisible');
+                };
+        
+                // Função para iniciar o temporizador de invisibilidade após o mouse sair
+                const iniciarTemporizador = () => {
+                    inactivityTimeout = setTimeout(() => {
+                        nextButton.classList.add('invisible');
+                        prevButton.classList.add('invisible');
+                    }, 2500); // 2,5 segundos
+                };
+        
+                // Adiciona os eventos de hover aos botões
+                nextButton.addEventListener('mouseenter', mostrarBotoes);
+                nextButton.addEventListener('mouseleave', iniciarTemporizador);
+                prevButton.addEventListener('mouseenter', mostrarBotoes);
+                prevButton.addEventListener('mouseleave', iniciarTemporizador);
+        
+                // Adiciona o serviceElement ao contêiner
+                container.appendChild(serviceElement);
 
         // Verificação se o elemento foi encontrado
         if (responsavelInfo) {
@@ -355,8 +383,10 @@ function toggleMensagem() {
 
 
         // Função para fechar o popup
+        // Função para fechar o popup de solicitação
         function fecharPopupSolicitacao() {
             document.getElementById('popupSolicitacao').style.display = 'none';
+            document.body.classList.remove('no-scroll'); // Reativar o scroll do body
         }
 
         // Função para confirmar a solicitação de serviço
@@ -441,7 +471,10 @@ document.addEventListener('click', function(event) {
 function resetHorizontalCarousel(serviceElement) {
     const gallery = serviceElement.querySelector('.gallery');
     const videoDescription = serviceElement.querySelector('.video-description');
+    const nextButton = serviceElement.querySelector('.next'); // Botão próximo
+    const prevButton = serviceElement.querySelector('.prev'); // Botão anterior
     const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
+    const toggleButton = document.getElementById('toggleViewBtn'); // Obtém o botão de alternância
     let activeIndex = 0;
 
     // Capturar apenas imagens e vídeos, excluindo .perfil-foto
@@ -465,6 +498,29 @@ function resetHorizontalCarousel(serviceElement) {
         solicitarServicoBtn.classList.add('active');
         solicitarServicoBtn.classList.remove('hidden');
     }
+
+    // Garantir que a galeria esteja no modo de visualização padrão (remover 'full-view')
+    gallery.classList.remove('full-view');
+    prevButton.classList.remove('full-view-prev');
+    nextButton.classList.remove('full-view-next');
+
+    // Resetar o texto do botão para "Ver Imagem Completa" com o ícone de zoom
+    if (toggleButton) {
+        const imagemCompletaIcon = `<img src="${zoomIconPath}" alt="Zoom Mais" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+        toggleButton.innerHTML = `${imagemCompletaIcon} Ver Imagem Completa`;
+    }
+
+
+    // Remove os estilos de tamanho aplicados anteriormente para todas as mídias
+    imagesAndVideos.forEach(media => {
+        media.style.width = '';
+        media.style.height = '';
+        prevButton.style.top = '';
+        prevButton.style.left = '';
+        nextButton.style.top = '';
+        nextButton.style.right = '';
+    });
+    
 }
 
 
@@ -531,6 +587,95 @@ function showPrevService() {
     }
 }
 
+let inactivityTimeout; // Variável para o temporizador de inatividade
+
+function ajustarPosicaoBotoes() {
+    const activeService = servicesElements[activeServiceIndex];
+    const gallery = activeService.querySelector('.gallery');
+    const nextButton = activeService.querySelector('.next');
+    const prevButton = activeService.querySelector('.prev');
+    const media = gallery.querySelector('img, video'); // Seleciona a mídia visível atual
+
+    if (media) {
+        const mediaHeight = media.offsetHeight;
+
+        if (nextButton) {
+            nextButton.style.top = `calc(50% - ${nextButton.offsetHeight / 2}px)`;
+            nextButton.style.right = `-260px`; // Ajuste conforme necessário
+            nextButton.classList.remove('invisible'); // Remove a invisibilidade
+        }
+
+        if (prevButton) {
+            prevButton.style.top = `calc(50% - ${prevButton.offsetHeight / 2}px)`;
+            prevButton.style.left = `-260px`; // Ajuste conforme necessário
+            prevButton.classList.remove('invisible'); // Remove a invisibilidade
+        }
+
+        // Limpa o temporizador anterior e define um novo temporizador de 2,5 segundos
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(() => {
+            if (nextButton) nextButton.classList.add('invisible');
+            if (prevButton) prevButton.classList.add('invisible');
+        }, 2500); // 2,5 segundos
+    }
+}
+
+
+function toggleView() {
+    const activeService = servicesElements[activeServiceIndex];
+    const gallery = activeService.querySelector('.gallery');
+    const mediaElements = gallery.querySelectorAll('img, video');
+    const toggleButton = document.getElementById('toggleViewBtn');
+    const nextButton = activeService.querySelector('.next');
+    const prevButton = activeService.querySelector('.prev');
+
+    if (!gallery || mediaElements.length === 0) return;
+
+    gallery.classList.toggle('full-view');
+
+    if (gallery.classList.contains('full-view')) {
+        mediaElements.forEach(media => {
+            media.style.width = 'auto';
+            media.style.height = 'auto';
+        });
+
+        if (nextButton) nextButton.classList.add('full-view-next');
+        if (prevButton) prevButton.classList.add('full-view-prev');
+
+        setTimeout(() => ajustarPosicaoBotoes(), 100);
+
+        const imagemPadraoIcon = `<img src="${zoomIconPathLess}" alt="Zoom Menos" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+        toggleButton.innerHTML = `${imagemPadraoIcon} Ver Imagem Padrão`;
+    } else {
+        mediaElements.forEach(media => {
+            media.style.width = '';
+            media.style.height = '';
+        });
+
+        if (nextButton) {
+            nextButton.classList.remove('full-view-next');
+            nextButton.style.top = '';
+            nextButton.style.right = '';
+            nextButton.style.left = '220px';
+        }
+        if (prevButton) {
+            prevButton.classList.remove('full-view-prev');
+            prevButton.style.top = '';
+            prevButton.style.left = '-144px';
+        }
+        const toggleButton = document.getElementById('toggleViewBtn');
+        if (toggleButton) {
+            const imagemCompletaIcon = `<img src="${zoomIconPath}" alt="Zoom Mais" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+            toggleButton.innerHTML = `${imagemCompletaIcon} Ver Imagem Completa`;
+        }
+        
+        
+        
+    }
+}
+
+
+
 
 window.onload = function() {
     carregarMaisServicos();
@@ -555,31 +700,39 @@ window.onload = function() {
 };
 
 
+function isModalOpen() {
+    return document.getElementById('alterarDescricaoModal').classList.contains('show') ||
+           document.getElementById('statusConvitePopup').style.display === "block" ||
+           document.getElementById('popupSolicitacao').style.display === "flex" ||
+           document.getElementById('popupAvaliacao').style.display === "flex";
+}
 // Função para navegação por scroll e teclado (para desktop)
 function enableScrollAndKeyboardNavigation() {
     // Adicionar navegação por rotação do scroll do mouse
     window.addEventListener('wheel', function(event) {
+        if (isModalOpen()) return; // Se o modal estiver aberto, ignorar o evento
+
         if (event.deltaY < 0) {
-            // Rolagem para cima, chamar função para serviço anterior
             showPrevService();
         } else if (event.deltaY > 0) {
-            // Rolagem para baixo, chamar função para próximo serviço
             showNextService();
         }
     });
 
     // Adicionar navegação pelas teclas do teclado
     window.addEventListener('keydown', function(event) {
+        if (isModalOpen()) return; // Se o modal estiver aberto, ignorar o evento
+
         if (event.key === 'ArrowUp') {
-            // Seta para cima, chamar função para serviço anterior
             showPrevService();
         } else if (event.key === 'ArrowDown') {
-            // Seta para baixo, chamar função para próximo serviço
             showNextService();
         }
     });
 }
 
+// Chamar a função de navegação por scroll e teclado
+enableScrollAndKeyboardNavigation();
 // Função para navegação por toque (swipe) em dispositivos móveis
 function enableTouchNavigation() {
     let startY = 0;
@@ -603,5 +756,7 @@ function enableTouchNavigation() {
         }
     });
 }
+
+
 
 

@@ -693,9 +693,16 @@ function atualizarContadorSolicitacoes(count) {
     }
 }
 
-// Função para exibir o status do convite com base no tempo decorrido
 function exibirStatusTempo(statusTimestamp, tipoStatus) {
-    const statusDate = new Date(statusTimestamp);
+    // Verificar se o timestamp é válido e tratar como UTC
+    const statusDate = new Date(Date.parse(statusTimestamp));
+    
+    // Caso o statusTimestamp não esteja em um formato correto, o statusDate será "Invalid Date"
+    if (isNaN(statusDate)) {
+        console.error(`Data inválida recebida: ${statusTimestamp}`);
+        return `${tipoStatus}: data inválida`;
+    }
+
     const now = new Date();
     const diffInSeconds = Math.floor((now - statusDate) / 1000);
 
@@ -708,13 +715,32 @@ function exibirStatusTempo(statusTimestamp, tipoStatus) {
     } else if (diffInSeconds < 3600) { // menos de 1 hora
         const minutes = Math.floor(diffInSeconds / 60);
         message = `${tipoStatus} há ${minutes} minutos.`;
-    } else if (diffInSeconds < 86400) { // menos de 24 horas
-        const hours = Math.floor(diffInSeconds / 3600);
-        message = `${tipoStatus} hoje às ${statusDate.getHours()}:${statusDate.getMinutes()}.`;
-    } else if (diffInSeconds < 172800) { // menos de 48 horas
-        message = `${tipoStatus} ontem às ${statusDate.getHours()}:${statusDate.getMinutes()}.`;
+    } else if (statusDate.toDateString() === now.toDateString()) { // mesmo dia
+        const timeString = statusDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        });
+        message = `${tipoStatus} hoje às ${timeString}.`;
+    } else if (now.getDate() - statusDate.getDate() === 1 && now.getMonth() === statusDate.getMonth() && now.getFullYear() === statusDate.getFullYear()) {
+        // Foi ontem
+        const timeString = statusDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        });
+        message = `${tipoStatus} ontem às ${timeString}.`;
     } else {
-        message = `${tipoStatus} no dia ${statusDate.toLocaleDateString()} às ${statusDate.getHours()}:${statusDate.getMinutes()}.`;
+        const dateFormatted = statusDate.toLocaleDateString('pt-BR');
+        const timeString = statusDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        });
+        message = `${tipoStatus} no dia ${dateFormatted} às ${timeString}.`;
     }
 
     return message;
@@ -740,20 +766,42 @@ function carregarSolicitacoes(solicitacoes) {
             statusAceito = exibirStatusTempo(solicitacao.data_aceito, "Aceito");
         }
 
+        // Conteúdo do HTML para o item da lista
+        let detalhesHtml = `
+            <p><strong>Orçamento:</strong> ${solicitacao.orcamento}</p>
+            <p><strong>Urgência:</strong> ${solicitacao.urgencia}</p>
+            <p><strong>Data de Contato:</strong> ${solicitacao.data_contato}</p>
+            <p><strong>Hora de Contato:</strong> ${solicitacao.hora_contato}</p>
+            <p><strong>Contato Cliente:</strong> ${solicitacao.contato_cliente}</p>
+        `;
+
+        // Condicional para exibir os botões ou a mensagem "Resposta já dada"
+        if (solicitacao.status === 'aceito' || solicitacao.status === 'não aceito') {
+            detalhesHtml += `<p><strong>Resposta:</strong> Resposta já dada</p>`;
+        } else {
+            detalhesHtml += `
+            <button onclick="aceitarServico(${solicitacao.id})" style="background: none; border: none; cursor: pointer;">
+                <img src="/static/images/verifica_aceitar.png" alt="Aceitar" style="width: 24px; height: 24px; vertical-align: middle;">
+            </button>
+            <button onclick="recusarServico(${solicitacao.id})" style="background: none; border: none; cursor: pointer;">
+                <img src="/static/images/recusar.png" alt="Recusar" style="width: 24px; height: 24px; vertical-align: middle;">
+            </button>
+            `;
+        }
+
         // Exibir as informações da solicitação
         li.innerHTML = `
-            <strong>Solicitação de ${solicitacao.nome_cliente}:</strong> ${solicitacao.mensagem}
-            <br><small>${exibirStatusTempo(solicitacao.data_solicitacao_cliente, "Solicitado")}</small>
-            <button onclick="toggleDetalhes(${solicitacao.id})">Ver Mais</button>
-            <div id="detalhes-${solicitacao.id}" style="display:none; margin-top:10px;">
-                <p><strong>Orçamento:</strong> ${solicitacao.orcamento}</p>
-                <p><strong>Urgência:</strong> ${solicitacao.urgencia}</p>
-                <p><strong>Data de Contato:</strong> ${solicitacao.data_contato}</p>
-                <p><strong>Hora de Contato:</strong> ${solicitacao.hora_contato}</p>
-                <p><strong>Contato Cliente:</strong> ${solicitacao.contato_cliente}</p>
-                <button onclick="aceitarServico(${solicitacao.id})">Aceitar Serviço</button> <!-- Botão para aceitar o serviço -->
-            </div>
-        `;
+        <strong>Solicitação de ${solicitacao.nome_cliente}:</strong> ${solicitacao.mensagem}
+        <br><small>${exibirStatusTempo(solicitacao.data_solicitacao_cliente, "Solicitado")}</small>
+        <button onclick="toggleDetalhes(${solicitacao.id})" style="background: none; border: none; cursor: pointer;">
+            <img src="/static/images/ver-mais.png" alt="Ver Mais" style="width: 33px; height: 33px; vertical-align: middle;">
+        </button>
+        <div id="detalhes-${solicitacao.id}" style="display:none; margin-top:10px;">
+            ${detalhesHtml}
+        </div>
+    `;
+    
+    
 
         lista.appendChild(li);
     });
@@ -775,6 +823,28 @@ function aceitarServico(solicitacaoId) {
     })
     .catch(error => console.error('Erro na requisição:', error));
 }
+
+function recusarServico(solicitacaoId) {
+    fetch(`/api/nao_aceitar_servico/${solicitacaoId}`, {
+        method: 'POST'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.message) {
+            alert('Serviço recusado com sucesso!');
+        } else {
+            console.error('Erro ao recusar o serviço:', data.error);
+        }
+    })
+    .catch(error => console.error('Erro na requisição:', error));
+}
+
+
 // Função para exibir/esconder os detalhes de uma solicitação e marcar como lida
 function toggleDetalhes(solicitacaoId) {
     const detalhes = document.getElementById(`detalhes-${solicitacaoId}`);

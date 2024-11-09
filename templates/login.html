@@ -7,18 +7,31 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
+    <div class="container-principal">
+        <div class="imagem-fundo">
+            <img src="{{ url_for('static', filename='images/prestador_cliente_login.webp') }}" alt="Imagem" class="imagem-lado">
+        </div>
     <form id="loginForm" action="/api/login" method="POST">  
         <h2>Login</h2>
-        <label for="email">E-mail:</label>
-        <input type="email" id="email" name="email" required>
+        <div class="input-container">
+            <input type="email" id="email" name="email" placeholder="Email" required>
+            <img src="{{ url_for('static', filename='images/o-email.png') }}" alt="Email Icon" class="icon">
+        </div>
         <br><br>
-        <label for="password">Senha:</label>
-        <input type="password" id="password" name="password" required>
+            <!-- Campo Senha -->
+            <div class="input-container">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <img src="{{ url_for('static', filename='images/cadeado.png') }}" alt="Lock Icon" class="icon">
+            </div>
         <br><br>
         <button type="submit">Entrar</button>
         <p><a href="/esqueceu_senha">Esqueceu a senha?</a></p> 
     </form>
+    <div class="landscape-notice">
+        Por favor, gire o dispositivo para o modo retrato para uma melhor experiência.
+    </div>
+            
     <script src="{{ url_for('static', filename='js/login.js') }}"></script>
-
+</div>
 </body>
 </html>
