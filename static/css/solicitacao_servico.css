@@ -1,39 +1,112 @@
+/* Fundo geral da página */
 body {
+    background-color: #D4A373; /* Tom de marrom claro para a prancheta */
     font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     margin: 0;
-    padding: 20px;
-    text-align: center;
 }
 
-h2 {
+/* Estilização da prancheta */
+.clipboard {
+    background-color: #8B5A2B; /* Tom de marrom médio para a prancheta */
+    width: 400px;
+    height: 600px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Suporte no topo da prancheta */
+.clip-top {
+    background-color: #B0B0B0; /* Tom cinza claro para o suporte */
+    width: 80px;
+    height: 20px;
+    border-radius: 5px;
+    margin-top: -10px;
+    position: absolute;
+    top: -10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Parafusos no suporte */
+.clip-screw {
+    width: 8px;
+    height: 8px;
+    background-color: #666; /* Cinza escuro para os parafusos */
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Container branco simulando a folha */
+.form-container {
+    background-color: #fff;
+    width: 90%;
+    height: 90%;
+    border-radius: 8px;
+    margin-top: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow-y: auto; /* Permite rolagem se o conteúdo exceder */
+}
+
+/* Estilo do formulário */
+form h2 {
+    text-align: center;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+form label, 
+form input, 
+form select, 
+form textarea, 
+form button, 
+form .checkbox-container, 
+form #contactDetails {
+    margin-bottom: 15px; /* Adiciona espaçamento entre os elementos */
+}
+
+form label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: bold;
     color: #333;
 }
 
-form {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: 0 auto;
-    text-align: left;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-input, select, textarea {
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin-bottom: 15px;
+form input, form select, form textarea, form button {
+    width: 100%;
+    margin-top: 5px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Para garantir que o padding não ultrapasse o tamanho do campo */
+    box-sizing: border-box;
+    font-size: 14px;
 }
+
+form button {
+    background-color: #007bff; /* Marrom escuro para o botão */
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+form button:hover {
+    background-color: #0056b3; /* Tom mais escuro ao passar o mouse */
+}
+
 
 
 
@@ -58,7 +131,7 @@ input, select, textarea {
     display: inline-block;
     width: 50px;
     height: 24px;
-    background-color: #ccc;
+    background-color: #007bff;
     border-radius: 34px;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -79,7 +152,7 @@ input, select, textarea {
 
 /* Cor de fundo quando o checkbox estiver selecionado (ativado) */
 .toggle-switch:checked + .toggle-switch-label {
-    background-color: #4CAF50;
+    background-color: #0056b3;
 }
 
 /* Movendo o círculo para a direita quando o checkbox estiver ativado */
@@ -101,7 +174,7 @@ textarea {
 }
 
 button {
-    background-color: #28a745;
+    background-color: #007bff;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -110,11 +183,88 @@ button {
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: #0056b3;
 }
 
 #response {
     margin-top: 20px;
     color: red;
     font-weight: bold;
+}
+/* Estilo para os ícones ao lado */
+.imagem-lado {
+    width: 24px; /* Ajuste o tamanho do ícone conforme necessário */
+    height: 24px;
+    margin-right: 10px; /* Espaço entre o ícone e o texto */
+    vertical-align: middle;
+}
+
+.custom-select {
+    position: relative;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+}
+
+.selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.selected img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.options {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.options li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.options li:hover {
+    background: #f0f0f0;
+}
+
+.options li img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.options li span {
+    flex-grow: 1;
+}
+#dynamicIcon {
+    width: 24px; /* Largura do ícone */
+    height: 24px; /* Altura do ícone */
+    display: inline-block; /* Garante que ele apareça inline */
+    vertical-align: middle; /* Alinha verticalmente ao texto */
+}
+.arial-font {
+    font-family: Arial, sans-serif;
+    font-size: 14px; /* Ajuste o tamanho da fonte, se necessário */
+    color: #333; /* Cor do texto (opcional) */
 }

@@ -10,7 +10,11 @@ from itsdangerous import URLSafeTimedSerializer
 import smtplib
 import random
 from werkzeug.datastructures import FileStorage  # Certifique-se de que o FileStorage está importado
-
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
+import numpy as np
+from decimal import Decimal
 app = Flask(__name__)
 
 
@@ -54,69 +58,150 @@ def connect_to_db():
 db = connect_to_db()
 cursor = db.cursor()
 
-def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=None, city=None, state=None, urgency=None, localizacao_importante=True):
-    print(f"Recebendo parâmetros: service_type={service_type}, cep={cep}, street={street}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}, localizacao_importante={localizacao_importante}")
 
+# ------------------------------------
+
+def get_services_from_db(cliente_id, service_type=None, cep=None, street=None, neighborhood=None, city=None, state=None, urgency=None, localizacao_importante=True):
+    print(f"Recebendo parâmetros: service_type={service_type}, cep={cep}, street={street}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}, localizacao_importante={localizacao_importante}")
+    
     db = connect_to_db()
     cursor = db.cursor(dictionary=True)
+    
+    # 1. Obter localização e descrição do cliente da tabela `bd_servicos.servicos`
+    query_cliente = """
+    SELECT cidade, estado, descricao
+    FROM bd_servicos.servicos
+    WHERE cliente_id = %s
+    """
+    cursor.execute(query_cliente, (cliente_id,))
+    cliente_info = cursor.fetchone()
 
-    query = """
-    SELECT prestadores.prestador_id AS prestador_id, 
-        prestadores.nome, 
-        servicos.tipo_servico AS servico, 
-        servicos.descricao, 
-        servicos.preferencias_prestador, 
-        uploads.id AS upload_id, 
-        uploads.tipo_arquivo, 
-        uploads.perfil_foto,
-        servicos.localizacao, 
-        servicos.rua, 
-        servicos.bairro, 
-        servicos.cidade, 
-        servicos.estado,
-        prestadores.nota,  
-        prestadores.contato
-    FROM bd_servicos.prestadores
+    cliente_cidade = cliente_info['cidade'] if cliente_info else None
+    cliente_estado = cliente_info['estado'] if cliente_info else None
+    cliente_descricao = cliente_info['descricao'] if cliente_info else ""
+
+    # 2. Obter histórico do cliente (se existir)
+    query_historico = """
+    SELECT DISTINCT bd_servicos.solicitacao.prestador_id, 
+           bd_servicos.prestadores.nota, 
+           servicos.cidade, 
+           servicos.estado
+    FROM bd_servicos.solicitacao
     JOIN bd_servicos.servicos 
-        ON prestadores.prestador_id = servicos.prestador_id
-    LEFT JOIN bd_servicos.uploads 
-        ON prestadores.prestador_id = uploads.prestador_id
-    WHERE 1=1
+    ON bd_servicos.solicitacao.prestador_id = servicos.prestador_id
+    JOIN bd_servicos.prestadores 
+    ON bd_servicos.solicitacao.prestador_id = bd_servicos.prestadores.prestador_id
+    WHERE bd_servicos.solicitacao.cliente_id = %s
+    """
+    cursor.execute(query_historico, (cliente_id,))
+    historico = cursor.fetchall()
+    
+    historico_df = pd.DataFrame(historico) if historico else pd.DataFrame(columns=['prestador_id', 'nota', 'cidade', 'estado'])
+    historico_ids = set(historico_df['prestador_id'])  # Conjunto de IDs para evitar duplicados
+    
+    # Garantir que a média das notas seja float, mesmo que `nota` seja Decimal
+    media_nota_historico = float(historico_df['nota'].mean()) if not historico_df.empty else None
+
+    # 3. Obter perfis de todos os prestadores do serviço escolhido
+    query_prestadores = """
+    SELECT prestadores.prestador_id, 
+           prestadores.nome, 
+           servicos.tipo_servico AS servico, 
+           servicos.descricao, 
+           servicos.preferencias_prestador, 
+           servicos.localizacao, 
+           servicos.rua, 
+           servicos.bairro, 
+           servicos.cidade, 
+           servicos.estado,
+           prestadores.nota,
+           uploads.id AS upload_id,
+           uploads.tipo_arquivo,
+           uploads.perfil_foto
+    FROM bd_servicos.prestadores
+    JOIN bd_servicos.servicos ON prestadores.prestador_id = servicos.prestador_id
+    LEFT JOIN bd_servicos.uploads ON prestadores.prestador_id = uploads.prestador_id
+    WHERE servicos.tipo_servico = %s
     """
     
-    params = []
+    # Adicionar filtro NOT IN apenas se o histórico não estiver vazio
+    if historico_ids:
+        query_prestadores += " AND prestadores.prestador_id NOT IN (%s)" % ",".join(["%s"] * len(historico_ids))
+        cursor.execute(query_prestadores, (service_type, *tuple(historico_ids)))
+    else:
+        cursor.execute(query_prestadores, (service_type,))  # Sem filtro NOT IN se o histórico estiver vazio
     
-    # Filtro por tipo de serviço
-    if service_type:
-        query += " AND servicos.tipo_servico = %s"
-        params.append(service_type)
-
-    # Filtro por urgência
-    if urgency:
-        query += " AND servicos.urgencia = %s"
-        params.append(urgency)
-
-    # Filtro de localização, mas apenas se a localização for importante para o cliente
-    if localizacao_importante:
-        if cep or neighborhood or city or state:
-            query += """
-            ORDER BY (servicos.localizacao = %s) DESC, 
-                    (servicos.bairro = %s) DESC, 
-                    (servicos.cidade = %s) DESC, 
-                    (servicos.estado = %s) DESC
-            """
-            params.extend([cep, neighborhood, city, state])
-
-    print(f"Query final: {query}")
-    print(f"Parâmetros da query: {params}")
-
-    cursor.execute(query, params)
     prestadores_servicos_uploads = cursor.fetchall()
+    
+    prestadores_df = pd.DataFrame(prestadores_servicos_uploads) if prestadores_servicos_uploads else pd.DataFrame(columns=[
+        'prestador_id', 'nome', 'servico', 'descricao', 'preferencias_prestador', 
+        'localizacao', 'rua', 'bairro', 'cidade', 'estado', 'nota', 'upload_id', 'tipo_arquivo', 'perfil_foto'
+    ])
+    
+    # 4. Criar vetor de atributos usando TF-IDF
+    if not prestadores_df.empty:
+        prestadores_df['descricao_completa'] = (
+            prestadores_df['servico'].fillna('') + " " +
+            prestadores_df['descricao'].fillna('') + " " +
+            prestadores_df['bairro'].fillna('') + " " +
+            prestadores_df['cidade'].fillna('') + " " +
+            prestadores_df['estado'].fillna('')
+        )
+        
+        vectorizer = TfidfVectorizer()
+        prestadores_tfidf = vectorizer.fit_transform(prestadores_df['descricao_completa'])
+    else:
+        prestadores_tfidf = None
 
+    # 5. Calcular a pontuação combinada (prioridade para novos perfis)
+    if not prestadores_df.empty:
+        # Convertendo `nota` para float se necessário
+        prestadores_df['nota'] = prestadores_df['nota'].apply(lambda x: float(x) if isinstance(x, Decimal) else x)
+
+        # Pontuação baseada na nota (somente se histórico existir)
+        if media_nota_historico:
+            prestadores_df['score_nota'] = 1 - abs(prestadores_df['nota'] - media_nota_historico) / 10
+
+        # Pontuação baseada na localização
+        if localizacao_importante and cliente_cidade and cliente_estado:
+            prestadores_df['score_localizacao'] = (
+                (prestadores_df['cidade'] == cliente_cidade).astype(int) * 2 +
+                (prestadores_df['estado'] == cliente_estado).astype(int)
+            )
+        else:
+            prestadores_df['score_localizacao'] = 0
+
+        # Pontuação baseada na similaridade de descrição
+        if prestadores_tfidf is not None and cliente_descricao:
+            cliente_tfidf = vectorizer.transform([cliente_descricao])
+            similaridade = cosine_similarity(cliente_tfidf, prestadores_tfidf).flatten()
+            prestadores_df['score_similaridade'] = similaridade
+        else:
+            prestadores_df['score_similaridade'] = 0
+
+        # Prioridade para novos perfis
+        prestadores_df['score_prioridade'] = prestadores_df['prestador_id'].apply(
+            lambda x: 1 if x not in historico_ids else 0
+        )
+
+        # Combinar as pontuações
+        prestadores_df['score'] = (
+            0.4 * prestadores_df.get('score_nota', 0) +
+            0.3 * prestadores_df['score_localizacao'] +
+            0.2 * prestadores_df['score_similaridade'] +
+            0.1 * prestadores_df['score_prioridade']
+        )
+    else:
+        prestadores_df['score'] = 0.0
+    
+    # 6. Ordenar por score
+    prestadores_df = prestadores_df.sort_values(by='score', ascending=False)
+    
+    # 7. Montar a estrutura final de resposta
     services = []
     prestadores_ids = set()
-
-    for prestador in prestadores_servicos_uploads:
+    
+    for _, prestador in prestadores_df.iterrows():
         if prestador['prestador_id'] not in prestadores_ids:
             prestadores_ids.add(prestador['prestador_id'])
 
@@ -150,14 +235,18 @@ def get_services_from_db(service_type=None, cep=None, street=None, neighborhood=
                 },
                 "person_name": prestador['nome'],
                 "rating": prestador['nota'],
-                "bio": prestador['preferencias_prestador']
+                "bio": prestador['preferencias_prestador'],
+                "score": prestador['score']
             }
 
             services.append(service)
-
+            print(f'como está: {services}')
+    # Filtrar a lista de services para remover prestadores com IDs no histórico
+    # services = [service for service in services if service['id'] not in historico_ids]
+    # print(f'historico: {historico}, {cliente_id}')
     cursor.close()
     db.close()
-
+    
     return services
 
 
@@ -207,9 +296,11 @@ def get_services():
 
     # Log para verificar os filtros recebidos
     print(f"Rota /get_services - Filtros recebidos: serviceType={service_type}, cep={cep}, neighborhood={neighborhood}, city={city}, state={state}, urgency={urgency}, localizacao_importante={localizacao_importante}, cliente_id={cliente_id}")
+    print(f"está pegando? {cliente_id}")
+    print(f"URL recebida: {request.url}")
 
     # Buscar serviços filtrados com base nas preferências do cliente, incluindo cliente_id
-    all_services = get_services_from_db(service_type, cep, street, neighborhood, city, state, urgency, localizacao_importante)
+    all_services = get_services_from_db(cliente_id, service_type, cep, street, neighborhood, city, state, urgency, localizacao_importante)
     
     # Log para verificar quantos serviços foram encontrados
     print(f"Total de serviços encontrados: {len(all_services)}")
@@ -218,6 +309,47 @@ def get_services():
     return jsonify({
         "services": all_services
     })
+
+def obter_dados_prestador(prestador_id):
+    # Conectar ao banco de dados e usar DictCursor para retornar dicionários
+        # Conectar ao banco e usar cursor padrão
+    db = connect_to_db()
+    cursor = db.cursor(dictionary=True)
+
+    # Consulta para obter os feedbacks
+    cursor.execute("""
+        SELECT comentario, nota, nome_cliente
+        FROM bd_servicos.feedback
+        WHERE id_prestador = %s
+    """, (prestador_id,))
+    feedbacks = cursor.fetchall()
+
+    # Inicializar o dicionário de distribuição das avaliações e variáveis para cálculo
+    avaliacoes_distribuicao = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+    total_avaliacoes = len(feedbacks)
+    soma_notas = 0
+
+    # Contar avaliações para cada nota e calcular a soma das notas
+    for feedback in feedbacks:
+        nota = feedback['nota']
+        avaliacoes_distribuicao[nota] += 1
+        soma_notas += nota
+
+    # Calcular a nota média
+    nota_media = soma_notas / total_avaliacoes if total_avaliacoes > 0 else 0
+
+    # Fechar cursor e conexão
+    cursor.close()
+    db.close()
+
+    # Retornar os dados do prestador, incluindo a distribuição de avaliações e a média
+    prestador_dados = {
+        'nota_media': nota_media,
+        'avaliacoes': avaliacoes_distribuicao,
+        'total_avaliacoes': total_avaliacoes,
+        'feedbacks': feedbacks
+    }
+    return prestador_dados
 
 
 @app.route('/perfil_prestador', methods=['GET'])
@@ -345,7 +477,7 @@ def perfil_prestador():
         'metodo_contato': prestador[0]['metodo_contato'],
         'data_contato': prestador[0]['data_contato'],
         'comentarios': prestador[0]['comentarios'],
-        'feedbacks': feedbacks
+        'feedbacks': feedbacks,
     }
 
     perfil_foto = next((upload['upload_id'] for upload in prestador if upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None), None)
@@ -358,11 +490,21 @@ def perfil_prestador():
 
     # Remover duplicatas de certificados
     certificados_unicos = list(dict.fromkeys(certificados))  # Remove duplicatas
+    # Exemplo de como obter e passar os dados para o template
+    # Adicionar dados de avaliação diretamente no dicionário `prestador_dados`
+    avaliacao_dados = obter_dados_prestador(prestador_id_url)
+    prestador_dados.update(avaliacao_dados)  # Mescla os dados de avaliação
 
-    return render_template('perfil_prestador.html', prestador_id=prestador_id_url, prestador=prestador_dados, certificados=certificados, perfil_foto=perfil_foto, images=images, videos=videos, is_owner=is_owner)
-
-
-# Mapeamento dos meses para português
+    return render_template(
+        'perfil_prestador.html',
+        prestador_id=prestador_id_url,
+        prestador=prestador_dados,
+        certificados=certificados,
+        perfil_foto=perfil_foto,
+        images=images,
+        videos=videos,
+        is_owner=is_owner
+    )
 meses_portugues = {
     1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
     7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
@@ -530,28 +672,51 @@ def nao_aceitar_servico(solicitacao_id):
 
 @app.route('/api/servico/<int:service_id>', methods=['GET'])
 def get_service(service_id):
-    print(f'o que chegou: {service_id}')
+    cliente_id = session.get('cliente_id')
+    print(f'Cliente ID recebido: {cliente_id}')
+
+    if not cliente_id:
+        return jsonify({'error': 'Cliente não autenticado'}), 401
+
     # Conectar ao banco de dados
     db = connect_to_db()
     cursor = db.cursor(dictionary=True)
-    
-    # Consultar os dados do serviço pelo ID do serviço
-    cursor.execute("""
-        SELECT tipo_servico AS service_name, descricao, orcamento, urgencia, data_contato, localizacao, rua, bairro, cidade, estado, metodo_contato 
-        FROM bd_servicos.servicos 
-        WHERE prestador_id = %s
-    """, (service_id,))
-    
-    service = cursor.fetchone()
-    cursor.close()
-    db.close()
 
-    if not service:
-        # Retornar uma mensagem de erro em formato JSON
-        return jsonify({'error': 'Serviço não encontrado'}), 404
+    try:
+        # Verificar se o cliente já enviou uma solicitação para o prestador
+        cursor.execute("""
+            SELECT COUNT(*) AS ja_enviado 
+            FROM bd_servicos.solicitacao
+            WHERE cliente_id = %s AND prestador_id = %s
+        """, (cliente_id, service_id))
 
-    # Retornar os dados do serviço como JSON
+        ja_enviado = cursor.fetchone()['ja_enviado'] > 0
+
+        # Buscar os detalhes do serviço
+        cursor.execute("""
+            SELECT tipo_servico AS service_name, descricao, orcamento, urgencia, data_contato, 
+                   localizacao, rua, bairro, cidade, estado, metodo_contato
+            FROM bd_servicos.servicos
+            WHERE prestador_id = %s
+        """, (service_id,))
+
+        service = cursor.fetchone()
+        if not service:
+            return jsonify({'error': 'Serviço não encontrado'}), 404
+
+        # Adicionar o status de "já enviado" ao JSON
+        service['ja_enviado'] = ja_enviado
+
+    except Exception as e:
+        print(f"Erro ao buscar serviço: {e}")
+        return jsonify({'error': 'Erro interno no servidor'}), 500
+
+    finally:
+        cursor.close()
+        db.close()
+
     return jsonify(service)
+
 
 
 
@@ -821,13 +986,13 @@ from flask import request, jsonify
 @app.route('/api/remover_foto_perfil', methods=['POST'])
 def remover_foto_perfil():
     prestador_id = request.form.get('prestador_id')
-    foto_id = request.form.get('foto_id')  # ID do registro da foto de perfil
+    foto_id = request.form.get('foto_id')
 
-    if not prestador_id or not foto_id:
-        return jsonify({'success': False, 'message': 'ID do prestador e ID da foto são necessários.'}), 400
+    if not prestador_id or foto_id in ('None', ''):
+        return jsonify({'success': False, 'message': 'ID do prestador ou ID da foto inválido.'}), 400
 
     try:
-        # Verifica se o registro existe e é uma foto de perfil
+        # Verifica se o registro da foto existe
         cursor.execute("""
             SELECT COUNT(*)
             FROM bd_servicos.uploads
@@ -850,7 +1015,6 @@ def remover_foto_perfil():
     except Exception as e:
         print("Erro ao remover a foto de perfil:", e)
         return jsonify({'success': False, 'message': 'Erro ao remover a foto de perfil.'}), 500
-
 
 # Rota para obter imagens do banco de dados (LONGBLOB)
 @app.route('/uploads/img/<int:upload_id>')
@@ -1256,10 +1420,12 @@ def api_solicitar_servico():
 
     return redirect(url_for('carrossel', cliente_id=cliente_id, serviceType=service_type, cep=cep, street=street, neighborhood=neighborhood, city=city, state=state, urgency=urgency, localizacaoImportante=localizacao_importante))
 
+import base64
+
 @app.route('/api/checar_convite', methods=['GET'])
 def checar_convite():
     cliente_id = session.get('cliente_id')
-    print(f'coleta_status: {cliente_id}')
+    print(f'Cliente ID recebido: {cliente_id}')
     
     if not cliente_id:
         return jsonify({'error': 'Cliente não autenticado'}), 401
@@ -1268,25 +1434,54 @@ def checar_convite():
     db = connect_to_db()
     cursor = db.cursor(dictionary=True)
 
-    # Buscar o status do convite relacionado ao cliente
-    cursor.execute("""
-    SELECT s.status, s.lido, s.data_visto_prestador, s.dta_feed_back_prestador, p.nome AS prestador_nome
-    FROM bd_servicos.solicitacao s
-    JOIN bd_servicos.prestadores p ON s.prestador_id = p.prestador_id
-    WHERE s.cliente_id = %s
-    ORDER BY s.data_solicitacao DESC
-    """, (cliente_id,))
+    try:
+        # Buscar status do convite relacionado ao cliente
+        cursor.execute("""
+            SELECT 
+                s.status, 
+                s.lido, 
+                s.data_visto_prestador, 
+                s.dta_feed_back_prestador, 
+                s.prestador_id, -- Adiciona o ID do prestador na seleção
+                p.nome AS prestador_nome,
+                u.arquivo AS foto_perfil
+            FROM 
+                bd_servicos.solicitacao s
+            JOIN 
+                bd_servicos.prestadores p ON s.prestador_id = p.prestador_id
+            LEFT JOIN 
+                bd_servicos.uploads u ON s.prestador_id = u.prestador_id AND u.perfil_foto = 'perfil'
+            WHERE 
+                s.cliente_id = %s
+            ORDER BY 
+                s.data_solicitacao DESC;
+        """, (cliente_id,))
 
-    convites = cursor.fetchall()  # Buscar todos os resultados, não apenas um
+        convites = cursor.fetchall()
 
-    cursor.close()
-    db.close()
+        # Converte a foto do perfil (BLOB) para Base64
+        for convite in convites:
+            if convite['foto_perfil']:
+                convite['foto_perfil'] = base64.b64encode(convite['foto_perfil']).decode('utf-8')
 
-    if convites:
-        # Retornar todos os convites em um array
-        return jsonify(convites)
-    else:
-        return jsonify({'error': 'Nenhum convite encontrado.'}), 404
+    except Exception as e:
+        print(f"Erro ao executar a consulta: {e}")
+        return jsonify({'error': 'Erro ao buscar convites no banco de dados'}), 500
+
+    finally:
+        cursor.close()
+        db.close()
+
+    # Se nenhum convite encontrado, retorne uma lista vazia
+    if not convites:
+        print("Nenhuma solicitação encontrada.")
+        return jsonify([])
+
+    # Retornar os convites
+    return jsonify(convites)
+
+
+
 
 @app.route('/api/pegar_prestadores_aceitos', methods=['GET'])
 def pegar_prestadores_aceitos():

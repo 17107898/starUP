@@ -6,7 +6,7 @@ body {
 }
 
 .profile-container {
-    max-width: 900px;
+    max-width: 640px;
     margin: 0 auto;
     padding: 20px;
     background-color: #fff;
@@ -193,6 +193,66 @@ h1, h2 {
     overflow: hidden;
 }
 
+.avaliacao-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.nota-media {
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.nota-media h2 {
+    font-size: 2.5rem;
+    margin: 0;
+    color: #333;
+}
+
+.nota-media .estrelas img {
+    width: 24px;
+    height: 24px;
+    margin-right: 2px;
+    vertical-align: middle;
+}
+
+.nota-media p {
+    font-size: 1rem;
+    color: #555;
+}
+
+.grafico-avaliacao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.barra-avaliacao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.barra {
+    flex: 1;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.barra-preenchida {
+    background-color: #007bff;
+    height: 100%;
+    border-radius: 5px;
+}
+
+
 .no-feedback {
     background-color: #fcdcdc; /* Cinza escuro para destacar o texto */
     border: 1px solid #000; /* Borda preta mais forte */
@@ -306,12 +366,11 @@ select {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
-/* Estilizando o ícone de notificação */
 .notification-container {
-    position: fixed; /* Altera de absolute para fixed */
+    position: fixed;
     top: 10px;
     right: 20px;
-    z-index: 1000; /* Garante que o ícone ficará acima de outros elementos */
+    z-index: 1000;
 }
 
 .notification-icon {
@@ -319,6 +378,26 @@ select {
     cursor: pointer;
     position: relative;
 }
+
+.logout-container {
+    position: fixed;
+    top: 50px; /* Ajuste a posição vertical em relação ao ícone de notificação */
+    right: 20px;
+    z-index: 1000;
+    text-align: center;
+}
+
+.logout-icon {
+    width: 30px; /* Ajuste o tamanho do ícone */
+    height: 30px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.logout-icon:hover {
+    transform: scale(1.1); /* Efeito de zoom ao passar o mouse */
+}
+
 
 .notification-count {
     background-color: red;
@@ -607,9 +686,140 @@ select {
     transition: background-color 0.5s ease, color 0.5s ease;  /* Transição suave */
 }
 
+#button-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-save {
+    display: flex;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+.btn-save .button-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.btn-save:hover {
+    background-color: #0056b3;
+}
+
+/* Efeito de flutuação */
+.floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: auto;
+    animation: slide-up 0.5s ease-out; /* Animação ao aparecer */
+}
+
+/* Efeito de entrada ao voltar ao lugar original */
+.slide-in {
+    animation: slide-in 0.5s ease-out;
+}
+
+/* Animação de subida ao aparecer flutuando */
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Sobe de baixo para cima */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animação de entrada ao retornar ao local original */
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-20px); /* Vem da esquerda para a posição */
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.file-upload-container {
+    position: relative;
+    display: inline-block;
+}
+
+.upload-icon {
+    width: 50px; /* Tamanho normal */
+    height: 50px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.upload-icon:hover {
+    transform: scale(1.1); /* Zoom ao passar o mouse */
+}
+
+.upload-icon.disabled {
+    opacity: 0.5; /* Reduz a opacidade */
+    cursor: not-allowed; /* Mostra um indicador de que está desabilitado */
+    transform: none; /* Remove o efeito de zoom */
+}
+
+.upload-limit-message {
+    color: #ffffff; /* Cor do texto branco */
+    background-color: #ff4d4d; /* Vermelho vibrante para fundo */
+    border: 2px solid #ff0000; /* Borda vermelha */
+    border-radius: 5px; /* Arredonda as bordas */
+    padding: 10px; /* Espaçamento interno */
+    font-size: 16px; /* Tamanho da fonte */
+    font-weight: bold; /* Texto em negrito */
+    text-align: center; /* Centraliza o texto */
+    margin-top: 20px; /* Espaço superior */
+    display: none; /* Inicialmente escondido */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Sombra para destaque */
+    animation: fadeIn 0.5s ease-in-out, bounce 1s ease infinite alternate; /* Animações */
+}
+
+.upload-message {
+    margin-top: 10px;
+    color: green; /* Cor do texto da mensagem de sucesso */
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+
 /* Estilo para os botões */
 button {
-    padding: 12px 20px;
+    padding: 3px 8px;
     background-color: #007BFF;
     color: white;
     border: none;
@@ -618,16 +828,48 @@ button {
     font-size: 16px;
     transition: background-color 0.3s ease;
 }
-.response-message {
+#response-message {
+    display: none; /* Oculta por padrão */
     margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
     font-size: 14px;
-    color: green;  /* Cor para mensagem de sucesso */
 }
 
-.response-message.error {
-    color: red;  /* Cor para mensagem de erro */
+#response-message.success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
 }
 
+#response-message.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+
+
+
+.remove-image-perfil {
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    background-color: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-upload {
+    margin-top: 10px;
+    text-align: center;
+}
 
 
 

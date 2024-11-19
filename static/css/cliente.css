@@ -133,6 +133,15 @@ p a {
 p a:hover {
     text-decoration: underline;
 }
+
+.response-message {
+    margin-top: 10px;
+    color: red; /* Ou verde, dependendo do contexto */
+    font-size: 14px;
+    text-align: center;
+}
+
+
 /* CSS para ocultar o formulário e exibir a mensagem no modo landscape */
 .landscape-notice {
     display: none;

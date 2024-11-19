@@ -86,88 +86,134 @@ document.getElementById('contactMethod').addEventListener('change', function () 
     }
 });
 
-document.getElementById('servicoForm').addEventListener('submit', function(event) {
-    event.preventDefault();
 
-    // Função de validação dos campos
-    function validarCampos() {
-        const prestadorId = document.getElementById('prestadorId').value.trim();
-        const serviceType = document.getElementById('serviceType').value.trim();
-        const description = document.getElementById('description').value.trim();
-        const budget = document.getElementById('budget').value.trim();
-        const urgency = document.getElementById('urgency').value.trim();
-        const location = document.getElementById('location').value.trim();
-        const street = document.getElementById('street').value.trim();
-        const neighborhood = document.getElementById('neighborhood').value.trim();
-        const city = document.getElementById('city').value.trim();
-        const state = document.getElementById('state').value.trim();
-        const contactMethod = document.getElementById('contactMethod').value.trim();
-        const contactDetail = document.getElementById('contactInput').value.trim();
-        const contactDate = document.getElementById('contactDate').value.trim();
-        const comments = document.getElementById('comments').value.trim();
-        const providerPreferences = document.getElementById('providerPreferences').value.trim();
+// Função para ativar o seletor de arquivos ao clicar no ícone
+function ativarUploadCertificados() {
+    const certificadoInput = document.getElementById('certificados');
+    if (certificadoInput) {
+        certificadoInput.click(); // Simula o clique no input de arquivos
+    } else {
+        console.error("Elemento de ID 'certificados' não encontrado.");
+    }
+}
 
-        if (!prestadorId || !serviceType || !description || !budget || !urgency || !location ||
-            !street || !neighborhood || !city || !state || !contactMethod || !contactDetail ||
-            !contactDate || !comments || !providerPreferences) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
+// Lista para armazenar os arquivos carregados
+let certificadosCarregados = [];
+
+// Listener para o input de arquivos
+document.addEventListener('DOMContentLoaded', function () {
+    const certificadoInput = document.getElementById('certificados');
+    if (certificadoInput) {
+        certificadoInput.addEventListener('change', function () {
+            const files = Array.from(this.files); // Converte os arquivos carregados em um array
+            const messageDiv = document.getElementById('certificados-message');
+
+            if (!messageDiv) {
+                console.error("Elemento de ID 'certificados-message' não encontrado.");
+                return;
+            }
+
+            // Adiciona os novos arquivos à lista cumulativa, evitando duplicatas
+            files.forEach(file => {
+                if (!certificadosCarregados.some(c => c.name === file.name && c.size === file.size)) {
+                    certificadosCarregados.push(file);
+                }
+            });
+
+            // Exibe a mensagem de sucesso com a contagem total de arquivos carregados
+            if (certificadosCarregados.length > 0) {
+                messageDiv.textContent = `${certificadosCarregados.length} certificado(s) carregado(s) no total.`;
+                messageDiv.style.display = 'block';
+            } else {
+                messageDiv.style.display = 'none';
+            }
+
+            console.log("Certificados carregados:", certificadosCarregados);
+        });
+    } else {
+        console.error("Elemento de ID 'certificados' não encontrado.");
+    }
+});
+
+// Função de validação dos campos
+function validarCampos() {
+    const camposObrigatorios = [
+        { id: 'prestadorId', mensagem: 'ID do Prestador é obrigatório.' },
+        { id: 'serviceType', mensagem: 'Tipo de Serviço é obrigatório.' },
+        { id: 'description', mensagem: 'Descrição é obrigatória.' },
+        { id: 'budget', mensagem: 'Orçamento é obrigatório.' },
+        { id: 'urgency', mensagem: 'Urgência é obrigatória.' },
+        { id: 'location', mensagem: 'CEP é obrigatório.' },
+        { id: 'contactMethod', mensagem: 'Forma de Contato é obrigatória.' },
+        { id: 'contactInput', mensagem: 'Detalhe do Contato é obrigatório.' },
+        { id: 'contactDate', mensagem: 'Data e Hora de Contato são obrigatórias.' }
+    ];
+
+    for (const campo of camposObrigatorios) {
+        const elemento = document.getElementById(campo.id);
+        if (!elemento || !elemento.value.trim()) {
+            alert(campo.mensagem);
             return false;
         }
-
-        return true;
     }
 
-    // Verifica se todos os campos foram preenchidos antes de enviar
-    if (!validarCampos()) {
-        return; // Se a validação falhar, interrompe o envio
+    return true;
+}
+
+// Listener para submissão do formulário
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('servicoForm');
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Evita o envio padrão do formulário
+
+            // Valida os campos antes de enviar
+            if (!validarCampos()) {
+                return;
+            }
+
+            // Coleta os dados para enviar
+            const formData = new FormData(form);
+
+            // Adicionar os certificados carregados ao FormData
+            certificadosCarregados.forEach((file, index) => {
+                formData.append(`certificados[${index}]`, file);
+            });
+
+            // Enviar os dados usando fetch
+            fetch('/api/cadastrar-servico', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(text || 'Erro na resposta do servidor.');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else if (data.message) {
+                        const responseDiv = document.getElementById('response');
+                        if (responseDiv) {
+                            responseDiv.textContent = data.message;
+                        } else {
+                            console.warn("Elemento de ID 'response' não encontrado para exibir a mensagem.");
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar:', error);
+                    const responseDiv = document.getElementById('response');
+                    if (responseDiv) {
+                        responseDiv.textContent = 'Erro ao enviar o serviço.';
+                    }
+                });
+        });
+    } else {
+        console.error("Elemento de ID 'servicoForm' não encontrado.");
     }
-
-    // Coleta os dados para enviar
-    const formData = new FormData();
-    formData.append('prestadorId', document.getElementById('prestadorId').value);
-    formData.append('serviceType', document.getElementById('serviceType').value);
-    formData.append('description', document.getElementById('description').value);
-    formData.append('budget', document.getElementById('budget').value);
-    formData.append('urgency', document.getElementById('urgency').value);
-    formData.append('location', document.getElementById('location').value);
-    formData.append('street', document.getElementById('street').value);
-    formData.append('neighborhood', document.getElementById('neighborhood').value);
-    formData.append('city', document.getElementById('city').value);
-    formData.append('state', document.getElementById('state').value);
-    formData.append('contactMethod', document.getElementById('contactMethod').value);
-    formData.append('contactDetail', document.getElementById('contactInput').value);
-    formData.append('contactDate', document.getElementById('contactDate').value);
-    formData.append('comments', document.getElementById('comments').value);
-    formData.append('providerPreferences', document.getElementById('providerPreferences').value);
-
-    // Adicionar os certificados, se existirem
-    const certificados = document.getElementById('certificados').files;
-    if (certificados.length > 0) {
-        for (let i = 0; i < certificados.length; i++) {
-            formData.append('certificados[]', certificados[i]);
-        }
-    }
-
-    // Enviar os dados usando fetch
-    fetch('/api/cadastrar-servico', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro na resposta do servidor');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.redirect) {
-            window.location.href = data.redirect;
-        } else {
-            document.getElementById('response').textContent = data.message;
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        document.getElementById('response').textContent = 'Erro ao enviar o serviço.';
-    });
 });

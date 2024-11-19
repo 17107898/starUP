@@ -44,8 +44,10 @@ document.getElementById('clienteForm').addEventListener('submit', function(event
     const cnpj = document.getElementById('cnpj').value;
     const responseElement = document.getElementById('response'); // Para facilitar as respostas
 
-    // Limpar a mensagem anterior
-    responseElement.textContent = '';
+    if (responseElement) {
+        // Limpar a mensagem anterior
+        responseElement.textContent = '';
+    }
 
     // Verificação de campos obrigatórios
     if (!name || !email || !password || !confirmPassword) {

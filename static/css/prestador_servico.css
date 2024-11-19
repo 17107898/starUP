@@ -1,42 +1,113 @@
-/* Resetando margens e padding para consistência em todos os navegadores */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* Fundo geral da página */
 body {
+    background-color: #979797; /* Tom de marrom claro para a prancheta */
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    height: 100vh;
+    margin: 0;
 }
 
-h2 {
+/* Estilização da prancheta */
+.clipboard {
+    background-color: #535353; /* Tom de marrom médio para a prancheta */
+    width: 400px;
+    height: 600px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Suporte no topo da prancheta */
+.clip-top {
+    background-color: #B0B0B0; /* Tom cinza claro para o suporte */
+    width: 80px;
+    height: 20px;
+    border-radius: 5px;
+    margin-top: -10px;
+    position: absolute;
+    top: -10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Parafusos no suporte */
+.clip-screw {
+    width: 8px;
+    height: 8px;
+    background-color: #666; /* Cinza escuro para os parafusos */
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Container branco simulando a folha */
+.form-container {
+    background-color: #fff;
+    width: 90%;
+    height: 90%;
+    border-radius: 8px;
+    margin-top: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow-y: auto; /* Permite rolagem se o conteúdo exceder */
+}
+
+/* Estilo do formulário */
+form h2 {
     text-align: center;
+    font-size: 18px;
+    color: #333;
     margin-bottom: 20px;
+}
+
+form label, 
+form input, 
+form select, 
+form textarea, 
+form button, 
+form .checkbox-container, 
+form #contactDetails {
+    margin-bottom: 15px; /* Adiciona espaçamento entre os elementos */
+}
+
+form label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: bold;
     color: #333;
 }
 
-form {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
+form input, form select, form textarea, form button {
     width: 100%;
-    margin: 0 auto;
+    margin-top: 5px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
 }
 
-label {
-    display: block;
-    margin-bottom: 8px;
+form button {
+    background-color: #007bff; /* Marrom escuro para o botão */
+    color: white;
     font-weight: bold;
-    color: #555;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
+
+form button:hover {
+    background-color: #0056b3; /* Tom mais escuro ao passar o mouse */
+}
+
+
 
 input[type="text"],
 input[type="datetime-local"],
@@ -61,6 +132,23 @@ select {
     box-sizing: border-box; /* Para garantir que o padding não ultrapasse o tamanho do campo */
 }
 
+/* Estilo para os ícones ao lado */
+.imagem-lado {
+    width: 24px; /* Ajuste o tamanho do ícone conforme necessário */
+    height: 24px;
+    margin-right: 10px; /* Espaço entre o ícone e o texto */
+    vertical-align: middle;
+}
+.upload-icon {
+    width: 50px; /* Tamanho normal */
+    height: 50px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.upload-icon:hover {
+    transform: scale(1.1); /* Zoom ao passar o mouse */
+}
 .contact-detail {
     display: none; /* Campo será exibido dinamicamente */
 }
@@ -70,6 +158,13 @@ select {
     margin-bottom: 5px;
     display: block;
 }
+
+.arial-font {
+    font-family: Arial, sans-serif;
+    font-size: 14px; /* Ajuste o tamanho da fonte, se necessário */
+    color: #333; /* Cor do texto (opcional) */
+}
+
 textarea {
     height: 100px;
     resize: none;
@@ -78,7 +173,7 @@ textarea {
 button[type="submit"] {
     width: 100%;
     padding: 12px;
-    background-color: #28a745;
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 5px;
@@ -88,7 +183,7 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-    background-color: #218838;
+    background-color: #0056b3;
 }
 
 #response {

@@ -8,8 +8,8 @@ function updatePreview(isExistingFile = false) {
 
     const preview = document.getElementById('preview');
     preview.innerHTML = '';  // Limpa a pré-visualização de imagens
-// Mostrar pré-visualização dos documentos
-storedDocuments.forEach((file, index) => {
+    // Mostrar pré-visualização dos documentos
+    storedDocuments.forEach((file, index) => {
     console.log("Processando documento:", file.name);
 
     const fileElement = document.createElement('div');
@@ -29,61 +29,105 @@ storedDocuments.forEach((file, index) => {
     fileElement.appendChild(img);
 
     const removeButton = document.createElement('button');
-    removeButton.innerHTML = '&times;';  // Ícone de "X"
-    removeButton.classList.add('remove-btn');  // Classe para estilização do botão "X"
-    removeButton.addEventListener('click', function () {
-        // Extrair o ID da URL usando expressão regular
-        const idMatch = file.url.match(/\/(\d+)(?!.*\d)/);
-        const imageID = idMatch ? idMatch[1] : null;
-
-        if (imageID) {
-            console.log(`Removendo documento: ${file.name}, ID: ${imageID}`);
-            
+    removeButton.innerHTML = '&times;'; // Ícone de "X"
+    removeButton.classList.add('remove-btn'); // Classe para estilização do botão "X"
+    
+    // Evento de clique para remover a mídia
+    removeButton.addEventListener('click', function (event) {
+        event.preventDefault(); // Previne comportamento padrão
+        event.stopPropagation(); // Evita propagação do evento
+    
+        // Verificar se o arquivo e a URL estão disponíveis
+        if (!file) {
+            console.error("Arquivo não definido.");
+            alert("Erro: Não foi possível identificar o arquivo a ser removido.");
+            return;
+        }
+    
+        // Extrair o ID da URL usando expressão regular, se houver uma URL associada
+        let imageID = null;
+        if (file.url) {
+            const idMatch = file.url.match(/\/(\d+)(?!.*\d)/);
+            imageID = idMatch ? idMatch[1] : null;
+        }
+    
+        if (!imageID || imageID === "preview") {
+            // Remover arquivo localmente se for uma pré-visualização
+            console.log(`Removendo arquivo em pré-visualização: ${file.name || "Sem Nome"}`);
+            const fileIndex = storedDocuments.indexOf(file);
+            if (fileIndex > -1) {
+                storedDocuments.splice(fileIndex, 1); // Remove do array local
+            }
+            updateFileInput(); // Atualiza o input de arquivos
+            updatePreview(); // Atualiza a pré-visualização
+            checkMediaLimit(); // Atualiza limites de mídia
+            fileElement.remove(); // Remove o elemento visual
+        } else {
+            console.log(`Removendo arquivo salvo no banco: ID ${imageID}`);
+    
+            // Adiciona mensagem de carregamento
+            const loadingMessage = document.createElement('span');
+            loadingMessage.textContent = 'Removendo...';
+            fileElement.appendChild(loadingMessage);
+    
             // Enviar requisição para o backend para remover a mídia
             fetch('/api/remover_midia', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
-                    'image_id': imageID
+                    image_id: imageID,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        console.log(data.message);
+    
+                        // Remove o arquivo da lista e atualiza a visualização
+                        const fileIndex = storedDocuments.indexOf(file);
+                        if (fileIndex > -1) {
+                            storedDocuments.splice(fileIndex, 1); // Remove do array local
+                        }
+                        updateFileInput(); // Atualiza o input de arquivos
+                        updatePreview(); // Atualiza a pré-visualização
+                        checkMediaLimit(); // Atualiza limites de mídia
+                        fileElement.remove(); // Remove o elemento visual
+                    } else {
+                        console.error(data.message);
+                        alert("Erro ao remover mídia: " + data.message); // Feedback ao usuário
+                    }
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log(data.message);
-                    // Remove o arquivo da lista e atualiza a visualização
-                    storedDocuments.splice(index, 1);
-                    updateFileInput();  // Atualiza o input de arquivos
-                    updatePreview();  // Atualiza a pré-visualização
-                    checkMediaLimit();
-                } else {
-                    console.error(data.message);
-                }
-            })
-            .catch(error => console.error('Erro ao remover mídia:', error));
-        } else {
-            console.error("ID da imagem não encontrado na URL.");
+                .catch((error) => {
+                    console.error("Erro ao remover mídia:", error);
+                    alert("Erro ao remover mídia. Tente novamente.");
+                })
+                .finally(() => {
+                    // Remove mensagem de carregamento
+                    loadingMessage.remove();
+                });
         }
     });
-
+    
+    // Adicionar o botão de remoção ao elemento do arquivo
     fileElement.appendChild(removeButton);
     preview.appendChild(fileElement);
+     
 });
 
 
 const videoPreview = document.getElementById('video-preview');
-videoPreview.innerHTML = '';  // Limpa a pré-visualização de vídeo
+videoPreview.innerHTML = ''; // Limpa a pré-visualização de vídeo
 
 if (storedVideo) {
-    console.log("Processando vídeo:", storedVideo.name);
+    console.log("Processando vídeo:", storedVideo.name || "Pré-visualização");
 
     const fileElement = document.createElement('div');
     fileElement.classList.add('file-preview');
 
     const videoElement = document.createElement('video');
-    videoElement.src = URL.createObjectURL(storedVideo);
+    videoElement.src = storedVideo.url ? storedVideo.url : URL.createObjectURL(storedVideo); // Usa a URL salva ou cria uma URL para pré-visualização
     videoElement.controls = true;
     videoElement.classList.add('thumbnail');
     fileElement.appendChild(videoElement);
@@ -92,45 +136,67 @@ if (storedVideo) {
     removeButton.innerHTML = '&times;';
     removeButton.classList.add('remove-btn');
     removeButton.addEventListener('click', function () {
-        // Extrair o ID da URL do vídeo usando expressão regular
-        const idMatch = storedVideo.url.match(/\/(\d+)(?!.*\d)/);
-        const videoID = idMatch ? idMatch[1] : null;
+        // Verificar se o vídeo é uma pré-visualização ou está salvo no banco
+        let videoID = null;
+        if (storedVideo.url) {
+            const idMatch = storedVideo.url.match(/\/(\d+)(?!.*\d)/); // Extrair o ID da URL
+            videoID = idMatch ? idMatch[1] : null;
+        }
 
-        if (videoID) {
-            console.log(`Removendo vídeo: ${storedVideo.name}, ID: ${videoID}`);
-            
+        if (!videoID || videoID === "preview") {
+            // Remover vídeo localmente se for uma pré-visualização
+            console.log(`Removendo vídeo em pré-visualização: ${storedVideo.name || "Sem Nome"}`);
+            storedVideo = null; // Limpa a variável armazenada
+            document.getElementById('video').value = ''; // Limpa o campo de vídeo
+            fileElement.remove(); // Remove o elemento visual
+            checkMediaLimit(); // Revalida o limite de mídia
+        } else {
+            console.log(`Removendo vídeo salvo no banco: ID ${videoID}`);
+
+            // Adiciona mensagem de carregamento
+            const loadingMessage = document.createElement('span');
+            loadingMessage.textContent = 'Removendo...';
+            fileElement.appendChild(loadingMessage);
+
             // Enviar requisição para o backend para remover o vídeo
             fetch('/api/remover_midia', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
-                    'image_id': videoID  // 'image_id' assume que a API espera o mesmo parâmetro para imagens e vídeos
+                    image_id: videoID, // 'image_id' usado como parâmetro para vídeos e imagens
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        console.log(data.message);
+                        // Remove o vídeo da variável e atualiza a visualização
+                        storedVideo = null; // Limpa a variável armazenada
+                        document.getElementById('video').value = ''; // Limpa o campo de vídeo
+                        fileElement.remove(); // Remove o elemento visual
+                        checkMediaLimit(); // Revalida o limite de mídia
+                    } else {
+                        console.error(data.message);
+                        alert("Erro ao remover vídeo: " + data.message); // Feedback ao usuário
+                    }
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log(data.message);
-                    // Remove o vídeo da variável e atualiza a visualização
-                    storedVideo = null;
-                    document.getElementById('video').value = '';  // Limpa o campo de vídeo
-                    updatePreview();  // Atualiza a pré-visualização
-                    checkMediaLimit();  // Revalida o limite de mídia
-                } else {
-                    console.error(data.message);
-                }
-            })
-            .catch(error => console.error('Erro ao remover mídia:', error));
-        } else {
-            console.error("ID do vídeo não encontrado na URL.");
+                .catch((error) => {
+                    console.error("Erro ao remover vídeo:", error);
+                    alert("Erro ao remover vídeo. Tente novamente.");
+                })
+                .finally(() => {
+                    // Remove mensagem de carregamento
+                    loadingMessage.remove();
+                });
         }
     });
 
     fileElement.appendChild(removeButton);
     videoPreview.appendChild(fileElement);
 }
+
 
 
     console.log("Finalizando pré-visualização");
@@ -207,28 +273,98 @@ function validateImages() {
                     // Se houver mais de 2 fotos deitadas, a partir da terceira será marcada como inválida
                     if (pos >= 2) {
                         console.log(`Marcando imagem deitada como inválida: Index ${idx}`);
-                        previewItem.classList.add('invalid');  // Adiciona classe vermelha
-                        showTemporaryMessage("Você pode enviar no máximo 2 fotos deitadas.");
+                        previewItem.classList.add('invalid'); // Adiciona classe vermelha
+                    
+                        showTemporaryMessage_Novo("Você pode enviar no máximo 2 fotos deitadas.");
+                        const responseMessage = document.getElementById('response');
+                        if (responseMessage) {
+                            responseMessage.textContent = ''; // Limpa o texto da mensagem
+                            responseMessage.style.display = 'none'; // Oculta completamente a mensagem
+                        }
+                        // Desabilitar o botão de salvar alterações
+                        const saveButton = document.querySelector('.btn-save');
+                        if (saveButton) {
+                            saveButton.disabled = true; // Desabilita o botão
+                            saveButton.style.opacity = '0.5'; // Reduz a opacidade para indicar desabilitado
+                            saveButton.style.cursor = 'not-allowed'; // Altera o cursor para indicar que está desabilitado
+                        }
                     } else {
-                        previewItem.classList.remove('invalid');  // Remove a classe vermelha se a imagem não for inválida
+                        previewItem.classList.remove('invalid'); // Remove a classe vermelha se a imagem não for inválida
+                    
+                        // Remover o aviso e reabilitar o botão de salvar alterações
+                        const responseMessage = document.getElementById('response-Novo');
+                        if (responseMessage) {
+                            responseMessage.textContent = ''; // Limpa o texto da mensagem
+                            responseMessage.style.display = 'none'; // Oculta completamente a mensagem
+                        }
+                    
+                        const saveButton = document.querySelector('.btn-save');
+                        if (saveButton) {
+                            saveButton.disabled = false; // Habilita o botão
+                            saveButton.style.opacity = '1'; // Restaura a opacidade original
+                            saveButton.style.cursor = 'pointer'; // Restaura o cursor padrão
+                        }
                     }
+                    
                 });
             }
         };
     });
 }
 
+function abrirSeletorArquivos() {
+    document.getElementById('documents').click();
+}
+function abrirSeletorVideo() {
+    document.getElementById('video').click();
+}
+// Função para ativar o seletor de arquivos ao clicar no ícone
+function ativarUploadCertificados() {
+    document.getElementById('certificados').click(); // Simula o clique no input de arquivos
+}
 
-// Função para atualizar o campo de input de arquivos com base nos arquivos armazenados
+// Lista para armazenar os arquivos carregados
+let certificadosCarregados = [];
+
+document.getElementById('certificados').addEventListener('change', function () {
+    const files = Array.from(this.files); // Converte os arquivos carregados em um array
+    const messageDiv = document.getElementById('certificados-message');
+
+    // Adiciona os novos arquivos à lista cumulativa
+    files.forEach(file => {
+        if (!certificadosCarregados.some(c => c.name === file.name && c.size === file.size)) {
+            certificadosCarregados.push(file); // Evita duplicatas
+        }
+    });
+
+    // Exibe a mensagem de sucesso com a contagem total de arquivos carregados
+    if (certificadosCarregados.length > 0) {
+        messageDiv.textContent = `${certificadosCarregados.length} certificado(s) carregado(s) no total.`;
+        messageDiv.style.display = 'block'; // Torna a mensagem visível
+    } else {
+        // Oculta a mensagem caso nenhum arquivo esteja na lista cumulativa
+        messageDiv.style.display = 'none';
+    }
+
+    console.log("Certificados carregados:", certificadosCarregados);
+});
+
+
+// Função para ativar o seletor de upload ao clicar no ícone de carregar
+function ativarUpload() {
+    document.getElementById('perfil_foto').click();
+}
+
+// Função para garantir que o campo de input reflita corretamente os arquivos no array
 function updateFileInput() {
     const input = document.getElementById('documents');
     const dataTransfer = new DataTransfer();
 
-    storedDocuments.forEach(file => {
+    storedDocuments.forEach((file) => {
         dataTransfer.items.add(file);
     });
 
-    input.files = dataTransfer.files;  // Atualiza o campo de arquivos
+    input.files = dataTransfer.files; // Atualiza o campo de arquivos
 }
 
 // Função para obter a contagem total de mídias (imagens + vídeo)
@@ -240,35 +376,81 @@ function getTotalMediaCount() {
 
 // Função para verificar o limite de mídias e ativar/desativar os campos de upload
 function checkMediaLimit() {
-    const totalMedia = storedDocuments.length + (storedVideo ? 1 : 0); // Mídias somam os documentos e o vídeo (se existir)
-    const excessMedia = totalMedia - 4;
+    const totalMedia = storedDocuments.length + (storedVideo ? 1 : 0); // Soma os documentos e o vídeo (se existir)
+    const uploadIcon = document.getElementById('upload-icon');
+    const videoInput = document.getElementById('video');
+    const documentsInput = document.getElementById('documents');
+    const responseMessage = document.getElementById('response'); // Elemento para exibir mensagem
+    const uploadVideoIcon = document.getElementById('upload-video-icon');
+    const saveButton = document.querySelector('.btn-save'); // Captura o botão de salvar
 
-
-    // Verifica se atingiu o limite de 4 mídias (documentos + vídeo)
     if (totalMedia >= 4) {
-        document.getElementById('video').disabled = true;  // Desabilita o campo de vídeo
-        document.getElementById('documents').disabled = true;  // Desabilita o campo de imagens
-        document.getElementById('response').textContent = "Você já enviou 4 arquivos, não pode enviar mais mídias."; // Exibe o aviso de limite
+        // Mensagem de limite atingido
+        responseMessage.textContent = "Você já enviou 4 arquivos, não pode enviar mais mídias.";
+        responseMessage.style.display = 'block'; // Exibe a mensagem
+        responseMessage.classList.add('visible'); // Adiciona a classe visível
+
+        // Desabilitar campos e botões
+        videoInput.disabled = true; // Desabilita o campo de vídeo
+        documentsInput.disabled = true; // Desabilita o campo de imagens
+        uploadVideoIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de vídeo
+        uploadIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de imagens
+        // if (saveButton) {
+        //     saveButton.disabled = true; // Desabilita o botão de salvar
+        //     saveButton.style.opacity = '0.5'; // Reduz a opacidade para indicar desabilitado
+        //     saveButton.style.cursor = 'not-allowed'; // Altera o cursor para indicar que está desabilitado
+        // }
+
+        // Marca pré-visualizações adicionais como inválidas
+        storedDocuments.forEach((file, index) => {
+            const previewElement = document.querySelectorAll('.file-preview')[index];
+            if (previewElement && index >= 4 - (storedVideo ? 1 : 0)) {
+                previewElement.classList.add('invalid'); // Adiciona classe vermelha
+            }
+        });
     } else {
-        // Se houver espaço para mais mídias, habilita os campos de upload
-        document.getElementById('video').disabled = false;  
-        document.getElementById('documents').disabled = false;
-        document.getElementById('response').textContent = '';  // Limpa a mensagem de erro
+        // Remove mensagem e reabilita campos e botões
+        responseMessage.textContent = ""; // Limpa a mensagem
+        responseMessage.style.display = 'none'; // Oculta a mensagem
+        responseMessage.classList.remove('visible'); // Remove a classe visível
+
+        videoInput.disabled = false; // Habilita o campo de vídeo
+        documentsInput.disabled = false; // Habilita o campo de imagens
+        uploadVideoIcon.classList.remove('disabled'); // Remove a classe de desabilitado no ícone de vídeo
+        uploadIcon.classList.remove('disabled'); // Remove a classe de desabilitado no ícone de imagens
+        if (saveButton) {
+            saveButton.disabled = false; // Habilita o botão de salvar
+            saveButton.style.opacity = '1'; // Restaura a opacidade original
+            saveButton.style.cursor = 'pointer'; // Restaura o cursor padrão
+        }
+
+        // Remove a classe de inválido das pré-visualizações
+        storedDocuments.forEach((file, index) => {
+            const previewElement = document.querySelectorAll('.file-preview')[index];
+            if (previewElement) {
+                previewElement.classList.remove('invalid'); // Remove a classe vermelha
+            }
+        });
     }
 }
+
 
 
 // Evento de mudança no input de arquivos (imagens/documentos)
 document.getElementById('documents').addEventListener('change', function () {
     const newFiles = Array.from(this.files);
 
-    // Adicionando novos arquivos à lista armazenada
-    storedDocuments = storedDocuments.concat(newFiles);
+    // Adiciona apenas arquivos únicos ao array `storedDocuments`
+    newFiles.forEach((file) => {
+        if (!storedDocuments.some((storedFile) => storedFile.name === file.name && storedFile.size === file.size)) {
+            storedDocuments.push(file);
+        }
+    });
 
     // Atualiza a pré-visualização e validação
     updatePreview();
     validateImages();
-    checkMediaLimit();  // Verifica se o limite de mídias foi atingido
+    checkMediaLimit();
 });
 
 // Evento de mudança no input de vídeo
@@ -284,9 +466,15 @@ document.getElementById('video').addEventListener('change', function () {
     const videoElement = document.createElement('video');
     videoElement.src = URL.createObjectURL(storedVideo);
     videoElement.onloadedmetadata = function () {
-        if (videoElement.duration > 60) {
+        if (videoElement.duration > 61) {
             showTemporaryMessage("O vídeo pode ter no máximo 1 minuto.");
-
+            // Desabilitar o botão de salvar alterações
+            const saveButton = document.querySelector('.btn-save');
+            if (saveButton) {
+                saveButton.disabled = true; // Desabilita o botão
+                saveButton.style.opacity = '0.5'; // Reduz a opacidade para indicar desabilitado
+                saveButton.style.cursor = 'not-allowed'; // Altera o cursor para indicar que está desabilitado
+            }
             // Marcar o vídeo como inválido sem removê-lo
             const videoPreview = document.getElementById('video-preview');
             videoPreview.innerHTML = '';  // Limpa a pré-visualização atual
@@ -315,6 +503,19 @@ document.getElementById('video').addEventListener('change', function () {
             videoPreview.appendChild(fileElement);
         } else {
             updatePreview();  // Atualiza a pré-visualização com o vídeo
+            // Remover o aviso e reabilitar o botão de salvar alterações
+            const responseMessage = document.getElementById('response-Novo');
+            if (responseMessage) {
+                responseMessage.textContent = ''; // Limpa o texto da mensagem
+                responseMessage.style.display = 'none'; // Oculta completamente a mensagem
+            }
+        
+            const saveButton = document.querySelector('.btn-save');
+            if (saveButton) {
+                saveButton.disabled = false; // Habilita o botão
+                saveButton.style.opacity = '1'; // Restaura a opacidade original
+                saveButton.style.cursor = 'pointer'; // Restaura o cursor padrão
+            }
         }
     };
 
@@ -324,11 +525,31 @@ document.getElementById('video').addEventListener('change', function () {
 
 // Função para exibir o aviso temporariamente
 function showTemporaryMessage(message) {
-    document.getElementById('response').textContent = message;
-    setTimeout(() => {
-        document.getElementById('response').textContent = '';  // Limpa o aviso após 5 segundos
-    }, 5000);
+    const responseMessage = document.getElementById('response');
+    responseMessage.textContent = message;
+    responseMessage.style.display = 'block'; // Mostra o aviso
+    responseMessage.classList.add('visible'); // Adiciona a classe para estilização
+
+    // setTimeout(() => {
+    //     responseMessage.style.display = 'none'; // Oculta completamente após 2 segundos
+    //     responseMessage.textContent = ''; // Limpa o conteúdo da mensagem
+    //     responseMessage.classList.remove('visible'); // Remove a classe para estilização
+    // }, 2000);
 }
+function showTemporaryMessage_Novo(message) {
+    const responseMessage = document.getElementById('response-Novo');
+    responseMessage.textContent = message;
+    responseMessage.style.display = 'block'; // Mostra o aviso
+    responseMessage.classList.add('visible'); // Adiciona a classe para estilização
+
+    // setTimeout(() => {
+    //     responseMessage.style.display = 'none'; // Oculta completamente após 2 segundos
+    //     responseMessage.textContent = ''; // Limpa o conteúdo da mensagem
+    //     responseMessage.classList.remove('visible'); // Remove a classe para estilização
+    // }, 2000);
+}
+
+
 
 
 document.addEventListener('DOMContentLoaded', function() { 
@@ -555,52 +776,75 @@ document.getElementById('location').addEventListener('input', function () {
 // Função para exibir mensagem de sucesso
 function mostrarMensagemSucesso(mensagem) {
     const responseMessage = document.getElementById('response-message');
-    responseMessage.textContent = mensagem;
-    responseMessage.classList.remove('error');  // Remove a classe de erro, caso ela tenha sido adicionada
-    responseMessage.classList.add('success');  // Adiciona uma classe de sucesso para estilizar a mensagem
+    const saveButton = document.querySelector('.btn-save');
+
+    // Verifica se o botão está flutuando
+    if (saveButton.classList.contains('floating')) {
+        // Exibe um alerta se o botão estiver flutuando
+        alert(mensagem);
+    } else {
+        // Exibe a mensagem no local original, se o botão estiver fixo
+        responseMessage.textContent = mensagem;
+        responseMessage.classList.remove('error'); // Remove a classe de erro, caso ela tenha sido adicionada
+        responseMessage.classList.add('success'); // Adiciona uma classe de sucesso para estilizar a mensagem
+        responseMessage.style.display = 'block'; // Garante que a mensagem seja visível
+
+        // Remove a mensagem automaticamente após 2 segundos
+        setTimeout(() => {
+            responseMessage.style.display = 'none'; // Oculta a mensagem
+        }, 2000); // 2000 ms = 2 segundos
+    }
 }
+
+// Adicionar os certificados cumulativos ao FormData
+function adicionarCertificadosAoFormData(formData) {
+    certificadosCarregados.forEach(certificado => {
+        formData.append('certificados', certificado);
+    });
+}
+
 
 // Evento de submissão do formulário
 document.getElementById('uploadForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
     const totalMidias = getTotalMediaCount();
-    
+
     // Verificar se o usuário carregou pelo menos 4 mídias
     if (totalMidias < 4) {
         const responseMessage = document.getElementById('response-message');
         responseMessage.textContent = 'Você deve carregar pelo menos 4 mídias (excluindo foto de perfil e certificados).';
-        responseMessage.classList.add('error');  // Adiciona a classe de erro para estilizar a mensagem
-        return;  // Impede o envio do formulário
+        responseMessage.classList.add('error'); // Adiciona a classe de erro para estilizar a mensagem
+        responseMessage.style.display = 'block';
+        setTimeout(() => {
+            responseMessage.style.display = 'none'; // Oculta a mensagem após 2 segundos
+        }, 2000);
+        return; // Impede o envio do formulário
     }
 
-    const formData = new FormData(this);  // Cria o FormData diretamente do formulário
+    const formData = new FormData(this);
     const perfilFoto = document.getElementById('perfil_foto').files[0];
-    const documents = document.getElementById('documents').files;
-    console.log("Quantidade de documentos selecionados:", documents.length);
-    
     const video = document.getElementById('video').files[0];
-    const certificados = document.getElementById('certificados').files;  // Certificados
+    const certificados = document.getElementById('certificados').files;
 
     // Adicionar a foto de perfil ao FormData
     if (perfilFoto) {
         formData.append('perfil_foto', perfilFoto);
     }
 
-    // Adicionar os documentos ao FormData
-    for (let i = 0; i < documents.length; i++) {
-        formData.append('documents', documents[i]);
-    }
+
+    // Adicionar todos os documentos em `storedDocuments` ao FormData
+    storedDocuments.forEach((file) => {
+        formData.append('documents', file);
+    });
 
     // Adicionar o vídeo ao FormData
     if (video) {
         formData.append('video', video);
     }
 
-    // Adicionar os certificados ao FormData
-    for (let i = 0; i < certificados.length; i++) {
-        formData.append('certificados', certificados[i]);
-    }
+    // Adiciona os certificados acumulados ao FormData
+    adicionarCertificadosAoFormData(formData);
 
     // Fazer o upload via fetch
     fetch('/api/editar_prestador', { 
@@ -609,16 +853,17 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
     })
     .then(response => response.json())
     .then(data => {
-        const responseMessage = document.getElementById('response-message');
-        responseMessage.textContent = data.message;
-        responseMessage.classList.remove('error');  // Remove a classe de erro, caso ela tenha sido adicionada
-        responseMessage.classList.add('success');  // Adiciona uma classe de sucesso para estilizar a mensagem
+        mostrarMensagemSucesso(data.message); // Usa a função mostrarMensagemSucesso
     })
     .catch(error => {
         console.error('Erro:', error);
         const responseMessage = document.getElementById('response-message');
         responseMessage.textContent = 'Erro ao fazer o upload das mídias.';
-        responseMessage.classList.add('error');  // Adiciona a classe de erro para estilizar a mensagem
+        responseMessage.classList.add('error'); // Adiciona a classe de erro para estilizar a mensagem
+        responseMessage.style.display = 'block';
+        setTimeout(() => {
+            responseMessage.style.display = 'none'; // Oculta a mensagem após 2 segundos
+        }, 2000);
     });
 });
 
@@ -889,13 +1134,65 @@ setInterval(verificarNovasSolicitacoes, 10000);  // 10 segundos
 verificarNovasSolicitacoes();
 
 
+// Função para verificar se a foto de perfil está ausente e exibir o ícone de carregar ou o botão de remover se necessário
+function verificarFotoInicial() {
+    const profilePhoto = document.querySelector('.profile-photo');
+    const carregarIcon = document.getElementById('carregar-icon');
+    const removeFotoButton = document.getElementById('remove-foto');
+    const fotoId = profilePhoto.getAttribute('data-id');
+    const backgroundImage = profilePhoto.style.backgroundImage;
 
+    console.log("Verificando foto inicial:");
+    console.log("Foto ID:", fotoId);
+    console.log("Background Image:", backgroundImage);
+
+    if (!fotoId || fotoId === 'None' || backgroundImage.includes('/uploads/img/None')) {
+        carregarIcon.style.display = 'block';  // Exibe o ícone de carregar
+        if (removeFotoButton) removeFotoButton.style.display = 'none';  // Oculta o botão de remover se ele existir
+        console.log("Ícone de carregar exibido. Botão de remover ocultado.");
+    } else {
+        carregarIcon.style.display = 'none';  // Oculta o ícone de carregar
+        if (removeFotoButton) removeFotoButton.style.display = 'block';  // Exibe o botão de remover se ele existir
+        console.log("Ícone de carregar ocultado. Botão de remover exibido.");
+    }
+}
+
+// Chamar a função de verificação inicial ao carregar a página
+verificarFotoInicial();
+
+
+
+// Função para carregar nova foto
+function carregarNovaFoto(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const profilePhoto = document.querySelector('.profile-photo');
+            profilePhoto.style.backgroundImage = `url(${e.target.result})`;
+            document.getElementById('carregar-icon').style.display = 'none'; // Oculta o ícone de carregar
+            document.getElementById('remove-foto').style.display = 'block'; // Exibe o botão de remover
+            console.log("Nova foto carregada e exibida como fundo da foto de perfil.");
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Função para alternar entre o ícone de carregar e o botão de remover após remoção da foto
+function alternarParaIconeCarregar() {
+    const carregarIcon = document.getElementById('carregar-icon');
+    const removeFotoButton = document.getElementById('remove-foto');
+    carregarIcon.style.display = 'block';  // Exibe o ícone de carregar
+    if (removeFotoButton) removeFotoButton.style.display = 'none';  // Oculta o botão de remover
+}
+
+// Evento de clique para o botão de remover foto
 document.getElementById('remove-foto').addEventListener('click', function () {
     const prestadorId = prestador.prestador_id;
     const fotoId = document.querySelector('.profile-photo').getAttribute('data-id');
 
-    if (!fotoId) {
-        console.error('ID da foto de perfil não encontrado.');
+    if (!fotoId || fotoId === 'None' || fotoId === '404') {
+        console.error('ID da foto de perfil inválido.');
         return;
     }
 
@@ -912,8 +1209,9 @@ document.getElementById('remove-foto').addEventListener('click', function () {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.querySelector('.profile-photo').style.backgroundImage = 'none';  // Remove a foto de perfil
-            document.getElementById('perfil_foto').value = '';  // Limpa o campo de upload
+            document.querySelector('.profile-photo').style.backgroundImage = 'none';
+            document.getElementById('perfil_foto').value = '';
+            alternarParaIconeCarregar();  // Alterna para o ícone de carregar
             console.log(data.message);
         } else {
             console.error(data.message);
@@ -921,3 +1219,47 @@ document.getElementById('remove-foto').addEventListener('click', function () {
     })
     .catch(error => console.error('Erro ao remover a foto de perfil:', error));
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const saveButton = document.querySelector('.btn-save');
+    const buttonContainer = document.querySelector('#button-container');
+
+    // Função para alternar a posição do botão
+    function toggleButtonPosition() {
+        const containerBottom = buttonContainer.getBoundingClientRect().bottom;
+        const viewportHeight = window.innerHeight;
+
+        if (containerBottom > viewportHeight) {
+            // Aplica classe de flutuação com animação de entrada
+            saveButton.classList.add('floating');
+            saveButton.classList.add('slide-up');
+            saveButton.classList.remove('slide-in'); // Remove animação de entrada no lugar original
+        } else {
+            // Remove a flutuação e aplica a animação de entrada ao retornar ao local original
+            saveButton.classList.remove('floating');
+            saveButton.classList.remove('slide-up');
+            saveButton.classList.add('slide-in');
+        }
+    }
+
+    // Função debounce para limitar a execução da função
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    // Chama a função imediatamente ao carregar a página
+    toggleButtonPosition();
+
+    // Adiciona o evento scroll com debounce
+    window.addEventListener('scroll', debounce(toggleButtonPosition, 100));
+});
+
+function logoutUser() {
+    // Redirecionar para a página de login
+    window.location.href = '/login';
+}

@@ -51,33 +51,31 @@
 <div id="popupAvaliacao" class="popup-avaliar">
     <div class="popup-avaliar-content">
         <span class="popup-close" onclick="fecharPopupAvaliacao()">&times;</span>
-        <!-- No popup de avaliação -->
         <h3 class="titulo-avaliacao">Avaliar Prestador</h3>
-
-
-        <!-- Dropdown para selecionar o prestador -->
+    
         <label for="prestadorSelecionadoDropdown">Prestador:</label>
         <select id="prestadorSelecionadoDropdown">
             <!-- Opções serão preenchidas dinamicamente com JavaScript -->
         </select>
-
-        <!-- Campo para adicionar nota -->
-        <label for="notaAvaliacao">Nota:</label>
-        <select id="notaAvaliacao">
-            <option value="5">5 - Excelente</option>
-            <option value="4">4 - Muito Bom</option>
-            <option value="3">3 - Bom</option>
-            <option value="2">2 - Regular</option>
-            <option value="1">1 - Ruim</option>
-        </select>
-
-        <!-- Campo para adicionar comentário -->
+    
+        <!-- Campo para adicionar nota com estrelas -->
+        <label>Nota:</label>
+        <div class="estrelas-avaliacao" id="estrelasAvaliacao">
+            <img src="{{ url_for('static', filename='images/estrela_sem_click.png') }}" alt="1 estrela" data-value="1" onclick="selecionarNota(1)" onmouseover="hoverEstrela(1)" onmouseout="sairEstrela()">
+            <img src="{{ url_for('static', filename='images/estrela_sem_click.png') }}" alt="2 estrelas" data-value="2" onclick="selecionarNota(2)" onmouseover="hoverEstrela(2)" onmouseout="sairEstrela()">
+            <img src="{{ url_for('static', filename='images/estrela_sem_click.png') }}" alt="3 estrelas" data-value="3" onclick="selecionarNota(3)" onmouseover="hoverEstrela(3)" onmouseout="sairEstrela()">
+            <img src="{{ url_for('static', filename='images/estrela_sem_click.png') }}" alt="4 estrelas" data-value="4" onclick="selecionarNota(4)" onmouseover="hoverEstrela(4)" onmouseout="sairEstrela()">
+            <img src="{{ url_for('static', filename='images/estrela_sem_click.png') }}" alt="5 estrelas" data-value="5" onclick="selecionarNota(5)" onmouseover="hoverEstrela(5)" onmouseout="sairEstrela()">
+        </div>
+        <span id="notaTooltip" class="tooltip">Nota: 0</span> <!-- Tooltip para exibir a nota -->
+        
+    
         <label for="comentarioAvaliacao">Comentário:</label>
         <textarea id="comentarioAvaliacao" placeholder="Escreva seu comentário..."></textarea>
-
-        <!-- Botão para enviar avaliação -->
+    
         <button onclick="enviarAvaliacao()">Enviar Avaliação</button>
     </div>
+    
 </div>
 
 
@@ -502,37 +500,7 @@ function exibirStatusTempo(statusTimestamp, tipoStatus) {
 
 let ultimoStatus = '';
 let ultimoLido = '';
-
-// Função para checar alterações no status e no campo lido
-function checarNovidades() {
-    fetch('/api/checar_convite')
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error('Erro ao checar novidades:', data.error);
-                return;
-            }
-
-            const status = data.status;
-            const lido = data.lido ? 'Sim' : 'Não';
-
-            // Verificar se houve mudanças no status ou no campo lido
-            if (status !== ultimoStatus || lido !== ultimoLido) {
-                mostrarNotificacao();
-            }
-
-            // Atualizar os valores
-            ultimoStatus = status;
-            ultimoLido = lido;
-        })
-        .catch(error => console.error('Erro ao checar novidades:', error));
-}
-
-// Função para mostrar a bolinha vermelha de notificação
-function mostrarNotificacao() {
-    const notificationElement = document.getElementById('notificationDot');
-    notificationElement.style.display = 'block'; // Mostrar a bolinha vermelha
-}
+let atualizacaoRecebida = false; // Controla se houve uma atualização nova
 
 // Função para esconder a bolinha vermelha de notificação
 function esconderNotificacao() {
@@ -540,12 +508,63 @@ function esconderNotificacao() {
     notificationElement.style.display = 'none'; // Esconder a bolinha vermelha
 }
 
+// Função para mostrar a bolinha vermelha de notificação
+function mostrarNotificacao() {
+    const notificationElement = document.getElementById('notificationDot');
+    notificationElement.style.display = 'block'; // Mostrar a bolinha vermelha
+    atualizacaoRecebida = true; // Marca que há uma atualização para o usuário ver
+}
+
+// Função para checar alterações no status e no campo lido
+function checarNovidades() {
+    fetch('/api/checar_convite')
+        .then(response => response.json())
+        .then(data => {
+            // Se o backend retornar uma lista vazia, não há convites
+            if (Array.isArray(data) && data.length === 0) {
+                console.log("Nenhuma novidade encontrada.");
+                esconderNotificacao(); // Esconder notificação se não houver novidades
+                return; // Não há mudanças, saída da função
+            }
+
+            // Caso o backend retorne um erro
+            if (data.error) {
+                console.error('Erro ao checar novidades:', data.error);
+                esconderNotificacao(); // Esconder notificação se houver erro
+                return;
+            }
+
+            // Assumindo que data é uma lista de convites
+            const convite = data[0]; // Primeiro convite mais recente
+            const status = convite.status;
+            const lido = convite.lido ? 'Sim' : 'Não';
+
+            // Verificar se houve mudanças no status ou no campo lido
+            if (status !== ultimoStatus || lido !== ultimoLido) {
+                mostrarNotificacao(); // Mostrar notificação se houver alterações
+            } else if (!atualizacaoRecebida) {
+                // Apenas esconder notificação se não houve atualização nova e já foi vista
+                esconderNotificacao();
+            }
+
+            // Atualizar os valores
+            ultimoStatus = status;
+            ultimoLido = lido;
+        })
+        .catch(error => {
+            console.error('Erro ao checar novidades:', error);
+            esconderNotificacao(); // Esconder notificação em caso de erro na requisição
+        });
+}
+
 // Função para iniciar a checagem automática a cada 10 segundos
 function iniciarChecagemAutomatica() {
+    esconderNotificacao(); // Começar com a notificação desativada
     checarNovidades(); // Checar uma vez imediatamente
     setInterval(checarNovidades, 10000); // Checar a cada 10 segundos
 }
 
+// Função para abrir o popup e exibir convites
 function abrirPopup() {
     fetch('/api/checar_convite')
         .then(response => response.json())
@@ -570,63 +589,97 @@ function abrirPopup() {
             // Iterar sobre os convites recebidos e exibir cada um
             data.forEach(convite => {
                 const prestadorNome = convite.prestador_nome;
+                const fotoPerfil = convite.foto_perfil; // Foto de perfil codificada em Base64
                 const status = convite.status;
                 const lido = convite.lido ? 'Sim' : 'Não';
                 const data_visto_prestador = convite.data_visto_prestador || 'Não disponível';
                 const dta_feed_back_prestador = convite.dta_feed_back_prestador || 'Não disponível';
 
-                // Ícones
-                const aceitoIcon = `<img src="{{ url_for('static', filename='images/Aceito_azul.png') }}" alt="Aceito" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
-                const naoAceitoIcon = `<img src="{{ url_for('static', filename='images/não_aceito_azul.png') }}" alt="Não Aceito" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
-                const vistoIcon = `<img src="{{ url_for('static', filename='images/visualizado.png') }}" alt="Visualizado" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
-                const recebidoIcon = `<img src="{{ url_for('static', filename='images/recebido.png') }}" alt="Recebido" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+// Ícones
+const aceitoIcon = `<img src="{{ url_for('static', filename='images/Aceito_azul.png') }}" alt="Aceito" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+const naoAceitoIcon = `<img src="{{ url_for('static', filename='images/não_aceito_azul.png') }}" alt="Não Aceito" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+const vistoIcon = `<img src="{{ url_for('static', filename='images/visualizado.png') }}" alt="Visualizado" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+const recebidoIcon = `<img src="{{ url_for('static', filename='images/recebido.png') }}" alt="Recebido" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`;
+const aguardandoIcon = `<img src="{{ url_for('static', filename='images/relogio.png') }}" alt="Aguardando" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">`; // Ícone do relógio para "Aguardando resposta"
 
-                // Selecionando o ícone baseado no status
-                let statusIcon;
-                if (status === 'aceito') {
-                    statusIcon = aceitoIcon;
-                } else if (status === 'não aceito') {
-                    statusIcon = naoAceitoIcon;
-                } else {
-                    statusIcon = recebidoIcon; // Ícone padrão caso o status seja diferente
-                }
+let vistoMensagem_ = "";
+let aceitoMensagem_ = "";
 
-                let vistoMensagem_ = "";
-                let aceitoMensagem_ = "";
+if (data_visto_prestador) {
+    vistoMensagem_ = exibirStatusTempo(data_visto_prestador, "");
+}
 
-                if (data_visto_prestador) {
-                    vistoMensagem_ = exibirStatusTempo(data_visto_prestador, "Visto");
-                }
+if (dta_feed_back_prestador) {
+    aceitoMensagem_ = exibirStatusTempo(dta_feed_back_prestador, "Aceito");
+}
 
-                if (dta_feed_back_prestador) {
-                    aceitoMensagem_ = exibirStatusTempo(dta_feed_back_prestador, "Aceito");
-                }
-                
-                // Definindo as mensagens com os ícones
-                const vistoMensagem = convite.lido 
-                    ? `${vistoIcon} ${vistoMensagem_}`
-                    : `${recebidoIcon} Ainda não visto`;
+let vistoMensagem = "";
+if (convite.lido) {
+    // Se o convite foi visualizado, mostramos o ícone de visualizado com a data de visto
+    vistoMensagem = `${vistoIcon} Visto ${vistoMensagem_}`;
+    
+    // Definir mensagem da resposta com base no status
+    aceitoMensagem = status === 'aceito' 
+        ? `${aceitoIcon} ${aceitoMensagem_}`
+        : status === 'não aceito' 
+        ? `${naoAceitoIcon} Não aceito` 
+        : `${aguardandoIcon} Aguardando resposta`;
+} else {
+    // Se não foi visualizado, exibe "Aguardando resposta"
+    vistoMensagem = `${recebidoIcon} Ainda não visto`;
+    aceitoMensagem = `${aguardandoIcon} Aguardando resposta`;
+}
+// Construção do HTML com a foto de perfil e nome
 
-                    const aceitoMensagem = status === 'aceito' 
-                    ? `${aceitoIcon} ${aceitoMensagem_}`
-                    : `${naoAceitoIcon} Não aceito`; // Exibe o ícone "não aceito" dos dois lados
 
-                // Construção do HTML com ícones
                 statusElement.innerHTML += `
-                    <div class="convite-item">
-                        <p><strong>Prestador:</strong> ${prestadorNome}</p>
-                        <p><strong>Convite visto:</strong> ${vistoMensagem}</p>
-                        <p><strong>Resposta:</strong> ${aceitoMensagem}</p> <!-- Mensagem com ícone para aceito ou não aceito -->
-                        <hr>
-                    </div>
+                <div class="convite-item">
+                    <p>
+                        <strong>Prestador:</strong> 
+                        ${fotoPerfil 
+                            ? `<img src="data:image/jpeg;base64,${fotoPerfil}" alt="Foto do Prestador" class="foto-perfil" data-prestador-id="${convite.prestador_id}">`
+                            : `<img src="{{ url_for('static', filename='images/default-profile.png') }}" alt="Foto Padrão" class="foto-perfil" data-prestador-id="${convite.prestador_id}">`
+                        } 
+                        ${prestadorNome}
+                    </p>
+                    <p><strong>Convite visto:</strong> ${vistoMensagem}</p>
+                    <p><strong>Resposta:</strong> ${aceitoMensagem}</p>
+                    <hr>
+                </div>
                 `;
             });
+
+            // Adicionar os eventos de clique às fotos de perfil após inserção do HTML
+            adicionarEventoFotosPerfil();
+
+            // O usuário abriu o popup, então consideramos que viu as atualizações
+            atualizacaoRecebida = false; // Reseta a atualização recebida
+            esconderNotificacao(); // Esconder a notificação quando o popup é aberto
         })
         .catch(error => console.error('Erro ao checar o status do convite:', error));
 
     document.getElementById("statusConvitePopup").style.display = "block";
     document.getElementById("modalOverlay").style.display = "block";
-    esconderNotificacao(); // Esconder a bolinha vermelha quando o popup é aberto
+}
+
+// Função para adicionar o evento de clique nas fotos de perfil
+function adicionarEventoFotosPerfil() {
+    const fotosPerfil = document.querySelectorAll('.foto-perfil');
+
+    fotosPerfil.forEach(foto => {
+        foto.addEventListener('click', function () {
+            const prestadorId = this.getAttribute('data-prestador-id');
+            const urlParams = new URLSearchParams(window.location.search);
+            const clienteId = urlParams.get('cliente_id'); // Captura o cliente_id da URL
+            
+            // Redireciona para a página do perfil do prestador
+            if (prestadorId) {
+                window.location.href = `/perfil_prestador?prestador_id=${prestadorId}&cliente_id=${clienteId}`;
+            } else {
+                alert("Erro: ID do prestador não encontrado.");
+            }
+        });
+    });
 }
 
 
@@ -759,13 +812,58 @@ function fecharPopupAvaliacao() {
     document.body.classList.remove('no-scroll'); // Reativar o scroll do body
 }
 
+let notaSelecionada = 0; // Armazena a nota selecionada
+
+// Função para selecionar uma nota ao clicar em uma estrela
+function selecionarNota(nota) {
+    notaSelecionada = nota; // Atualiza a nota selecionada
+    atualizarVisualizacaoEstrelas(nota); // Atualiza a visualização das estrelas com a nota clicada
+}
+
+// Função para atualizar a visualização das estrelas
+function atualizarVisualizacaoEstrelas(nota) {
+    const estrelas = document.querySelectorAll('#estrelasAvaliacao img');
+    estrelas.forEach((estrela, index) => {
+        if (index < nota) {
+            estrela.src = "{{ url_for('static', filename='images/estrela_estrela_com_click.png') }}"; // Estrela cheia
+        } else {
+            estrela.src = "{{ url_for('static', filename='images/estrela_sem_click.png') }}"; // Estrela vazia
+        }
+    });
+}
+
+// Função para mostrar as estrelas preenchidas no hover
+function hoverEstrela(nota) {
+    atualizarVisualizacaoEstrelas(nota); // Atualiza a visualização das estrelas com a nota do hover
+    exibirNotaTooltip(nota); // Mostra o tooltip com a nota correspondente
+}
+
+// Função para exibir um tooltip com a nota
+function exibirNotaTooltip(nota) {
+    const tooltip = document.getElementById('notaTooltip');
+    tooltip.innerText = `Nota: ${nota}`; // Exibe a nota correspondente
+    tooltip.style.display = 'inline'; // Mostra o tooltip
+}
+
+// Função para ocultar o tooltip e restaurar a visualização das estrelas
+function sairEstrela() {
+    atualizarVisualizacaoEstrelas(notaSelecionada); // Restaura a visualização para a nota selecionada
+    const tooltip = document.getElementById('notaTooltip');
+    tooltip.style.display = 'none'; // Esconde o tooltip
+}
+
+
 // Função para enviar a avaliação
 function enviarAvaliacao() {
-    const nota = document.getElementById('notaAvaliacao').value;
     const comentario = document.getElementById('comentarioAvaliacao').value;
 
     if (!prestadorSelecionadoId) {
         alert('Nenhum prestador selecionado.');
+        return;
+    }
+
+    if (notaSelecionada === 0) {
+        alert('Por favor, selecione uma nota.');
         return;
     }
 
@@ -779,7 +877,7 @@ function enviarAvaliacao() {
             id_prestador: prestadorSelecionadoId,
             nome_cliente: nomeCliente,  // Passa o nome do cliente capturado dinamicamente
             comentario: comentario,
-            nota: nota
+            nota: notaSelecionada
         })
     })
     .then(response => response.json())

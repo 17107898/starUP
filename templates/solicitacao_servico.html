@@ -7,10 +7,23 @@
     <title>Solicitação de Serviço</title>
 </head>
 <body>
-    <h2>Solicitação de Serviço</h2>
-    <form id="serviceRequestForm">
+
+    <div class="clipboard">
+        <div class="clip-top">
+            <div class="clip-screw"></div>
+            <div class="clip-screw"></div>
+        </div>
+        <div class="form-container">
+            <form id="serviceRequestForm">
+
+        <h2>Solicitação de Serviço</h2>
         <input type="hidden" id="clienteId" name="clienteId" value="{{ cliente_id }}">
-        <label for="serviceType">Tipo de Serviço:</label>
+
+        <!-- Tipo de Serviço -->
+        <label for="serviceType">
+            <img src="{{ url_for('static', filename='images/servico-de-gestao.png') }}" alt="Serviço" class="imagem-lado">
+            Tipo de Serviço:
+        </label>
         <select id="serviceType" name="serviceType" required>
             <option value="">Selecione o serviço</option>
             <option value="desenvolvimento_software">Desenvolvimento de Software</option>
@@ -25,19 +38,28 @@
             <option value="suporte_tecnico">Suporte Técnico</option>
             <option value="automacao_industrial">Automação Industrial</option>
             <option value="devops">DevOps</option>
-            <option value="analise_de_dados">Análise de Dados</option>            
+            <option value="analise_de_dados">Análise de Dados</option>
         </select>
         <br>
 
-        <label for="description">Descrição Detalhada:</label>
-        <textarea id="description" name="description" rows="4" required></textarea>
+        <!-- Descrição Detalhada -->
+        <label for="description">
+            <img src="{{ url_for('static', filename='images/politica.png') }}" alt="Descrição" class="imagem-lado">
+            Descrição Detalhada:
+        </label>
+        <textarea id="description" name="description" rows="4" required class="arial-font"></textarea>
         <br>
 
+        <!-- Orçamento -->
         <label for="budget">Orçamento Disponível (R$):</label>
         <input type="number" id="budget" name="budget" min="0" required>
         <br>
 
-        <label for="urgency">Prazo/Urgência:</label>
+        <!-- Prazo/Urgência -->
+        <label for="urgency">
+            <img src="{{ url_for('static', filename='images/urgencia.png') }}" alt="Urgência" class="imagem-lado">
+            Prazo/Urgência:
+        </label>
         <select id="urgency" name="urgency" required>
             <option value="">Selecione a urgência</option>
             <option value="urgente">Urgente</option>
@@ -46,72 +68,156 @@
             <option value="sem_prazo">Sem prazo específico</option>
         </select>
         <br>
-
         <div class="checkbox-container">
             <input type="checkbox" id="localizacaoImportante" name="localizacaoImportante" class="toggle-switch">
             <label for="localizacaoImportante" class="toggle-switch-label"></label>
             <span class="toggle-text">Localização é importante?</span>
         </div>
         <br>
-        
-        
-
-        <label for="location">CEP (se aplicável):</label>
+        <!-- CEP -->
+        <label for="location">
+            <img src="{{ url_for('static', filename='images/CEP.png') }}" alt="CEP" class="imagem-lado">
+            CEP (se aplicável):
+        </label>
         <input type="text" id="location" name="location" placeholder="Digite o CEP" required>
         <br>
 
-        <!-- Campos de endereço preenchidos automaticamente -->
-        <label for="street">Rua:</label>
+        <!-- Rua -->
+        <label for="street">
+            <img src="{{ url_for('static', filename='images/rua.png') }}" alt="Rua" class="imagem-lado">
+            Rua:
+        </label>
         <input type="text" id="street" name="street" readonly>
         <br>
 
-        <label for="neighborhood">Bairro:</label>
+        <!-- Bairro -->
+        <label for="neighborhood">
+            <img src="{{ url_for('static', filename='images/BAIRRO.png') }}" alt="Bairro" class="imagem-lado">
+            Bairro:
+        </label>
         <input type="text" id="neighborhood" name="neighborhood" readonly>
         <br>
 
-        <label for="city">Cidade:</label>
+        <!-- Cidade -->
+        <label for="city">
+            <img src="{{ url_for('static', filename='images/CIDADE.png') }}" alt="Cidade" class="imagem-lado">
+            Cidade:
+        </label>
         <input type="text" id="city" name="city" readonly>
         <br>
 
-        <label for="state">Estado:</label>
+        <!-- Estado -->
+        <label for="state">
+            <img src="{{ url_for('static', filename='images/BRASIL_regial.png') }}" alt="Estado" class="imagem-lado">
+            Estado:
+        </label>
         <input type="text" id="state" name="state" readonly>
         <br>
 
-        <label for="contactMethod">Forma de Contato Preferencial:</label>
-        <select id="contactMethod" name="contactMethod" required>
-            <option value="">Selecione a forma de contato</option>
-            <option value="email">Email</option>
-            <option value="telefone">Telefone</option>
-            <option value="whatsapp">WhatsApp</option>
-        </select>
-        <br>
-        <!-- Campo de detalhes de contato -->
-        <div id="contactDetail" style="display:none;">
-            <label id="contactLabel" for="contactInput"></label>
-            <input id="contactInput" name="contactInput" placeholder="Digite seus dados de contato">
-        </div>
-        <label for="contactDate">Data/Hora de Contato:</label>
-        <input type="datetime-local" id="contactDate" name="contactDate">
-        <br>
+        <!-- Contato Preferencial -->
+        <label for="contactMethod">
+            <img src="{{ url_for('static', filename='images/contato.png') }}" alt="Contato" class="imagem-lado">
+            Forma de Contato Preferencial:
+        </label>
+            <select id="contactMethod" name="contactMethod" required>
+                <option value="">Selecione a forma de contato</option>
+                <option value="email" data-icon="{{ url_for('static', filename='images/o-email.png') }}">Email</option>
+                <option value="telefone" data-icon="{{ url_for('static', filename='images/telefone.png') }}">Telefone</option>
+                <option value="whatsapp" data-icon="{{ url_for('static', filename='images/whatsapp.png') }}">WhatsApp</option>
+            </select>
+        
+            <!-- Campo de detalhes de contato -->
+            <div id="contactDetails" style="display: none;">
+                <label for="contactInput" id="dynamicLabel">
+                    <img src="" alt="" class="imagem-lado" id="dynamicIcon"> <!-- O ícone começa vazio -->
+                    Dados de Contato:
+                </label>
+                <input id="contactInput" name="contactInput" placeholder="Digite seus dados de contato">
+            </div>
+            <!-- Campo para Data/Hora de Contato -->
+            <label for="contactDate">
+                <img src="{{ url_for('static', filename='images/data-limite.png') }}" alt="Contato" class="imagem-lado">
+                Data/Hora de Contato:
+            </label>
+            <input type="datetime-local" id="contactDate" name="contactDate">
+            <br>
 
-        <label for="references">Documentos ou Referências (opcional):</label>
-        <input type="file" id="references" name="references">
-        <br>
+            <!-- Campo para Documentos ou Referências -->
+            <label for="references">
+                <img src="{{ url_for('static', filename='images/documentos.png') }}" alt="Documentos" class="imagem-lado">
+                Documentos ou Referências (opcional):
+            </label>
+            <input type="file" id="references" name="references">
+            <br>
 
-        <label for="comments">Comentários sobre Serviços Anteriores (opcional):</label>
-        <textarea id="comments" name="comments" rows="4"></textarea>
-        <br>
+            <!-- Campo para Comentários -->
+            <label for="comments">
+                <img src="{{ url_for('static', filename='images/bate_papo_comentarios.png') }}" alt="Comentários" class="imagem-lado">
+                Comentários sobre Serviços Anteriores (opcional):
+            </label>
+            <textarea id="comments" name="comments" rows="4" required class="arial-font"></textarea>
+            <br>
+            <!-- Campo para Preferências sobre o Prestador -->
+            <label for="providerPreferences">
+                <img src="{{ url_for('static', filename='images/Preferencias.png') }}" alt="Preferências" class="imagem-lado">
+                Preferências sobre o Prestador (opcional):
+            </label>
+            <input type="text" id="providerPreferences" name="providerPreferences" class="arial-font" placeholder="Ex: Experiência, Idiomas, etc.">
+            <br>
 
-        <label for="providerPreferences">Preferências sobre o Prestador (opcional):</label>
-        <input type="text" id="providerPreferences" name="providerPreferences" placeholder="Ex: Experiência, Idiomas, etc.">
-        <br>
-
+        
         <button type="submit">Solicitar Serviço</button>
     </form>
-
+</div>
+</div>
     <p id="response"></p>
 
     <script src="{{ url_for('static', filename='js/solicitacao_servico.js') }}"></script>
+    <script>
+// Seleciona os elementos relevantes
+const contactMethod = document.getElementById("contactMethod");
+const contactDetails = document.getElementById("contactDetails");
+const dynamicLabel = document.getElementById("dynamicLabel");
+const dynamicIcon = document.getElementById("dynamicIcon");
+const contactInput = document.getElementById("contactInput");
+
+// Define os ícones de acordo com o método de contato
+const icons = {
+    email: "{{ url_for('static', filename='images/o-email.png') }}",
+    telefone: "{{ url_for('static', filename='images/telefone.png') }}",
+    whatsapp: "{{ url_for('static', filename='images/whatsapp.png') }}"
+};
+
+// Adiciona um listener para a mudança na seleção do dropdown
+contactMethod.addEventListener("change", function () {
+    const selectedValue = this.value;
+
+    if (selectedValue) {
+        // Atualiza o ícone com base no valor selecionado
+        dynamicIcon.src = icons[selectedValue]; // Define o caminho da imagem
+        dynamicIcon.alt = selectedValue; // Define o texto alternativo da imagem
+
+        // Atualiza o texto do label
+        dynamicLabel.textContent = `Dados de Contato (${selectedValue.charAt(0).toUpperCase() + selectedValue.slice(1)}):`;
+
+        // Mostra o campo de detalhes de contato
+        contactDetails.style.display = "block";
+
+        // Atualiza o placeholder do input
+        contactInput.placeholder = `Digite seu ${selectedValue}`;
+    } else {
+        // Esconde o campo de detalhes de contato se nenhuma opção for selecionada
+        contactDetails.style.display = "none";
+
+        // Reseta o ícone e o texto
+        dynamicIcon.src = "";
+        dynamicIcon.alt = "";
+        dynamicLabel.textContent = "Dados de Contato:";
+    }
+});
+
+
+
+    </script>
 </body>
 </html>
-

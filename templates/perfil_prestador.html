@@ -17,7 +17,13 @@
                     <span class="notification-count" id="notificationCount">0</span> <!-- Contador de notificações -->
                 </span>
             </div>
-        
+        <!-- Botão de sair -->
+        <div class="logout-container">
+            <img id="logout-icon" src="{{ url_for('static', filename='images/sair_log_out.png') }}" 
+                alt="Sair" 
+                class="logout-icon"
+                onclick="logoutUser()">
+        </div>
             <!-- Popup de notificações -->
             <div id="popupSolicitacoes" class="popup-solicitacao" style="display: none;">
                 <div class="popup-content-solicitacao">
@@ -32,11 +38,28 @@
         
             
 
-        <!-- Foto de Perfil -->
         <div class="profile-header">
-            <div class="profile-photo" 
-            data-id="{{ perfil_foto }}" 
-            style="background-image: url('/uploads/img/{{ perfil_foto }}');"></div>
+            <!-- Foto de Perfil visível para todos -->
+            <div class="profile-container">
+                <div class="profile-photo" 
+                    data-id="{{ perfil_foto }}" 
+                    style="background-image: url('/uploads/img/{{ perfil_foto }}'); width: 150px; height: 150px; border-radius: 50%; position: relative; background-size: cover; background-position: center;">
+                    
+                    <!-- Ícone de Carregar Arquivo (clicável para upload), exibido quando não houver foto de perfil -->
+                    <img id="carregar-icon" src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+                         alt="Carregar Foto" 
+                         style="display: none; width: 40px; height: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer;" 
+                         onclick="ativarUpload()">
+                    
+                    {% if is_owner %}
+                        <!-- Botão de Remover Foto no canto superior direito da imagem de perfil -->
+                        <button type="button" class="remove-image-perfil" id="remove-foto" style="display: none;">&times;</button>
+                    {% endif %}
+                </div>
+            
+                <!-- Input de upload de nova foto de perfil, escondido e acionado pelo ícone de carregar -->
+                <input type="file" id="perfil_foto" name="perfil_foto" accept="image/*" style="display: none;" onchange="carregarNovaFoto(event)">
+
             
             <h1>{{ prestador.nome }}</h1>
             {% if is_owner %}
@@ -67,19 +90,19 @@
             </div>
 
         
-                <!-- Upload de nova foto de perfil -->
-                <div class="photo-upload">
+
+                <!-- <div class="photo-upload">
                     <label for="perfil_foto">Alterar Foto de Perfil:</label>
                     <input type="file" id="perfil_foto" name="perfil_foto" accept="image/*">
-        
-                    <!-- Botão para remover a foto de perfil -->
+
                     <button type="button" id="remove-foto">Remover Foto de Perfil</button>
-                </div>
+                </div> -->
 
             {% else %}
 
                 <p><strong>Contato:</strong> {{ prestador.contato }}</p>
             {% endif %}
+        </div>
         </div>
         <!-- Informações do Serviço -->
         <div class="service-info container">
@@ -174,7 +197,41 @@
         </div>
         <div class="comments-and-rating container">
             <h2>Avaliação</h2>
-            <p><strong>Nota Média:</strong> {{ prestador.nota }}</p>
+            <div class="avaliacao-container">
+                <!-- Nota média e estrelas -->
+                <div class="nota-media">
+                    <h2>{{ prestador.nota_media | round(1) }}</h2>
+                    <div class="estrelas">
+                        {% for i in range(5) %}
+                            {% if i < prestador.nota_media|int %}
+                                <!-- Exibe uma estrela cheia -->
+                                <img src="{{ url_for('static', filename='images/estrela_estrela_com_click.png') }}" alt="Estrela cheia">
+                            {% elif i == prestador.nota_media|int and prestador.nota_media % 1 >= 0.5 %}
+                                <!-- Exibe uma meia estrela se houver parte decimal >= 0.5 -->
+                                <img src="{{ url_for('static', filename='images/avaliacao_metade_destacada.png') }}" alt="Estrela meia">
+                            {% else %}
+                                <!-- Exibe uma estrela vazia -->
+                                <img src="{{ url_for('static', filename='images/estrela_sem_avaliação.png') }}" alt="Estrela vazia">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p>{{ prestador.total_avaliacoes }} avaliações</p>
+                </div>
+            
+                <!-- Mini gráfico de barras horizontal -->
+                <div class="grafico-avaliacao">
+                    {% for rating in [5, 4, 3, 2, 1] %}
+                        <div class="barra-avaliacao">
+                            <span>{{ rating }}</span>
+                            <div class="barra">
+                                <div class="barra-preenchida" style="width: {{ (prestador.avaliacoes[rating] / prestador.total_avaliacoes) * 100 }}%;"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            
             {% if prestador.feedbacks|length == 0 %}
                 <div class="no-feedback">
                     <p>Nenhuma avaliação disponível para este prestador.</p>
@@ -273,15 +330,26 @@
                     <p>Nenhum certificado carregado.</p>
                 {% endif %}
             </div>
-        
-            {% if is_owner %}
-            <h3>Adicionar Certificado:</h3>
-            <form id="uploadCertificadoForm" enctype="multipart/form-data">
-                <label for="certificados">Carregar Certificados (PDF ou Imagem):</label>
-                <input type="file" id="certificados" name="certificados" multiple accept="application/pdf,image/*">
-            </form>
-            {% endif %}
         </div>
+        {% if is_owner %}
+        <h3>Adicionar Certificado:</h3>
+        <form id="uploadCertificadoForm" enctype="multipart/form-data">
+            <label for="certificados">Carregar Certificados (PDF ou Imagem):</label>
+            <div class="file-upload-container">
+                <!-- Ícone do botão de upload -->
+                <img id="upload-certificados-icon" src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+                     alt="Upload de Certificados" 
+                     class="upload-icon"
+                     onclick="ativarUploadCertificados()">
+                
+                <!-- Input de upload escondido -->
+                <input type="file" id="certificados" name="certificados" multiple accept="application/pdf,image/*" style="display: none;">
+            </div>
+            <!-- Área para exibir a mensagem -->
+            <div id="certificados-message" class="upload-message" style="display: none;"></div>
+        </form>
+        
+        {% endif %}
         
         <!-- Estrutura do Popup -->
         <div id="popupCertificado" class="popup">
@@ -321,7 +389,7 @@
                         <div class="gallery-item">
                             <img src="/uploads/img/{{ image_id }}" alt="Imagem do documento" class="{% if is_owner %}thumbnail{% else %}gallery-item img{% endif %}">
                             {% if is_owner %}
-                                <button type="button" class="remove-image" data-file-id="{{ image_id }}">&times;</button>
+                            <button type="button" class="remove-image" data-file-id="{{ image_id }}">&times;</button>
                             {% endif %}
 
                         </div>
@@ -329,8 +397,28 @@
                 </div>
 
                 {% if is_owner %}
-                <input type="file" id="documents" name="documents" multiple accept="image/*">
+                <div class="file-upload-container">
+                    <!-- Ícone de upload clicável -->
+                    <img 
+                        id="upload-icon" 
+                        src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+                        alt="Upload Arquivo" 
+                        class="upload-icon" 
+                        onclick="abrirSeletorArquivos()"
+                    >
+                    <!-- Input de upload escondido -->
+                    <input 
+                        type="file" 
+                        id="documents" 
+                        name="documents" 
+                        multiple 
+                        accept="image/*" 
+                        style="display: none;" 
+                        onchange="processarArquivosSelecionados(event)"
+                    >
+                </div>
                 <p id="response" class="upload-limit-message"></p>
+                <p id="response-Novo" class="upload-limit-message"></p>
                 {% endif %}
             </div>
 
@@ -348,16 +436,38 @@
                 </div>
 
                 {% if is_owner %}
-                <input type="file" id="video" name="video" accept="video/mp4">
+                <div class="file-upload-container">
+                <!-- Ícone de upload para vídeos -->
+                <img 
+                    id="upload-video-icon" 
+                    src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+                    alt="Upload Vídeo" 
+                    class="upload-icon" 
+                    onclick="abrirSeletorVideo()"
+                >
+                <!-- Input de upload escondido para vídeos -->
+                <input 
+                    type="file" 
+                    id="video" 
+                    name="video" 
+                    accept="video/mp4" 
+                    style="display: none;" 
+                    onchange="processarVideoSelecionado(event)"
+                >
+            </div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Botão para salvar as alterações -->
-        <!-- Botão para salvar as alterações -->
         <div class="action-buttons">
             {% if is_owner %}
-                <button type="submit" class="btn-save">Salvar Alterações</button>
+            <div id="button-container">
+                <button type="submit" class="btn-save">
+                    <img src="{{ url_for('static', filename='images/salvar_alteracao.png') }}" alt="Salvar" class="button-icon">
+                    Salvar Alterações
+                </button>
+            </div>            
                 <div id="response-message" class="response-message"></div>
             {% else %}
             {% endif %}
@@ -371,8 +481,8 @@
 <div class="action-buttons">
     {% if not is_owner %}
         <!-- Botão de confirmação de solicitação -->
-        <button class="solicitar-servico-btn" onclick="abrirPopupSolicitacao()">Solicitar Serviço</button>
-    {% endif %}
+        <button class="solicitar-servico-btn" onclick="checarSolicitacaoServico()">Solicitar Serviço</button>
+        {% endif %}
 </div>
 
 <!-- Popup de confirmação de solicitação -->

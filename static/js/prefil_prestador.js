@@ -64,7 +64,39 @@ function fecharPopup() {
     // Esconde o popup
     popup.style.display = 'none';
 }
+function checarSolicitacaoServico() {
+    // Obter os parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const prestadorId = urlParams.get('prestador_id'); // Captura o ID do prestador
+    const clienteId = urlParams.get('cliente_id'); // Captura o ID do cliente (se necessário)
 
+    if (!prestadorId) {
+        alert("Erro: ID do prestador não encontrado na URL.");
+        return;
+    }
+
+    // Enviar requisição para verificar se o serviço já foi enviado
+    fetch(`/api/servico/${prestadorId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Erro: " + data.error);
+                return;
+            }
+
+            // Verifique se o cliente já enviou o serviço
+            if (data.ja_enviado) {
+                alert("Você já enviou este serviço para este prestador.");
+            } else {
+                // Abrir o popup se o serviço ainda não foi enviado
+                abrirPopupSolicitacao();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar o serviço:', error);
+            alert("Erro ao verificar o serviço. Tente novamente.");
+        });
+}
 // Função para abrir o popup com as informações do serviço
 function abrirPopupSolicitacao() {
     let tipoServicoLegivel = '';

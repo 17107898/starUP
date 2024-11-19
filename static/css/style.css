@@ -729,15 +729,47 @@ button.vertical-next:hover {
     color: #333;
 }
 
+.estrelas-avaliacao {
+    display: flex;
+    justify-content: center;
+    gap: 5px; /* Espaço entre as estrelas */
+    margin-top: 10px;
+    position: relative; /* Para posicionar o tooltip */
+}
+
+.estrelas-avaliacao img {
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+}
+
+.tooltip {
+    display: none; /* Tooltip inicialmente oculto */
+    position: absolute;
+    top: -30px; /* Acima das estrelas */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+
+
 .popup-avaliar-content textarea {
-    width: 100%;
+    width: 95%;
     height: 80px;
     margin-top: 10px;
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 1rem;
+    font-family: Arial, sans-serif; /* Define a fonte como Arial */
 }
+
 
 .popup-avaliar-content select {
     width: 100%;
@@ -749,7 +781,7 @@ button.vertical-next:hover {
 }
 
 .popup-avaliar-content button {
-    background-color: #28a745;
+    background-color:  #007bff;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -760,7 +792,7 @@ button.vertical-next:hover {
 }
 
 .popup-avaliar-content button:hover {
-    background-color: #218838;
+    background-color: #0755a8;
 }
 
 .popup-close {
@@ -774,6 +806,25 @@ button.vertical-next:hover {
 
 .popup-close:hover {
     color: #ff1a1a;
+}
+#notificationDot {
+    display: none; /* Oculta a bolinha inicialmente */
+}
+#statusConvite {
+    max-height: 400px; /* Altura máxima do contêiner */
+    overflow-y: auto;  /* Ativar rolagem vertical */
+    padding: 10px;     /* Espaço interno para melhor visualização */
+    border: 1px solid #ddd; /* Opcional: borda para separar visualmente */
+}
+
+.foto-perfil {
+    width: 50px; /* Ajusta a largura da imagem */
+    height: 50px; /* Ajusta a altura da imagem */
+    border-radius: 50%; /* Deixa a imagem circular */
+    object-fit: cover; /* Garante que a imagem seja cortada corretamente para caber no tamanho especificado */
+    margin-right: 10px; /* Adiciona espaço à direita da imagem */
+    vertical-align: middle; /* Alinha verticalmente com o texto */
+    cursor: pointer;
 }
 
 

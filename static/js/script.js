@@ -63,7 +63,10 @@ async function carregarMaisServicos() {
 
     console.log(`Buscando serviços com os filtros: serviceType=${serviceType}, cep=${cep}, neighborhood=${neighborhood}, city=${city}, state=${state}, urgency=${urgency}, localizacaoImportante=${localizacaoImportante}`);
 
-    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&cep=${cep}&neighborhood=${neighborhood}&city=${city}&state=${state}&urgency=${urgency}&localizacaoImportante=${localizacaoImportante}`);
+
+
+    // Incluindo o cliente_id na chamada fetch
+    const response = await fetch(`/get_services?page=${page}&per_page=5&serviceType=${serviceType}&cep=${cep}&neighborhood=${neighborhood}&city=${city}&state=${state}&urgency=${urgency}&localizacaoImportante=${localizacaoImportante}&cliente_id=${clienteId}`);
     const data = await response.json();
 
     console.log(`Número de serviços encontrados: ${data.services.length}`);
@@ -176,7 +179,6 @@ async function carregarMaisServicos() {
         console.log(`Serviço adicionado ao container: ${service.person_name}, ID do elemento: ${serviceElement.id}`);
 
         // Configurar os botões e navegação (conforme seu código original)
-        // Configurar os botões e navegação (conforme seu código original)
         const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
         if (solicitarServicoBtn) {
             solicitarServicoBtn.addEventListener('click', () => {
@@ -254,6 +256,41 @@ async function carregarMaisServicos() {
                 }
             }
         }
+        function checarSolicitacaoServico() {
+            // Obter os parâmetros da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const prestadorId = urlParams.get('prestador_id'); // Captura o ID do prestador
+            const clienteId = urlParams.get('cliente_id'); // Captura o ID do cliente (se necessário)
+        
+            if (!prestadorId) {
+                alert("Erro: ID do prestador não encontrado na URL.");
+                return;
+            }
+        
+            // Enviar requisição para verificar se o serviço já foi enviado
+            fetch(`/api/servico/${prestadorId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Erro: " + data.error);
+                        return;
+                    }
+        
+                    // Verifique se o cliente já enviou o serviço
+                    if (data.ja_enviado) {
+                        alert("Você já enviou este serviço para este prestador.");
+                    } else {
+                        // Abrir o popup se o serviço ainda não foi enviado
+                        abrirPopupSolicitacao(prestadorId);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao verificar o serviço:', error);
+                    alert("Erro ao verificar o serviço. Tente novamente.");
+                });
+        }
+        
+        
         function abrirPopupSolicitacao(serviceId) {
             // Aqui você já tem o prestadorId, que pode ser usado ao confirmar a solicitação
         // Fazer uma requisição para o servidor buscando os detalhes do serviço pelo ID
