@@ -224,12 +224,18 @@
                         <div class="barra-avaliacao">
                             <span>{{ rating }}</span>
                             <div class="barra">
-                                <div class="barra-preenchida" style="width: {{ (prestador.avaliacoes[rating] / prestador.total_avaliacoes) * 100 }}%;"></div>
+                                <div class="barra-preenchida" style="width: 
+                                    {% if prestador.total_avaliacoes > 0 %}
+                                        {{ (prestador.avaliacoes[rating] / prestador.total_avaliacoes) * 100 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %};
+                                "></div>
                             </div>
                         </div>
                     {% endfor %}
                 </div>
-            </div>
+                
             
             
             {% if prestador.feedbacks|length == 0 %}

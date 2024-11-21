@@ -194,7 +194,12 @@ document.getElementById('video').addEventListener('change', function () {
     checkMediaLimit();  // Verifica se o limite de mídias foi atingido
 });
 
-
+function abrirSeletorArquivos() {
+    document.getElementById('documents').click();
+}
+function abrirSeletorVideo() {
+    document.getElementById('video').click();
+}
 // Função para exibir o aviso temporariamente
 function showTemporaryMessage(message) {
     document.getElementById('response').textContent = message;

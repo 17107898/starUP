@@ -1799,7 +1799,7 @@ def api_prestador_solicitar_servico():
     contact_date = data.get('contactDate')
     comments = data.get('comments')
     provider_preferences = data.get('providerPreferences')
-    certificados = request.files.getlist('certificados[]')
+    certificados = request.files.getlist('certificados')
     print(f'como está cegando: {contact_detail}')
     # Mapeamento reverso: pegar a chave correspondente ao valor legível
     SERVICE_LABELS_REVERSE = {v: k for k, v in SERVICE_LABELS.items()}
@@ -1849,6 +1849,7 @@ def api_prestador_solicitar_servico():
 
     # Iterando sobre os arquivos de certificados recebidos
     for certificado in certificados:
+        print(f'certificados carregados: {certificado.filename}')
         if certificado and certificado.filename != '':
             # Verificar se já existe um certificado com o mesmo nome para evitar duplicação
             cursor.execute("""

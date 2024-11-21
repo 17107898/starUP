@@ -7,30 +7,26 @@
     <title>Detalhes do Serviço</title>
 </head>
 <body>
-
     <div class="clipboard">
         <div class="clip-top">
             <div class="clip-screw"></div>
             <div class="clip-screw"></div>
         </div>
         <div class="form-container">
-            <form id="servicoForm" enctype="multipart/form-data">
-                <h2>Preencha os Detalhes do Serviço</h2>
-        
-                <!-- Input oculto para o ID do prestador -->
-                <input type="hidden" id="prestadorId" value="{{ prestador_id }}">
-        
-                <!-- Saudação -->
-                <p>Olá {{ nome_prestador }}</p>
-        
-                <!-- Tipo de Serviço -->
-                <label for="serviceType">
-                    <img src="{{ url_for('static', filename='images/servico-de-gestao.png') }}" alt="Serviço" class="imagem-lado">
-                    Tipo de Serviço Selecionado:
-                </label>
-                <input type="text" id="serviceType" name="serviceType" value="{{ service_type_legivel }}" readonly required>
-                <br>
-        
+    <form id="servicoForm">
+        <h2>Preencha os Detalhes do Serviço</h2>
+        <input type="hidden" id="prestadorId" value="{{ prestador_id }}"> <!-- Input oculto para o ID do prestador -->
+        <br>
+        <label for="nome">Olá {{nome_prestador}}</label>
+        <br>
+        <label for="serviceType">
+            <img src="{{ url_for('static', filename='images/servico-de-gestao.png') }}" alt="Serviço" class="imagem-lado">
+            Tipo de Serviço Selecionado:
+        </label>
+        <input type="hidden" id="prestadorId" value="{{ prestador_id }}"> <!-- Input oculto para o ID do prestador -->
+
+        <input type="text" id="serviceType" name="serviceType" value="{{ service_type_legivel }}" required>
+        <br>
                 <!-- Certificado -->
                 <label for="certificados">
                     <img src="{{ url_for('static', filename='images/certificado.png') }}" alt="Certificados" class="imagem-lado">
@@ -51,117 +47,114 @@
                     <img src="{{ url_for('static', filename='images/politica.png') }}" alt="Descrição" class="imagem-lado">
                     Descrição Detalhada:
                 </label>
-                <textarea id="description" name="description" rows="4" required class="arial-font"></textarea>
-                <br>
-        
+        <textarea id="description" name="description" required></textarea>
+        <br>
+    
                 <!-- Orçamento -->
                 <label for="budget">
                     <img src="{{ url_for('static', filename='images/orcamento.png') }}" alt="Orçamento" class="imagem-lado">
                     Orçamento Disponível:
                 </label>
-                <input type="text" id="budget" name="budget" required>
-                <br>
-        
+        <input type="text" id="budget" name="budget" required>
+        <br>
+    
                 <!-- Prazo/Urgência -->
                 <label for="urgency">
                     <img src="{{ url_for('static', filename='images/urgencia.png') }}" alt="Urgência" class="imagem-lado">
                     Prazo/Urgência:
                 </label>
-                <select id="urgency" name="urgency" required>
-                    <option value="">Selecione a urgência</option>
-                    <option value="urgente">Urgente</option>
-                    <option value="semana">Dentro de uma semana</option>
-                    <option value="mes">Dentro de um mês</option>
-                    <option value="sem_prazo">Sem prazo específico</option>
-                </select>
-                <br>
-        
+        <select id="urgency" name="urgency" required>
+            <option value="">Selecione a urgência</option>
+            <option value="urgente">Urgente</option>
+            <option value="semana">Dentro de uma semana</option>
+            <option value="mes">Dentro de um mês</option>
+            <option value="sem_prazo">Sem prazo específico</option>
+        </select>
+        <br>
+    
                 <!-- Localização -->
                 <label for="location">
                     <img src="{{ url_for('static', filename='images/CEP.png') }}" alt="CEP" class="imagem-lado">
                     CEP (se aplicável):
                 </label>
-                <input type="text" id="location" name="location">
-                <br>
-        
+
+        <input type="text" id="location" name="location">
+        <br>
+    
                 <!-- Rua -->
                 <label for="street">
                     <img src="{{ url_for('static', filename='images/rua.png') }}" alt="Rua" class="imagem-lado">
                     Rua:
                 </label>
-                <input type="text" id="street" name="street" readonly>
-                <br>
-        
-                <!-- Bairro -->
-                <label for="neighborhood">
-                    <img src="{{ url_for('static', filename='images/BAIRRO.png') }}" alt="Bairro" class="imagem-lado">
-                    Bairro:
-                </label>
-                <input type="text" id="neighborhood" name="neighborhood" readonly>
-                <br>
-        
+        <input type="text" id="street" name="street" readonly>
+        <br>
+    
+        <label for="neighborhood">Bairro:</label>
+        <input type="text" id="neighborhood" name="neighborhood" readonly>
+        <br>
+    
                 <!-- Cidade -->
                 <label for="city">
                     <img src="{{ url_for('static', filename='images/a.png') }}" alt="Cidade" class="imagem-lado">
                     Cidade:
                 </label>
-                <input type="text" id="city" name="city" readonly>
-                <br>
-        
-                <!-- Estado -->
-                <label for="state">
-                    <img src="{{ url_for('static', filename='images/BRASIL_regial.png') }}" alt="Estado" class="imagem-lado">
-                    Estado:
-                </label>
-                <input type="text" id="state" name="state" readonly>
-                <br>
-        
+        <input type="text" id="city" name="city" readonly>
+        <br>
+    
+        <label for="state">
+            <img src="{{ url_for('static', filename='images/BRASIL_regial.png') }}" alt="Estado" class="imagem-lado">
+            Estado:
+        </label>
+        <input type="text" id="state" name="state" readonly>
+        <br>
+    
                 <!-- Forma de Contato -->
                 <label for="contactMethod">
                     <img src="{{ url_for('static', filename='images/contato.png') }}" alt="Contato" class="imagem-lado">
                     Forma de Contato Preferencial:
                 </label>
-                <select id="contactMethod" name="contactMethod" required>
-                    <option value="">Selecione a forma de contato</option>
-                    <option value="email">Email</option>
-                    <option value="telefone">Telefone</option>
-                    <option value="whatsapp">WhatsApp</option>
-                </select>
-                <div id="contactDetail" class="contact-container" style="display: none;">
-                    <label id="contactLabel" for="contactInput"></label>
-                    <input id="contactInput" name="contactInput" placeholder="Digite seus dados de contato">
-                </div>
-                <br>
+        <select id="contactMethod" name="contactMethod" required>
+            <option value="">Selecione a forma de contato</option>
+            <option value="email">Email</option>
+            <option value="telefone">Telefone</option>
+            <option value="whatsapp">WhatsApp</option>
+        </select>
+        <br>
+        <!-- Campo de detalhes de contato -->
+        <div id="contactDetail" class="contact-container" style="display: none;">
+            <label id="contactLabel" for="contactInput"></label>
+            <input id="contactInput" name="contactInput" placeholder="Digite seus dados de contato">
+        </div>
+
+        
+        
         
                 <!-- Data/Hora de Contato -->
                 <label for="contactDate">
                     <img src="{{ url_for('static', filename='images/data-limite.png') }}" alt="Data/Hora de Contato" class="imagem-lado">
                     Data/Hora de Contato:
                 </label>
-                <input type="datetime-local" id="contactDate" name="contactDate" required>
-                <br>
-        
+        <input type="datetime-local" id="contactDate" name="contactDate" required>
+        <br>
+    
                 <!-- Comentários -->
                 <label for="comments">
                     <img src="{{ url_for('static', filename='images/bate_papo_comentarios.png') }}" alt="Comentários" class="imagem-lado">
                     Comentários sobre Serviços Anteriores (opcional):
                 </label>
-                <textarea id="comments" name="comments" rows="4" class="arial-font"></textarea>
-                <br>
-        
-                <!-- Preferências -->
-                <label for="providerPreferences">
-                    <img src="{{ url_for('static', filename='images/Preferencias.png') }}" alt="Preferências" class="imagem-lado">
-                    Preferências sobre o Cliente (opcional):
-                </label>
-                <input type="text" id="providerPreferences" name="providerPreferences" class="arial-font" placeholder="Ex: Experiência, Idiomas, etc.">
-                <br>
-        
-                <!-- Botão de Envio -->
-                <button type="submit">Enviar Solicitação</button>
-            </form>
-        </div>
-        
+        <textarea id="comments" name="comments"></textarea>
+        <br>
+    
+        <label for="providerPreferences">
+            <img src="{{ url_for('static', filename='images/Preferencias.png') }}" alt="Preferências" class="imagem-lado">
+            Preferências sobre o Cliente (opcional):
+        </label>
+        <textarea id="providerPreferences" name="providerPreferences"></textarea>
+        <br>
+    
+        <button type="submit">Enviar Solicitação</button>
+    </form>
+</div>
     
     <p id="response"></p>
     

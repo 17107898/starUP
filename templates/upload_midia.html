@@ -15,12 +15,49 @@
         <br>
 
         <label for="documents">Selecione até 4 Imagens:</label>
-        <input type="file" id="documents" name="documents" accept="image/*,.pdf" multiple>
-        <br>
+        <div class="file-upload-container">
+            <!-- Ícone de upload clicável -->
+            <img 
+                id="upload-icon" 
+                src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+                alt="Upload Arquivo" 
+                class="upload-icon" 
+                onclick="abrirSeletorArquivos()"
+            >
+            <!-- Input de upload escondido -->
+            <input 
+                type="file" 
+                id="documents" 
+                name="documents" 
+                multiple 
+                accept="image/*" 
+                style="display: none;" 
+                onchange="processarArquivosSelecionados(event)"
+            >
+        </div>
+        <p id="response" class="upload-limit-message"></p>
+        <p id="response-Novo" class="upload-limit-message"></p>
 
         <label for="video">Selecione um Vídeo (máx 1 min):</label>
-        <input type="file" id="video" name="video" accept="video/*">
-        <br>
+        <div class="file-upload-container">
+            <!-- Ícone de upload para vídeos -->
+            <img 
+                id="upload-video-icon" 
+                src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+                alt="Upload Vídeo" 
+                class="upload-icon" 
+                onclick="abrirSeletorVideo()"
+            >
+            <!-- Input de upload escondido para vídeos -->
+            <input 
+                type="file" 
+                id="video" 
+                name="video" 
+                accept="video/mp4" 
+                style="display: none;" 
+                onchange="processarVideoSelecionado(event)"
+            >
+        </div>
 
         <div id="preview"></div> <!-- Área para pré-visualização -->
 
