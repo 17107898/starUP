@@ -230,7 +230,7 @@ button.prev {
     position: absolute;
     top: 50%; /* Centraliza verticalmente */
     transform: translateY(-50%); /* Ajuste para manter os botões centralizados */
-    background-color: rgba(0, 0, 0, 0.5); /* Cor de fundo semitransparente */
+    background-color: rgba(0, 156, 247, 0.5); /* Cor de fundo semitransparente */
     color: white;
     border: none;
     padding: 15px;
@@ -242,7 +242,7 @@ button.prev {
 /* Efeitos de hover para os botões */
 button.next:hover, 
 button.prev:hover {
-    background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+    background-color: rgba(0, 156, 247, 0.8); /* Fundo mais escuro ao passar o mouse */
     transform: translateY(-50%) scale(1.1); /* Aumenta o botão um pouco quando hover */
 }
 
@@ -252,14 +252,14 @@ button.vertical-prev {
     top: 10px; /* Posiciona o botão no topo da galeria */
     left: 50%; /* Centraliza horizontalmente */
     transform: translateX(-50%); /* Mantém o botão centralizado */
-    background-color: rgba(0, 0, 0, 0.5); /* Cor de fundo semitransparente */
+    background-color: rgba(0, 156, 247, 0.5); /* Cor de fundo semitransparente */
     color: white;
     border: none;
     padding: 10px;
     cursor: pointer;
     font-size: 24px; /* Tamanho da fonte para visibilidade */
     transition: background-color 0.3s ease, transform 0.3s ease;
-    border-radius: 50%; /* Botão redondo */
+    border-radius: 100%; /* Botão redondo */
 }
 
 /* Estilizando o botão de navegação vertical inferior (seta para baixo) */
@@ -268,20 +268,20 @@ button.vertical-next {
     bottom: 10px; /* Posiciona o botão no fundo da galeria */
     left: 50%; /* Centraliza horizontalmente */
     transform: translateX(-50%); /* Mantém o botão centralizado */
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 156, 247, 0.5); /* Cor de fundo semitransparente */
     color: white;
     border: none;
     padding: 10px;
     cursor: pointer;
     font-size: 24px;
     transition: background-color 0.3s ease, transform 0.3s ease;
-    border-radius: 50%;
+    border-radius:100%;
 }
 
 /* Efeito hover para os botões verticais */
 button.vertical-prev:hover, 
 button.vertical-next:hover {
-    background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+    background-color: rgba(0, 156, 247, 0.8); /* Fundo mais escuro ao passar o mouse */
     transform: translateX(-50%) scale(1.1); /* Aumenta o botão levemente */
 }
 
@@ -291,27 +291,27 @@ button.vertical-next:hover {
 }
 
 /* Estilo de descrição no carrossel para desktop */
+
 .video-description {
-    position: absolute;
+    /* position: absolute; */
     bottom: -383px;
     left: 10px;
     color: white;
     padding: 10px;
     font-size: 12px;
     border-radius: 5px;
-    max-width: 200px;
+    max-width: 180px;
     z-index: 2;
     background-color: rgba(0, 0, 0, 0.6);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     line-height: 1.5;
     font-weight: 400;
     letter-spacing: 0.5px;
-    margin-left: -159px;
-    /* margin-top: 85px; */
+    margin-left: -90px;
+    margin-top: 340px;
     text-align: left;
     transition: opacity 0.5s ease;
 }
-
 /* Quando a descrição estiver ativa */
 .video-description.active {
     opacity: 1; /* Descrição visível */
@@ -341,7 +341,29 @@ button.vertical-next:hover {
     background-position: center; /* Centraliza a imagem */
     display: inline-block;
 }
+.description-container {
+    max-height: 65px; /* Limite de altura */
+    overflow-y: auto; /* Ativa o scroll vertical */
+    width: 100%; /* Garante que ocupe toda a largura do contêiner */
+    box-sizing: border-box; /* Inclui padding no tamanho total */
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo semitransparente */
+    padding: 5px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+}
 
+.full-description {
+    display: none; /* Por padrão, está escondida */
+    max-height: 100%; /* Ocupa no máximo a altura do contêiner pai */
+    overflow-y: auto; /* Scroll vertical caso o conteúdo exceda o espaço disponível */
+    padding: 5px; /* Ajusta o espaçamento interno */
+    color: #fff; /* Texto branco */
+    width: 100%; /* Ocupa toda a largura do contêiner pai */
+    box-sizing: border-box; /* Inclui o padding na largura */
+}
+
+.short-description {
+    display: inline; /* A descrição curta é exibida por padrão */
+}
 /* Estilo para a bolinha vermelha de notificação */
 #notificationDot {
     position: absolute;
@@ -544,7 +566,7 @@ button.vertical-next:hover {
 }
 
 .solicitar-servico-btn {
-    background-color: #28a745;
+    background-color: #007bff;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -555,10 +577,9 @@ button.vertical-next:hover {
     transition: background-color 0.3s ease, opacity 0.5s ease;
     z-index: 4;
     display: block;
-    margin-top: 333px;
-    margin-left: 220px;
+    margin-top: -45px;
+    margin-left: 180px;
 }
-
 
 /* Quando o botão estiver oculto */
 .solicitar-servico-btn.hidden {

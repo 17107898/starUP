@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termos e Condições - Tech. Informatic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        .terms-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .terms-container h1 {
+            text-align: center;
+            color: #333;
+        }
+        .logo-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .logo-container img {
+            height: 70px;
+            border-radius: 50%; /* Torna a imagem circular */
+            border: 2px solid #007bff; /* Adiciona uma borda */
+            cursor: pointer;
+            transition: transform 0.3s ease; /* Animação suave ao passar o mouse */
+        }
+
+        .logo-container img:hover {
+            transform: scale(1.1); /* Aumenta levemente o tamanho ao passar o mouse */
+        }
+        .terms-content {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .terms-content h2 {
+            color: #007bff;
+            margin-top: 15px;
+        }
+
+        .terms-content p {
+            margin: 10px 0;
+        }
+
+        .terms-agreement {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .terms-agreement label {
+            font-size: 0.9em;
+        }
+
+        #proceedButton {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: not-allowed;
+            transition: background-color 0.3s ease;
+        }
+
+        #proceedButton:enabled {
+            cursor: pointer;
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <a href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='images/Empresa.png') }}" alt="Tech Informatic Logo">
+        </a>
+    </div>
+    <div class="terms-container">
+        <h1>Termos e Condições</h1>
+        <div class="terms-content">
+            <h2>1. Introdução</h2>
+            <p>Bem-vindo à Tech. Informatic! Ao utilizar nossa plataforma, você concorda com os seguintes termos e condições.</p>
+
+            <h2>2. Objetivo</h2>
+            <p>Nossa plataforma conecta empresas e profissionais de TI, utilizando um sistema avançado de matchmaking para facilitar a contratação.</p>
+
+            <h2>3. Requisitos e Políticas</h2>
+            <p>
+                - Respeitar as políticas de uso da plataforma.<br>
+                - Garantir que os dados fornecidos estão corretos.<br>
+                - Usar a plataforma de forma ética e responsável.
+            </p>
+
+            <h2>4. Privacidade e Segurança</h2>
+            <p>Todos os dados fornecidos serão tratados de acordo com nossa <a href="{{ url_for('politica_privacidade') }}">Política de Privacidade</a>, que segue as melhores práticas de proteção de dados.</p>
+
+            <h2>5. Direitos e Responsabilidades</h2>
+            <p>
+                - A Tech. Informatic não se responsabiliza por contratações realizadas fora da plataforma.<br>
+                - Empresas e profissionais devem avaliar os perfis de forma independente antes de fechar acordos.
+            </p>
+
+            <h2>6. Restrições</h2>
+            <p>Usuários não podem usar a plataforma para atividades ilegais ou que violem os direitos de terceiros.</p>
+
+            <h2>7. Alterações nos Termos</h2>
+            <p>Reservamo-nos o direito de atualizar os termos a qualquer momento. Recomendamos que revise este documento periodicamente.</p>
+        </div>
+        <div class="terms-agreement">
+            <input type="checkbox" id="terms" name="terms" required>
+            <label for="terms">Eu concordo com os <a href="#">Termos e Condições</a> e a <a href="{{ url_for('politica_privacidade') }}">Política de Privacidade</a>.</label>
+            <button type="button" id="proceedButton" disabled>Prosseguir</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const termsCheckbox = document.getElementById("terms");
+            const proceedButton = document.getElementById("proceedButton");
+
+            // Verificar a origem da URL (cliente ou prestador)
+            const urlParams = new URLSearchParams(window.location.search);
+            const origem = urlParams.get('origem'); // Pega o parâmetro 'origem' da URL
+
+            // Redireciona para a página inicial caso a origem não seja identificada
+            if (!origem) {
+                alert("Origem não identificada. Redirecionando para a página inicial.");
+                window.location.href = '/';
+                return;
+            }
+
+            // Habilitar o botão quando o checkbox for marcado
+            termsCheckbox.addEventListener("change", () => {
+                proceedButton.disabled = !termsCheckbox.checked;
+            });
+
+            // Redirecionar para a origem com o checkbox confirmado
+            proceedButton.addEventListener("click", () => {
+                const redirectUrl = origem === 'cliente' 
+                    ? "{{ url_for('cadastro_cliente') }}" 
+                    : "{{ url_for('cadastro_prestador') }}";
+
+                // Redireciona para a origem com o parâmetro que confirma o checkbox
+                window.location.href = `${redirectUrl}?termos_aceitos=true`;
+            });
+        });
+
+
+    </script>
+</body>
+</html>

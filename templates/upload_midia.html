@@ -8,13 +8,36 @@
 <body>
     <div class="container">
         <form id="uploadForm" enctype="multipart/form-data">
-        <h2>Carregar Documentos e Mídias</h2>
+        <h2>Carregar Mídias</h2>
         <title>Upload de Mídia</title>
-        <label for="perfil_foto">Selecione a Foto de Perfil:</label>
-        <input type="file" id="perfil_foto" name="perfil_foto" accept="image/*">
+        <label for="profile_photo" class="label-icon">
+            <img src="{{ url_for('static', filename='images/do-utilizador.png') }}" alt="Ícone de Perfil" class="icon">
+            Foto Perfil
+        </label>
+        
+        <div class="profile-photo" 
+        data-id="{{ perfil_foto }}" 
+        style="background-image: url('/uploads/img/{{ perfil_foto }}'); width: 150px; height: 150px; border-radius: 50%; position: relative; background-size: cover; background-position: center;">
+        
+        <!-- Ícone de Carregar Arquivo (clicável para upload), exibido quando não houver foto de perfil -->
+        <img id="carregar-icon" src="{{ url_for('static', filename='images/upload_de_arquivo.png') }}" 
+             alt="Carregar Foto" 
+             style="display: none; width: 40px; height: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer;" 
+             onclick="ativarUpload()">
+        
+
+            <!-- Botão de Remover Foto no canto superior direito da imagem de perfil -->
+            <button type="button" class="remove-image-perfil" id="remove-foto" style="display: none;">&times;</button>
+            <input type="file" id="perfil_foto" name="perfil_foto" accept="image/*" style="display: none;" onchange="carregarNovaFoto(event)">
+
+        </div>
         <br>
 
-        <label for="documents">Selecione até 4 Imagens:</label>
+        <label for="documents" class="label-icon">
+            <img src="{{ url_for('static', filename='images/imagem.png') }}" alt="Ícone de Imagens" class="icon">
+            Selecione até 4 Imagens:
+        </label>
+        
         <div class="file-upload-container">
             <!-- Ícone de upload clicável -->
             <img 
@@ -32,13 +55,17 @@
                 multiple 
                 accept="image/*" 
                 style="display: none;" 
-                onchange="processarArquivosSelecionados(event)"
             >
         </div>
+        <div id="preview" class="gallery-container"></div>
         <p id="response" class="upload-limit-message"></p>
         <p id="response-Novo" class="upload-limit-message"></p>
 
-        <label for="video">Selecione um Vídeo (máx 1 min):</label>
+        <!-- Label para vídeo -->
+        <label for="video" class="label-icon">
+            <img src="{{ url_for('static', filename='images/marketing-de-video.png') }}" alt="Ícone de Vídeo" class="icon">
+            Selecione um Vídeo (máx 1 min):
+        </label>
         <div class="file-upload-container">
             <!-- Ícone de upload para vídeos -->
             <img 
@@ -55,14 +82,19 @@
                 name="video" 
                 accept="video/mp4" 
                 style="display: none;" 
-                onchange="processarVideoSelecionado(event)"
             >
+            <div id="video-preview"></div>
         </div>
 
-        <div id="preview"></div> <!-- Área para pré-visualização -->
 
-        <button type="submit">Enviar Mídia</button>
         <p id="response"></p>
+        <div id="response-message" class="response-message"></div>
+        <div id="button-container">
+            <button type="submit" class="btn-save">
+                <img src="{{ url_for('static', filename='images/salvar_alteracao.png') }}" alt="Salvar" class="button-icon">
+                Confirmar Mídias
+            </button>
+        </div> 
     </form>
 </div>
     <script src="{{ url_for('static', filename='js/upload_script.js') }}"></script>

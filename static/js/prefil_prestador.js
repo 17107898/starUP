@@ -235,3 +235,18 @@ function confirmarSolicitacao() {
 }
 
 
+// Obter os dados enviados pelo backend
+const contactDaysContainer = document.getElementById('contactDays');
+const diasHorasContato = JSON.parse(contactDaysContainer.getAttribute('data-dias-horas-contato') || '{}');
+
+// Iterar pelos dias e preencher os checkboxes e horários
+for (const [dia, hora] of Object.entries(diasHorasContato)) {
+    const checkbox = document.querySelector(`input[type="checkbox"][id="${dia}"]`);
+    const horarioInput = document.querySelector(`input[type="time"][id="${dia}Time"]`);
+
+    if (checkbox && horarioInput) {
+        checkbox.checked = true; // Marcar o checkbox como selecionado
+        horarioInput.value = hora; // Preencher o horário correspondente
+    }
+}
+

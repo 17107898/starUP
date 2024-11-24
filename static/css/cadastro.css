@@ -29,7 +29,11 @@ body {
 }
 
 .container .logo img {
-    height: 50px;
+    height: 70px;
+    border-radius: 6%; /* Torna a imagem circular */
+    border: 2px solid #007bff; /* Adiciona uma borda */
+    cursor: pointer;
+    transition: transform 0.3s ease; /* Animação suave ao passar o mouse */
 }
 
 .container nav {

@@ -45,18 +45,19 @@
                 <!-- Descrição Detalhada -->
                 <label for="description">
                     <img src="{{ url_for('static', filename='images/politica.png') }}" alt="Descrição" class="imagem-lado">
-                    Descrição Detalhada:
+                    Sua Descrição Detalhada:
                 </label>
-        <textarea id="description" name="description" required></textarea>
-        <br>
+                <textarea id="description" name="description" placeholder="Descreva com detalhes suas expectativas ou requisitos para o serviço" required></textarea>
+                <br>
+
     
                 <!-- Orçamento -->
                 <label for="budget">
                     <img src="{{ url_for('static', filename='images/orcamento.png') }}" alt="Orçamento" class="imagem-lado">
-                    Orçamento Disponível:
+                    Preferência de Orçamento:
                 </label>
-        <input type="text" id="budget" name="budget" required>
-        <br>
+                <input type="text" id="budget" name="budget" placeholder="Digite o valor que considera justo para o serviço" required>
+                <br>
     
                 <!-- Prazo/Urgência -->
                 <label for="urgency">
@@ -72,25 +73,25 @@
         </select>
         <br>
     
-                <!-- Localização -->
-                <label for="location">
-                    <img src="{{ url_for('static', filename='images/CEP.png') }}" alt="CEP" class="imagem-lado">
-                    CEP (se aplicável):
-                </label>
-
-        <input type="text" id="location" name="location">
+        <!-- Localização -->
+        <label for="location">
+            <img src="{{ url_for('static', filename='images/CEP.png') }}" alt="CEP" class="imagem-lado">
+            CEP (se aplicável):
+        </label>
+        <input type="text" id="location" name="location" placeholder="Digite o CEP do local relacionado (opcional)">
         <br>
     
-                <!-- Rua -->
-                <label for="street">
-                    <img src="{{ url_for('static', filename='images/rua.png') }}" alt="Rua" class="imagem-lado">
-                    Rua:
-                </label>
-        <input type="text" id="street" name="street" readonly>
+        <!-- Rua -->
+        <label for="street">
+            <img src="{{ url_for('static', filename='images/rua.png') }}" alt="Rua" class="imagem-lado">
+            Rua:
+        </label>
+        <input type="text" id="street" name="street" placeholder="Preenchido automaticamente após informar o CEP" readonly>
         <br>
+
     
         <label for="neighborhood">Bairro:</label>
-        <input type="text" id="neighborhood" name="neighborhood" readonly>
+        <input type="text" id="neighborhood" name="neighborhood" placeholder="Preenchido automaticamente após informar o CEP" readonly>
         <br>
     
                 <!-- Cidade -->
@@ -98,14 +99,14 @@
                     <img src="{{ url_for('static', filename='images/a.png') }}" alt="Cidade" class="imagem-lado">
                     Cidade:
                 </label>
-        <input type="text" id="city" name="city" readonly>
+        <input type="text" id="city" name="city" placeholder="Preenchido automaticamente após informar o CEP" readonly>
         <br>
     
         <label for="state">
             <img src="{{ url_for('static', filename='images/BRASIL_regial.png') }}" alt="Estado" class="imagem-lado">
             Estado:
         </label>
-        <input type="text" id="state" name="state" readonly>
+        <input type="text" id="state" name="state" placeholder="Preenchido automaticamente após informar o CEP" readonly>
         <br>
     
                 <!-- Forma de Contato -->
@@ -129,14 +130,62 @@
         
         
         
-                <!-- Data/Hora de Contato -->
-                <label for="contactDate">
-                    <img src="{{ url_for('static', filename='images/data-limite.png') }}" alt="Data/Hora de Contato" class="imagem-lado">
-                    Data/Hora de Contato:
-                </label>
-        <input type="datetime-local" id="contactDate" name="contactDate" required>
-        <br>
-    
+    <!-- Dias da Semana e Horários de Contato -->
+    <label for="contactDays">
+        <img src="{{ url_for('static', filename='images/data-limite.png') }}" alt="Dias e Horários de Contato" class="imagem-lado">
+        Dias e Horários de Contato:
+    </label>
+    <div id="contactDays" style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <!-- Segunda-feira -->
+        <div class="day-selector">
+            <input type="checkbox" id="monday" name="contactDays[]" value="monday">
+            <label for="monday" class="day-label">seg</label>
+            <input type="time" id="mondayTime" name="contactTime[monday]" disabled>
+        </div>
+
+        <!-- Terça-feira -->
+        <div class="day-selector">
+            <input type="checkbox" id="tuesday" name="contactDays[]" value="tuesday">
+            <label for="tuesday" class="day-label">ter</label>
+            <input type="time" id="tuesdayTime" name="contactTime[tuesday]" disabled>
+        </div>
+
+        <!-- Quarta-feira -->
+        <div class="day-selector">
+            <input type="checkbox" id="wednesday" name="contactDays[]" value="wednesday">
+            <label for="wednesday" class="day-label">qua</label>
+            <input type="time" id="wednesdayTime" name="contactTime[wednesday]" disabled>
+        </div>
+
+        <!-- Quinta-feira -->
+        <div class="day-selector">
+            <input type="checkbox" id="thursday" name="contactDays[]" value="thursday">
+            <label for="thursday" class="day-label">qui</label>
+            <input type="time" id="thursdayTime" name="contactTime[thursday]" disabled>
+        </div>
+
+        <!-- Sexta-feira -->
+        <div class="day-selector">
+            <input type="checkbox" id="friday" name="contactDays[]" value="friday">
+            <label for="friday" class="day-label">sex</label>
+            <input type="time" id="fridayTime" name="contactTime[friday]" disabled>
+        </div>
+
+        <!-- Sábado -->
+        <div class="day-selector">
+            <input type="checkbox" id="saturday" name="contactDays[]" value="saturday">
+            <label for="saturday" class="day-label">sáb</label>
+            <input type="time" id="saturdayTime" name="contactTime[saturday]" disabled>
+        </div>
+
+        <!-- Domingo -->
+        <div class="day-selector">
+            <input type="checkbox" id="sunday" name="contactDays[]" value="sunday">
+            <label for="sunday" class="day-label">dom</label>
+            <input type="time" id="sundayTime" name="contactTime[sunday]" disabled>
+        </div>
+    </div>
+    <br>
                 <!-- Comentários -->
                 <label for="comments">
                     <img src="{{ url_for('static', filename='images/bate_papo_comentarios.png') }}" alt="Comentários" class="imagem-lado">

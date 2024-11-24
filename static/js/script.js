@@ -93,6 +93,7 @@ async function carregarMaisServicos() {
             `<video src="/uploads/video/${vidId}" controls class="${itemIndex++ === 0 ? 'active' : ''}"></video>`
         ).join('');
         console.log('id do prestador', service)
+
         serviceElement.innerHTML = `
             <div class="titulo-container">
                 <h1>Serviços Disponíveis</h1>
@@ -129,7 +130,6 @@ async function carregarMaisServicos() {
         container.appendChild(serviceElement);
         servicesElements.push(serviceElement);  // Adiciona o serviço à lista de serviços
     
-        // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
         // Adicionando o evento de clique na foto e no nome para abrir o perfil do prestador
         const responsavelInfo = serviceElement.querySelector(`#responsavel-${service.id}`);
                 // Adiciona os listeners aos botões de navegação após criá-los
@@ -373,7 +373,7 @@ async function carregarMaisServicos() {
             .catch(error => {
                 console.error('Erro ao buscar os detalhes do serviço:', error);
             });
-    }
+        }
         
         // Verificar se os botões de navegação existem antes de adicionar o evento
         const nextBtn = serviceElement.querySelector('.next');
@@ -488,22 +488,24 @@ function toggleMensagem() {
         
 
 document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('read-more-btn')) {
-        const btn = event.target;
-        const shortDescription = btn.previousElementSibling.previousElementSibling;
-        const fullDescription = btn.previousElementSibling;
-        
-        if (fullDescription.style.display === 'none') {
-            fullDescription.style.display = 'inline';
-            shortDescription.style.display = 'none';
-            btn.textContent = 'Ler menos';
-        } else {
-            fullDescription.style.display = 'none';
-            shortDescription.style.display = 'inline';
-            btn.textContent = 'Ler mais';
+        if (event.target.classList.contains('read-more-btn')) {
+            const btn = event.target;
+            const descriptionContainer = btn.parentElement; // Obtém o contêiner pai
+            const shortDescription = descriptionContainer.querySelector('.short-description');
+            const fullDescription = descriptionContainer.querySelector('.full-description');
+            
+            if (fullDescription.style.display === 'none') {
+                fullDescription.style.display = 'block'; // Mostra a descrição completa
+                shortDescription.style.display = 'none'; // Esconde a descrição curta
+                btn.textContent = 'Ler menos';
+            } else {
+                fullDescription.style.display = 'none'; // Esconde a descrição completa
+                shortDescription.style.display = 'inline'; // Mostra a descrição curta
+                btn.textContent = 'Ler mais';
+            }
         }
-    }
-});
+    });
+
 
 function resetHorizontalCarousel(serviceElement) {
     const gallery = serviceElement.querySelector('.gallery');
@@ -512,6 +514,7 @@ function resetHorizontalCarousel(serviceElement) {
     const prevButton = serviceElement.querySelector('.prev'); // Botão anterior
     const solicitarServicoBtn = serviceElement.querySelector('.solicitar-servico-btn');
     const toggleButton = document.getElementById('toggleViewBtn'); // Obtém o botão de alternância
+    const descriptionContainers = serviceElement.querySelectorAll('.description-container'); // Contêineres de descrição
     let activeIndex = 0;
 
     // Capturar apenas imagens e vídeos, excluindo .perfil-foto
@@ -547,7 +550,6 @@ function resetHorizontalCarousel(serviceElement) {
         toggleButton.innerHTML = `${imagemCompletaIcon} Ver Imagem Completa`;
     }
 
-
     // Remove os estilos de tamanho aplicados anteriormente para todas as mídias
     imagesAndVideos.forEach(media => {
         media.style.width = '';
@@ -557,8 +559,21 @@ function resetHorizontalCarousel(serviceElement) {
         nextButton.style.top = '';
         nextButton.style.right = '';
     });
-    
+
+    // Resetar o estado do botão "Ler Mais" para todas as descrições
+    descriptionContainers.forEach(container => {
+        const shortDescription = container.querySelector('.short-description');
+        const fullDescription = container.querySelector('.full-description');
+        const readMoreButton = container.querySelector('.read-more-btn');
+
+        if (shortDescription && fullDescription && readMoreButton) {
+            shortDescription.style.display = 'inline'; // Exibe a descrição curta
+            fullDescription.style.display = 'none'; // Esconde a descrição completa
+            readMoreButton.textContent = 'Ler mais'; // Restaura o texto do botão
+        }
+    });
 }
+    
 
 
 function showNextService() {

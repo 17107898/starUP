@@ -92,3 +92,13 @@ document.getElementById('clienteForm').addEventListener('submit', function(event
         responseElement.textContent = 'Erro ao cadastrar cliente. Tente novamente mais tarde.';
     });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const termosAceitos = urlParams.get('termos_aceitos') === 'true'; // Verifica se o checkbox foi confirmado
+
+    const termsCheckbox = document.getElementById("terms");
+    if (termosAceitos) {
+        termsCheckbox.checked = true; // Marca o checkbox automaticamente
+    }
+});

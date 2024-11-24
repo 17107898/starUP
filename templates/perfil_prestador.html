@@ -24,6 +24,28 @@
                 class="logout-icon"
                 onclick="logoutUser()">
         </div>
+        <!-- Botão para abrir o pop-up -->
+        {% if is_owner %}
+        <div class="abrir-carrosel-perfil">
+            <button type="button" class="abrir-carrosel-perfil-btn" onclick="openModal()">
+                <img src="{{ url_for('static', filename='images/visualizado.png') }}" 
+                     alt="Abrir Carrossel Perfil" 
+                     class="popup-icon">
+            </button>
+        </div>
+        
+        <!-- Fundo escuro -->
+        <div id="modal-backdrop" class="modal-backdrop" style="display: none;"></div>
+
+        <!-- Contêiner Branco -->
+        <div id="popup-container" class="popup-container" style="display: none;">
+            <span class="popup-close-fechar" onclick="closeModal()">&times;</span>
+            <div id="popup-content">
+                <!-- O texto será adicionado aqui via JS -->
+            </div>
+        </div>
+
+    {% endif %}
             <!-- Popup de notificações -->
             <div id="popupSolicitacoes" class="popup-solicitacao" style="display: none;">
                 <div class="popup-content-solicitacao">
@@ -376,11 +398,121 @@
                 <option value="telefone" {% if prestador.metodo_contato == 'telefone' %}selected{% endif %}>Telefone</option>
                 <option value="whatsapp" {% if prestador.metodo_contato == 'whatsapp' %}selected{% endif %}>WhatsApp</option>
             </select>
-                <label for="data_contato">Data Preferida para Contato:</label>
-                <input type="date" name="data_contato" value="{{ prestador.data_contato }}">
+                <!-- <input type="date" name="data_contato" value="{{ prestador.data_contato }}"> -->
+                <!-- Dias da Semana e Horários de Contato -->
+                <div id="dias-horas-container" data-dias-horas-contato='{{ prestador.data_contato | tojson }}'></div>
+                <label for="contactDays">
+                    <img src="{{ url_for('static', filename='images/data-limite.png') }}" alt="Dias e Horários de Contato" class="imagem-lado">
+                    Dias e Horários de Contato:
+                </label>
+                <div id="contactDays" style="display: flex; gap: 15px; flex-wrap: wrap;" data-dias-horas-contato='{{ prestador.data_contato | tojson }}'>
+                    <!-- Segunda-feira -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="monday" name="contactDays[]" value="monday">
+                        <label for="monday" class="day-label">seg</label>
+                        <input type="time" id="mondayTime" name="contactTime[monday]" disabled>
+                    </div>
+
+                    <!-- Terça-feira -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="tuesday" name="contactDays[]" value="tuesday">
+                        <label for="tuesday" class="day-label">ter</label>
+                        <input type="time" id="tuesdayTime" name="contactTime[tuesday]" disabled>
+                    </div>
+
+                    <!-- Quarta-feira -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="wednesday" name="contactDays[]" value="wednesday">
+                        <label for="wednesday" class="day-label">qua</label>
+                        <input type="time" id="wednesdayTime" name="contactTime[wednesday]" disabled>
+                    </div>
+
+                    <!-- Quinta-feira -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="thursday" name="contactDays[]" value="thursday">
+                        <label for="thursday" class="day-label">qui</label>
+                        <input type="time" id="thursdayTime" name="contactTime[thursday]" disabled>
+                    </div>
+
+                    <!-- Sexta-feira -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="friday" name="contactDays[]" value="friday">
+                        <label for="friday" class="day-label">sex</label>
+                        <input type="time" id="fridayTime" name="contactTime[friday]" disabled>
+                    </div>
+
+                    <!-- Sábado -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="saturday" name="contactDays[]" value="saturday">
+                        <label for="saturday" class="day-label">sáb</label>
+                        <input type="time" id="saturdayTime" name="contactTime[saturday]" disabled>
+                    </div>
+
+                    <!-- Domingo -->
+                    <div class="day-selector">
+                        <input type="checkbox" id="sunday" name="contactDays[]" value="sunday">
+                        <label for="sunday" class="day-label">dom</label>
+                        <input type="time" id="sundayTime" name="contactTime[sunday]" disabled>
+                    </div>
+                </div>
+
             {% else %}
             <p><strong>Método de Contato:</strong> {{ prestador.metodo_contato }}</p>
-                <p><strong>Data Preferida para Contato:</strong> {{ prestador.data_contato }}</p>
+            <label for="contactDays">
+                <img src="{{ url_for('static', filename='images/data-limite.png') }}" alt="Dias e Horários de Contato" class="imagem-lado">
+                Dias e Horários de Contato:
+            </label>
+            <div id="contactDays" style="display: flex; gap: 15px; flex-wrap: wrap;" data-dias-horas-contato='{{ prestador.data_contato | tojson }}'>
+                <!-- Segunda-feira -->
+                <div class="day-selector">
+                    <input type="checkbox" id="monday" name="contactDays[]" value="monday" disabled>
+                    <label for="monday" class="day-label">seg</label>
+                    <input type="time" id="mondayTime" name="contactTime[monday]" disabled>
+                </div>
+            
+                <!-- Terça-feira -->
+                <div class="day-selector">
+                    <input type="checkbox" id="tuesday" name="contactDays[]" value="tuesday" disabled>
+                    <label for="tuesday" class="day-label">ter</label>
+                    <input type="time" id="tuesdayTime" name="contactTime[tuesday]" disabled>
+                </div>
+            
+                <!-- Quarta-feira -->
+                <div class="day-selector">
+                    <input type="checkbox" id="wednesday" name="contactDays[]" value="wednesday" disabled>
+                    <label for="wednesday" class="day-label">qua</label>
+                    <input type="time" id="wednesdayTime" name="contactTime[wednesday]" disabled>
+                </div>
+            
+                <!-- Quinta-feira -->
+                <div class="day-selector">
+                    <input type="checkbox" id="thursday" name="contactDays[]" value="thursday" disabled>
+                    <label for="thursday" class="day-label">qui</label>
+                    <input type="time" id="thursdayTime" name="contactTime[thursday]" disabled>
+                </div>
+            
+                <!-- Sexta-feira -->
+                <div class="day-selector">
+                    <input type="checkbox" id="friday" name="contactDays[]" value="friday" disabled>
+                    <label for="friday" class="day-label">sex</label>
+                    <input type="time" id="fridayTime" name="contactTime[friday]" disabled>
+                </div>
+            
+                <!-- Sábado -->
+                <div class="day-selector">
+                    <input type="checkbox" id="saturday" name="contactDays[]" value="saturday" disabled>
+                    <label for="saturday" class="day-label">sáb</label>
+                    <input type="time" id="saturdayTime" name="contactTime[saturday]" disabled>
+                </div>
+            
+                <!-- Domingo -->
+                <div class="day-selector">
+                    <input type="checkbox" id="sunday" name="contactDays[]" value="sunday" disabled>
+                    <label for="sunday" class="day-label">dom</label>
+                    <input type="time" id="sundayTime" name="contactTime[sunday]" disabled>
+                </div>
+            </div>
+            
             {% endif %}
         </div>
         
@@ -388,7 +520,7 @@
         <!-- Mídias Carregadas -->
         <div class="media-section container">
             <h2>Documentos e Vídeos</h2>
-            <div class="gallery">
+            <div class="gallery-midia">
                 <h3>Imagens Carregadas:</h3>
                 <div id="preview" class="gallery-container">
                     {% for image_id in images %}
@@ -483,13 +615,15 @@
     <script src="{{ url_for('static', filename='js/perfil_prestador_atualizar.js') }}"></script>
     {% endif %}
 </form>
+
 <!-- Coloque o botão de "Solicitar Serviço" fora do formulário de edição -->
 <div class="action-buttons">
     {% if not is_owner %}
         <!-- Botão de confirmação de solicitação -->
-        <button class="solicitar-servico-btn" onclick="checarSolicitacaoServico()">Solicitar Serviço</button>
-        {% endif %}
+        <button type="button" class="solicitar-servico-btn" onclick="checarSolicitacaoServico()">Solicitar Serviço</button>
+    {% endif %}
 </div>
+
 
 <!-- Popup de confirmação de solicitação -->
 <div id="popupSolicitacao" class="popup">
@@ -554,7 +688,7 @@
         </div>
 
         <!-- Botão de confirmação -->
-        <button class="confirmar-servico-btn" onclick="confirmarSolicitacao()">Confirmar Solicitação</button>
+        <button type="button" class="confirmar-servico-btn" onclick="confirmarSolicitacao()">Confirmar Solicitação</button>
     </div>
 </div>
 
@@ -565,7 +699,7 @@
         var isOwner = {{ is_owner | tojson }};
         // Os dados de feedback já estão disponíveis no lado do servidor, você pode renderizá-los no JavaScript como um array JSON
         var feedbacks = {{ prestador.feedbacks | tojson }};
-
+        // Dados do backend (enviados pelo Flask)
 
 
         // Defina uma variável global no HTML com o valor dos dados do prestador

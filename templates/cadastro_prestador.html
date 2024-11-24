@@ -61,7 +61,9 @@
             <!-- Checkbox de Termos e Condições -->
             <div class="terms-container">
                 <input type="checkbox" id="terms" name="terms" required>
-                <label for="terms">Concordo com os <a href="#">Termos e Condições</a> e a <a href="#">Política de Privacidade</a></label>
+                <label for="terms">
+                    Concordo com os <a href="{{ url_for('termos_condicoes', origem='prestador') }}">Termos e Condições</a> e a <a href="{{ url_for('politica_privacidade') }}">Política de Privacidade</a>.
+                </label>
             </div>
         
             <button type="submit">Cadastrar</button>

@@ -192,3 +192,91 @@ button[type="submit"]:hover {
     text-align: center;
     color: #e74c3c; /* Cor do texto de erro */
 }
+
+/* Container para os dias */
+#contactDays {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Ocultando o checkbox */
+.day-selector input[type="checkbox"] {
+    display: none;
+}
+
+/* Estilo normal da label */
+.day-selector .day-label {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Estilo quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked + .day-label {
+    background-color: #007bff; /* Cor de fundo quando selecionado */
+    color: #fff; /* Texto branco */
+    border-color: #007bff;
+}
+
+/* Estilo do campo de hora */
+.day-selector input[type="time"] {
+    margin-top: -5px;
+    font-size: 14px;
+    display: none; /* Inicialmente escondido */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    width: 100%; /* Ajuste para ocupação total do container */
+    max-width: 150px; /* Tamanho máximo */
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); /* Pequeno sombreado */
+}
+
+/* Exibe o campo de hora quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked ~ input[type="time"] {
+    display: block;
+}
+
+/* Estilo do botão (label) quando selecionado */
+.day-selector label {
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    color: #000; /* Cor do texto padrão */
+    border: 1px solid #ccc; /* Borda padrão */
+    background-color: #f8f8f8; /* Fundo padrão */
+}
+
+/* Label destacada quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked + label {
+    background-color: #28a745; /* Fundo verde */
+    color: #fff; /* Texto branco */
+    border-color: #28a745; /* Borda verde */
+}
+
+/* Manutenção do estado da label quando o horário é confirmado */
+.day-selector label.confirmed {
+    background-color: #007bff; /* Verde mais escuro para diferenciar */
+    color: #fff;
+    border-color: #007bff;
+}
+
+/* Mostra o campo de hora quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked ~ input[type="time"] {
+    display: block;
+}
+
+

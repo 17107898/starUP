@@ -15,6 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import pandas as pd
 import numpy as np
 from decimal import Decimal
+import json
 app = Flask(__name__)
 
 
@@ -351,6 +352,21 @@ def obter_dados_prestador(prestador_id):
     }
     return prestador_dados
 
+# Transformar `data_contato` em uma estrutura organizada
+def tratar_data_contato(data_contato):
+    dias_horas = {}
+    if data_contato:  # Verifica se há algum dado
+        try:
+            pares = data_contato.split(";")  # Divide pelos dias
+            for par in pares:
+                dia, hora = par.strip().split(" ")  # Divide o dia da hora
+                dias_horas[dia] = hora
+        except ValueError:
+            # Caso haja algum erro no formato dos dados, retornar vazio
+            print("Erro ao tratar data_contato. Formato inválido:", data_contato)
+            return {}
+    return dias_horas
+
 
 @app.route('/perfil_prestador', methods=['GET'])
 def perfil_prestador():
@@ -459,6 +475,8 @@ def perfil_prestador():
     cursor.close()
     db.close()
 
+    dias_horas_contato = tratar_data_contato(prestador[0]['data_contato'])
+    print(f"como está tratado dia e hora: {dias_horas_contato}")
 
     prestador_dados = {
         'nome': prestador[0]['nome'],
@@ -475,7 +493,7 @@ def perfil_prestador():
         'cidade': prestador[0]['cidade'],
         'estado': prestador[0]['estado'],
         'metodo_contato': prestador[0]['metodo_contato'],
-        'data_contato': prestador[0]['data_contato'],
+        'data_contato': dias_horas_contato,
         'comentarios': prestador[0]['comentarios'],
         'feedbacks': feedbacks,
     }
@@ -505,6 +523,140 @@ def perfil_prestador():
         videos=videos,
         is_owner=is_owner
     )
+@app.route('/api/get-prestador', methods=['GET'])
+def get_prestador():
+    # Receber o ID do prestador como parâmetro de consulta
+    prestador_id = request.args.get('prestador_id')
+
+    if not prestador_id:
+        return jsonify({"error": "prestador_id não fornecido"}), 400
+
+    # Query para buscar dados dos prestadores e serviços
+    query_prestadores = """
+        SELECT prestadores.prestador_id, 
+               prestadores.nome, 
+               servicos.tipo_servico AS servico, 
+               servicos.descricao, 
+               servicos.preferencias_prestador, 
+               servicos.localizacao, 
+               servicos.rua, 
+               servicos.bairro, 
+               servicos.cidade, 
+               servicos.estado,
+               prestadores.nota
+        FROM bd_servicos.prestadores
+        JOIN bd_servicos.servicos ON prestadores.prestador_id = servicos.prestador_id
+        WHERE prestadores.prestador_id = %s
+    """
+
+    # Query para buscar uploads (imagens e vídeos)
+    query_uploads = """
+        SELECT prestador_id, 
+               id AS upload_id, 
+               tipo_arquivo, 
+               perfil_foto
+        FROM bd_servicos.uploads
+        WHERE prestador_id = %s
+    """
+
+    try:
+        # Conectar ao banco de dados
+        db = connect_to_db()
+        cursor = db.cursor(dictionary=True)
+
+        # Executar a consulta para prestadores
+        cursor.execute(query_prestadores, (prestador_id,))
+        prestadores_result = cursor.fetchall()
+
+        # Se nenhum prestador for encontrado
+        if not prestadores_result:
+            return jsonify({"error": "Prestador não encontrado"}), 404
+
+        # Executar a consulta para uploads
+        cursor.execute(query_uploads, (prestador_id,))
+        uploads_result = cursor.fetchall()
+
+        # Criar DataFrame de prestadores
+        import pandas as pd
+        prestadores_df = pd.DataFrame(prestadores_result)
+
+        # Processar os dados usando a função fornecida
+        resultado = processar_prestadores(prestadores_df, uploads_result)
+
+        # Retornar os dados processados
+        return jsonify(resultado)
+
+    except Exception as e:
+        # Log detalhado do erro no servidor
+        print(f"Erro ao processar o ID {prestador_id}: {str(e)}")
+        return jsonify({"error": "Erro interno no servidor", "details": str(e)}), 500
+
+    finally:
+        # Fechar o cursor e a conexão com o banco de dados
+        if cursor:
+            cursor.close()
+        if db:
+            db.close()
+
+
+def processar_prestadores(prestadores_df, prestadores_servicos_uploads):
+    prestadores_ids = set()  # Conjunto para evitar duplicações
+    resultado = []  # Lista para armazenar os dados processados
+
+    for _, prestador in prestadores_df.iterrows():
+        if prestador['prestador_id'] not in prestadores_ids:
+            prestadores_ids.add(prestador['prestador_id'])
+
+            # Foto de perfil
+            perfil_foto = next(
+                (upload['upload_id'] for upload in prestadores_servicos_uploads
+                 if upload['prestador_id'] == prestador['prestador_id'] and
+                 upload['tipo_arquivo'] == 'imagem' and upload['perfil_foto'] is not None),
+                None
+            )
+
+            # Imagens (exceto a foto de perfil)
+            images = [
+                upload['upload_id'] for upload in prestadores_servicos_uploads
+                if upload['prestador_id'] == prestador['prestador_id'] and
+                upload['tipo_arquivo'] == 'imagem' and upload['upload_id'] != perfil_foto
+            ]
+
+            # Vídeos
+            videos = [
+                upload['upload_id'] for upload in prestadores_servicos_uploads
+                if upload['prestador_id'] == prestador['prestador_id'] and upload['tipo_arquivo'] == 'video'
+            ]
+
+            # Tipo de serviço legível
+            service_type_legivel = SERVICE_LABELS.get(prestador['servico'], "Serviço Desconhecido")
+
+            # Estrutura do prestador
+            service = {
+                "id": prestador['prestador_id'],
+                "perfil_foto": perfil_foto,
+                "name": prestador['nome'],
+                "service_name": service_type_legivel,
+                "description": prestador['descricao'],
+                "images": images,
+                "videos": videos,
+                "location": {
+                    "cep": prestador['localizacao'],
+                    "street": prestador['rua'],
+                    "neighborhood": prestador['bairro'],
+                    "city": prestador['cidade'],
+                    "state": prestador['estado']
+                },
+                "person_name": prestador['nome'],
+                "rating": prestador['nota'],
+                "bio": prestador['preferencias_prestador']
+            }
+
+            resultado.append(service)
+
+    return resultado
+
+
 meses_portugues = {
     1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
     7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
@@ -838,6 +990,8 @@ def remover_midia():
 @app.route('/api/editar_prestador', methods=['POST'])
 def editar_prestador():
     prestador_id = session.get('prestador_id')
+    dias_horarios_contato = request.form.get('dias_horarios_contato', '')  # Obtem o valor enviado
+    print(f"Dias e horários recebidos: {dias_horarios_contato}")
 
     # Conectar ao banco de dados
     db = connect_to_db()
@@ -855,7 +1009,21 @@ def editar_prestador():
     cidade = request.form.get('cidade')
     estado = request.form.get('estado')
     metodo_contato = request.form.get('metodo_contato')
-    data_contato = request.form.get('data_contato')
+    contact_days_and_times = request.form.get('contactDaysAndTimes')
+    if contact_days_and_times:
+        contact_days_and_times = json.loads(contact_days_and_times)
+    else:
+        contact_days_and_times = []
+
+    if not contact_days_and_times:
+        return jsonify({
+            'message': 'Por favor, selecione pelo menos um dia e horário de contato.',
+            'success': False
+        }), 400
+
+    formatted_contact_date = "; ".join([f"{item['day']} {item['time']}" for item in contact_days_and_times])
+
+
 
     # Atualizar os dados do prestador no banco de dados
     cursor.execute("""
@@ -868,7 +1036,7 @@ def editar_prestador():
         UPDATE bd_servicos.servicos
         SET tipo_servico = %s, descricao = %s, orcamento = %s, urgencia = %s, localizacao = %s, rua = %s, bairro = %s, cidade = %s, estado = %s, metodo_contato = %s, data_contato = %s
         WHERE prestador_id = %s
-    """, (service_type, descricao, orcamento, urgencia, localizacao, rua, bairro, cidade, estado, metodo_contato, data_contato, prestador_id))
+    """, (service_type, descricao, orcamento, urgencia, localizacao, rua, bairro, cidade, estado, metodo_contato, formatted_contact_date, prestador_id))
 
     # Verificar se uma nova foto de perfil foi enviada
     # Verificar se uma nova foto de perfil foi enviada
@@ -1060,6 +1228,12 @@ def get_video_from_db(upload_id):
 @app.route('/', methods=['GET'])
 def index():
     return render_template('cadastro.html')
+@app.route('/termos_condicoes', methods=['GET'])
+def termos_condicoes():
+    return render_template('termos_condicoes.html')
+@app.route('/politica_privacidade', methods=['GET'])
+def politica_privacidade():
+    return render_template('politica_privacidade.html')
 # Rota para a página de cadastro de cliente
 @app.route('/cadastro_cliente', methods=['GET'])
 def cadastro_cliente():
@@ -1781,111 +1955,121 @@ def prestador_servico():
 # Rota para tratar a solicitação de serviço do prestador
 @app.route('/api/cadastrar-servico', methods=['POST'])
 def api_prestador_solicitar_servico():
-    # Coletar dados do formulário
-    data = request.form
-    prestador_id = data.get('prestadorId')  # Obter o ID do prestador do formulário ao invés da sessão
+    try:
+        # Coletar dados do formulário
+        data = request.form
+        prestador_id = data.get('prestadorId')  # Obter o ID do prestador do formulário
+        service_type_legivel = data.get('serviceType')  # Este é o valor legível recebido do front-end
+        description = data.get('description')
+        budget = data.get('budget')
+        urgency = data.get('urgency')
+        location = data.get('location')  # CEP
+        street = data.get('street')  # Rua
+        neighborhood = data.get('neighborhood')  # Bairro
+        city = data.get('city')  # Cidade
+        state = data.get('state')  # Estado
+        contact_method = data.get('contactMethod')  # Método de contato escolhido (email, telefone, whatsapp)
+        contact_detail = data.get('contactDetail')  # Detalhe do contato (email, número de telefone, número do WhatsApp)
+        comments = data.get('comments')
+        provider_preferences = data.get('providerPreferences')
 
-    service_type_legivel = data.get('serviceType')  # Este é o valor legível recebido do front-end
-    description = data.get('description')
-    budget = data.get('budget')
-    urgency = data.get('urgency')
-    location = data.get('location')  # CEP
-    street = data.get('street')  # Rua
-    neighborhood = data.get('neighborhood')  # Bairro
-    city = data.get('city')  # Cidade
-    state = data.get('state')  # Estado
-    contact_method = data.get('contactMethod')  # Método de contato escolhido (email, telefone, whatsapp)
-    contact_detail = data.get('contactDetail')  # Detalhe do contato (email, número de telefone, número do WhatsApp)
-    contact_date = data.get('contactDate')
-    comments = data.get('comments')
-    provider_preferences = data.get('providerPreferences')
-    certificados = request.files.getlist('certificados')
-    print(f'como está cegando: {contact_detail}')
-    # Mapeamento reverso: pegar a chave correspondente ao valor legível
-    SERVICE_LABELS_REVERSE = {v: k for k, v in SERVICE_LABELS.items()}
-    service_type = SERVICE_LABELS_REVERSE.get(service_type_legivel, None)
-
-    # Verificar se o valor legível corresponde a uma chave válida
-    if not service_type:
-        return jsonify({
-            'message': 'Tipo de serviço inválido.',
-            'success': False
-        }), 400  # Código de erro HTTP 400 - Bad Request
-
-    # Verificar se já existe o mesmo serviço cadastrado para o prestador
-    cursor.execute("""
-        SELECT id FROM servicos WHERE prestador_id = %s AND tipo_servico = %s
-    """, (prestador_id, service_type))
-    
-    duplicata = cursor.fetchone()
-    
-    if duplicata:
-        return jsonify({
-            'message': 'O prestador já possui um serviço desse tipo cadastrado.',
-            'success': False
-        }), 400
-
-    # Atualizar método de contato na tabela `prestadores`
-    cursor.execute("""
-        UPDATE bd_servicos.prestadores
-        SET contato = %s
-        WHERE prestador_id = %s
-    """, (contact_detail, prestador_id))
-
-    db.commit()
-
-    # Inserindo dados na tabela `servicos`
-    cursor.execute(
-        """
-        INSERT INTO bd_servicos.servicos (prestador_id, tipo_servico, descricao, orcamento, urgencia, localizacao, 
-                                        rua, bairro, cidade, estado, metodo_contato, data_contato, comentarios, preferencias_prestador)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """,
-        (prestador_id, service_type, description, budget, urgency, location, 
-        street, neighborhood, city, state, contact_method, contact_date, comments, provider_preferences)
-    )
-
-    db.commit()
-
-    # Iterando sobre os arquivos de certificados recebidos
-    for certificado in certificados:
-        print(f'certificados carregados: {certificado.filename}')
-        if certificado and certificado.filename != '':
-            # Verificar se já existe um certificado com o mesmo nome para evitar duplicação
-            cursor.execute("""
-                SELECT id FROM bd_servicos.uploads 
-                WHERE prestador_id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
-            """, (prestador_id, certificado.filename))
-
-            duplicado = cursor.fetchone()
-
-            if duplicado:
-                print(f"Certificado {certificado.filename} já existe. Pulando inserção.")
-                continue
-
-            # Ler o conteúdo binário do certificado para armazenar no banco de dados
-            certificado_binario = certificado.read()
-            
-            # Inserir o novo certificado no banco de dados
-            cursor.execute("""
-                INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
-                VALUES (%s, %s, 'certificado', %s, NOW())
-            """, (prestador_id, certificado_binario, certificado.filename))
-
-            print(f"Certificado {certificado.filename} foi inserido com sucesso.")
-        
+        # Processar os dias e horários de contato
+        contact_days_and_times = data.get('contactDaysAndTimes')
+        if contact_days_and_times:
+            contact_days_and_times = json.loads(contact_days_and_times)  # Decodifica o JSON enviado pelo front-end
         else:
-            print(f"Certificado inválido ou sem nome. Pulando.")
+            contact_days_and_times = []
 
-    # Realizar o commit para salvar as alterações
-    db.commit()
-    print("Todos os certificados foram processados e o banco de dados foi atualizado.")
+        # Validar se pelo menos um dia e horário foram selecionados
+        if not contact_days_and_times:
+            return jsonify({
+                'message': 'Por favor, selecione pelo menos um dia e horário de contato.',
+                'success': False
+            }), 400
 
-    return jsonify({
-        'message': 'Serviço enviado com sucesso!',
-        'redirect': url_for('upload_midia'),  # Redirecionar para uma página de upload de mídia (opcional)
-        'success': True
-    })
+        # Formatar os dias e horários para salvar no banco
+        formatted_contact_date = "; ".join([f"{item['day']} {item['time']}" for item in contact_days_and_times])
+
+        # Mapeamento reverso: pegar a chave correspondente ao valor legível
+        SERVICE_LABELS_REVERSE = {v: k for k, v in SERVICE_LABELS.items()}
+        service_type = SERVICE_LABELS_REVERSE.get(service_type_legivel, None)
+
+        # Verificar se o valor legível corresponde a uma chave válida
+        if not service_type:
+            return jsonify({
+                'message': 'Tipo de serviço inválido.',
+                'success': False
+            }), 400  # Código de erro HTTP 400 - Bad Request
+
+        # Verificar se já existe o mesmo serviço cadastrado para o prestador
+        cursor.execute("""
+            SELECT id FROM servicos WHERE prestador_id = %s AND tipo_servico = %s
+        """, (prestador_id, service_type))
+        
+        duplicata = cursor.fetchone()
+        if duplicata:
+            return jsonify({
+                'message': 'O prestador já possui um serviço desse tipo cadastrado.',
+                'success': False
+            }), 400
+
+        # Atualizar método de contato na tabela `prestadores`
+        cursor.execute("""
+            UPDATE bd_servicos.prestadores
+            SET contato = %s
+            WHERE prestador_id = %s
+        """, (contact_detail, prestador_id))
+        db.commit()
+
+        # Inserir o novo serviço na tabela `servicos`
+        cursor.execute("""
+            INSERT INTO bd_servicos.servicos (
+                prestador_id, tipo_servico, descricao, orcamento, urgencia, localizacao, 
+                rua, bairro, cidade, estado, metodo_contato, data_contato, comentarios, preferencias_prestador
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            prestador_id, service_type, description, budget, urgency, location,
+            street, neighborhood, city, state, contact_method, formatted_contact_date, comments, provider_preferences
+        ))
+        db.commit()
+
+        # Processar os certificados carregados
+        certificados = request.files.getlist('certificados')
+        for certificado in certificados:
+            if certificado and certificado.filename != '':
+                # Verificar duplicidade
+                cursor.execute("""
+                    SELECT id FROM bd_servicos.uploads 
+                    WHERE prestador_id = %s AND tipo_certificado = %s AND tipo_arquivo = 'certificado'
+                """, (prestador_id, certificado.filename))
+                duplicado = cursor.fetchone()
+
+                if duplicado:
+                    print(f"Certificado {certificado.filename} já existe. Pulando inserção.")
+                    continue
+
+                # Inserir o novo certificado
+                certificado_binario = certificado.read()
+                cursor.execute("""
+                    INSERT INTO bd_servicos.uploads (prestador_id, arquivo, tipo_arquivo, tipo_certificado, created_at)
+                    VALUES (%s, %s, 'certificado', %s, NOW())
+                """, (prestador_id, certificado_binario, certificado.filename))
+        
+        db.commit()
+
+        return jsonify({
+            'message': 'Serviço enviado com sucesso!',
+            'redirect': url_for('upload_midia'),
+            'success': True
+        })
+
+    except Exception as e:
+        print(f"Erro: {e}")
+        return jsonify({
+            'message': 'Erro ao processar a solicitação.',
+            'success': False
+        }), 500
 
 
 # ------------------------------------

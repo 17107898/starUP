@@ -218,7 +218,7 @@ function validateImages() {
     console.log("Total Media Count:", getTotalMediaCount());
 
     // Checa se excedeu o limite de 4 arquivos
-    if (getTotalMediaCount() >= 4) {
+    if (getTotalMediaCount() === 4) {
         showTemporaryMessage("Você já enviou 4 arquivos, não pode enviar mais mídias.");
 
         // Itera sobre todas as pré-visualizações de arquivos (imagens e vídeos)
@@ -233,9 +233,48 @@ function validateImages() {
                 console.log("Elemento .file-preview não encontrado para o index:", index);
             }
         });
-
+        const saveButton = document.querySelector('.btn-save');
+        if (saveButton) {
+            saveButton.disabled = false; // Habilita o botão
+            saveButton.style.opacity = '1'; // Restaura a opacidade original
+            saveButton.style.cursor = 'pointer'; // Restaura o cursor padrão
+        }
         // Caso o vídeo também deva ser marcado como inválido
         if (storedVideo && storedDocuments.length >= 4) {
+            const videoPreviewElement = document.querySelector('.video-preview');  // Assumindo que o vídeo tenha uma classe 'video-preview'
+            if (videoPreviewElement) {
+                console.log("Marcando o vídeo como inválido:", videoPreviewElement);
+                videoPreviewElement.classList.add('invalid');  // Adiciona classe vermelha no vídeo
+            }
+        }
+    } else if (getTotalMediaCount() >= 5) {
+
+        showTemporaryMessage("Você já enviou 4 mídias. Não é possível enviar mais. Por favor, remova uma mídia existente para continuar.");
+        // Desabilitar o botão de salvar alterações
+        const saveButton = document.querySelector('.btn-save');
+        if (saveButton) {
+            saveButton.disabled = true; // Desabilita o botão
+            saveButton.style.opacity = '0.5'; // Reduz a opacidade para indicar desabilitado
+            saveButton.style.cursor = 'not-allowed'; // Altera o cursor para indicar que está desabilitado
+            uploadVideoIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de vídeo
+            uploadIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de imagens
+    
+        }
+        // Itera sobre todas as pré-visualizações de arquivos (imagens e vídeos)
+        storedDocuments.forEach((file, index) => {
+            const previewElement = document.querySelectorAll('.file-preview')[index];
+            if (previewElement) {
+                if (index >= 4 - (storedVideo ? 1 : 0)) {  // Ajusta a lógica para considerar o vídeo
+                    console.log("Marcando como inválido:", previewElement);
+                    previewElement.classList.add('invalid');  // Adiciona classe vermelha
+                }
+            } else {
+                console.log("Elemento .file-preview não encontrado para o index:", index);
+            }
+        });
+
+        // Caso o vídeo também deva ser marcado como inválido
+        if (storedVideo && storedDocuments.length >= 5) {
             const videoPreviewElement = document.querySelector('.video-preview');  // Assumindo que o vídeo tenha uma classe 'video-preview'
             if (videoPreviewElement) {
                 console.log("Marcando o vídeo como inválido:", videoPreviewElement);
@@ -374,6 +413,7 @@ function getTotalMediaCount() {
     return total;
 }
 
+
 // Função para verificar o limite de mídias e ativar/desativar os campos de upload
 function checkMediaLimit() {
     const totalMedia = storedDocuments.length + (storedVideo ? 1 : 0); // Soma os documentos e o vídeo (se existir)
@@ -384,22 +424,23 @@ function checkMediaLimit() {
     const uploadVideoIcon = document.getElementById('upload-video-icon');
     const saveButton = document.querySelector('.btn-save'); // Captura o botão de salvar
 
-    if (totalMedia >= 4) {
+    if (totalMedia === 4) {
         // Mensagem de limite atingido
         responseMessage.textContent = "Você já enviou 4 arquivos, não pode enviar mais mídias.";
         responseMessage.style.display = 'block'; // Exibe a mensagem
         responseMessage.classList.add('visible'); // Adiciona a classe visível
-
+        const saveButton = document.querySelector('.btn-save');
+        if (saveButton) {
+            saveButton.disabled = false; // Habilita o botão
+            saveButton.style.opacity = '1'; // Restaura a opacidade original
+            saveButton.style.cursor = 'pointer'; // Restaura o cursor padrão
+        }
         // Desabilitar campos e botões
         videoInput.disabled = true; // Desabilita o campo de vídeo
         documentsInput.disabled = true; // Desabilita o campo de imagens
         uploadVideoIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de vídeo
         uploadIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de imagens
-        // if (saveButton) {
-        //     saveButton.disabled = true; // Desabilita o botão de salvar
-        //     saveButton.style.opacity = '0.5'; // Reduz a opacidade para indicar desabilitado
-        //     saveButton.style.cursor = 'not-allowed'; // Altera o cursor para indicar que está desabilitado
-        // }
+
 
         // Marca pré-visualizações adicionais como inválidas
         storedDocuments.forEach((file, index) => {
@@ -408,6 +449,40 @@ function checkMediaLimit() {
                 previewElement.classList.add('invalid'); // Adiciona classe vermelha
             }
         });
+    } else if (getTotalMediaCount() >= 5) {
+
+    showTemporaryMessage("Você já enviou 4 mídias ou mais. Não é possível enviar mais. Por favor, remova uma ou mais mídia(as) existente(es) para continuar.");
+    // Desabilitar o botão de salvar alterações
+    const saveButton = document.querySelector('.btn-save');
+    if (saveButton) {
+        saveButton.disabled = true; // Desabilita o botão
+        saveButton.style.opacity = '0.5'; // Reduz a opacidade para indicar desabilitado
+        saveButton.style.cursor = 'not-allowed'; // Altera o cursor para indicar que está desabilitado
+        uploadVideoIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de vídeo
+        uploadIcon.classList.add('disabled'); // Adiciona a classe de desabilitado ao ícone de imagens
+
+    }
+    // Itera sobre todas as pré-visualizações de arquivos (imagens e vídeos)
+    storedDocuments.forEach((file, index) => {
+        const previewElement = document.querySelectorAll('.file-preview')[index];
+        if (previewElement) {
+            if (index >= 4 - (storedVideo ? 1 : 0)) {  // Ajusta a lógica para considerar o vídeo
+                console.log("Marcando como inválido:", previewElement);
+                previewElement.classList.add('invalid');  // Adiciona classe vermelha
+            }
+        } else {
+            console.log("Elemento .file-preview não encontrado para o index:", index);
+        }
+    });
+
+    // Caso o vídeo também deva ser marcado como inválido
+    if (storedVideo && storedDocuments.length >= 5) {
+        const videoPreviewElement = document.querySelector('.video-preview');  // Assumindo que o vídeo tenha uma classe 'video-preview'
+        if (videoPreviewElement) {
+            console.log("Marcando o vídeo como inválido:", videoPreviewElement);
+            videoPreviewElement.classList.add('invalid');  // Adiciona classe vermelha no vídeo
+        }
+    }
     } else {
         // Remove mensagem e reabilita campos e botões
         responseMessage.textContent = ""; // Limpa a mensagem
@@ -823,28 +898,40 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
     }
 
     const formData = new FormData(this);
-    const perfilFoto = document.getElementById('perfil_foto').files[0];
-    const video = document.getElementById('video').files[0];
-    const certificados = document.getElementById('certificados').files;
+
+    const daysAndTimes = [];
+    document.querySelectorAll('.day-selector input[type="checkbox"]').forEach(checkbox => {
+        if (checkbox.checked) {
+            const day = checkbox.value; // Exemplo: 'monday'
+            const time = document.querySelector(`#${checkbox.id}Time`).value; // Exemplo: '19:54'
+            if (time) {
+                daysAndTimes.push({ day, time });
+            }
+        }
+    });
+    
 
     // Adicionar a foto de perfil ao FormData
+    const perfilFoto = document.getElementById('perfil_foto').files[0];
     if (perfilFoto) {
         formData.append('perfil_foto', perfilFoto);
     }
 
-
-    // Adicionar todos os documentos em `storedDocuments` ao FormData
+    // Adicionar os documentos acumulados ao FormData
     storedDocuments.forEach((file) => {
         formData.append('documents', file);
     });
 
     // Adicionar o vídeo ao FormData
+    const video = document.getElementById('video').files[0];
     if (video) {
         formData.append('video', video);
     }
 
     // Adiciona os certificados acumulados ao FormData
     adicionarCertificadosAoFormData(formData);
+
+    formData.append('contactDaysAndTimes', JSON.stringify(daysAndTimes));
 
     // Fazer o upload via fetch
     fetch('/api/editar_prestador', { 
@@ -1258,6 +1345,289 @@ document.addEventListener('DOMContentLoaded', () => {
     // Adiciona o evento scroll com debounce
     window.addEventListener('scroll', debounce(toggleButtonPosition, 100));
 });
+
+
+
+// Recuperar os dados do elemento
+// Obter o container que contém os dados
+const contactDaysContainer = document.getElementById('contactDays');
+
+// Recuperar os dados de dias e horários do atributo `data-dias-horas-contato`
+const diasHorasContato = JSON.parse(contactDaysContainer.getAttribute('data-dias-horas-contato') || '{}');
+
+// Iterar pelos dias e preencher os checkboxes e horários
+for (const [dia, hora] of Object.entries(diasHorasContato)) {
+    // Selecionar o checkbox correspondente
+    const checkbox = document.querySelector(`input[type="checkbox"][id="${dia}"]`);
+    if (checkbox) {
+        checkbox.checked = true; // Marcar o checkbox como selecionado
+
+        // Selecionar o input time correspondente e preencher o valor
+        const horarioInput = document.querySelector(`input[type="time"][id="${dia}Time"]`);
+        if (horarioInput) {
+            horarioInput.value = hora; // Preencher o horário
+            horarioInput.disabled = false; // Habilitar o campo
+        }
+    }
+}
+
+// Habilitar ou desabilitar os inputs de horário ao marcar/desmarcar os checkboxes
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', (event) => {
+        const dia = event.target.id; // Obter o ID do checkbox
+        const horarioInput = document.querySelector(`input[type="time"][id="${dia}Time"]`);
+        if (horarioInput) {
+            horarioInput.disabled = !event.target.checked; // Habilitar se o checkbox estiver marcado
+        }
+    });
+});
+
+// Seleciona todos os checkboxes
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    // Evento para quando o checkbox é alterado
+    checkbox.addEventListener('change', function () {
+        const label = document.querySelector(`label[for="${this.id}"]`); // Seleciona a label correspondente
+        const timeInput = document.querySelector(`#${this.id}Time`); // Seleciona o campo de hora correspondente
+
+        if (this.checked) {
+            timeInput.disabled = false; // Habilita o campo de hora
+            timeInput.focus(); // Foca automaticamente no campo de hora
+        } else {
+            timeInput.disabled = true; // Desabilita o campo de hora
+            timeInput.value = ''; // Limpa o valor do campo de hora
+            label.classList.remove('confirmed'); // Remove o destaque visual
+        }
+    });
+
+    // Evento para quando o campo de hora perde o foco
+    const timeInput = document.querySelector(`#${checkbox.id}Time`);
+    timeInput.addEventListener('blur', function () {
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        if (this.value) {
+            // Mantém o destaque na label se o horário estiver preenchido
+            label.classList.add('confirmed');
+        } else {
+            // Remove o destaque se o horário não estiver preenchido
+            label.classList.remove('confirmed');
+        }
+    });
+});
+
+
+
+
+// Habilitar/desabilitar campos de horário ao marcar/desmarcar o checkbox
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', (event) => {
+        const dia = event.target.id;
+        const horarioInput = document.querySelector(`input[type="time"][id="${dia}Time"]`);
+        if (horarioInput) {
+            horarioInput.disabled = !event.target.checked; // Habilitar se marcado, desabilitar se desmarcado
+        }
+    });
+});
+
+
+function openModal() {
+    const backdrop = document.getElementById('modal-backdrop');
+    const container = document.getElementById('popup-container');
+    const content = document.getElementById('popup-content');
+
+    console.log('Backdrop Element:', backdrop);
+    console.log('Container Element:', container);
+    console.log('Content Element:', content);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const prestadorId = urlParams.get('prestador_id');
+    console.log('Prestador ID:', prestadorId);
+
+    if (!prestadorId) {
+        content.innerHTML = `<p>Erro: ID do prestador não encontrado na URL.</p>`;
+        return;
+    }
+
+    console.log('Fazendo requisição para a API:', `/api/get-prestador?prestador_id=${prestadorId}`);
+    fetch(`/api/get-prestador?prestador_id=${prestadorId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Erro recebido da API:', data.error);
+                content.innerHTML = `<p>Erro: ${data.error}</p>`;
+                return;
+            }
+
+            const service = data[0];
+            const serviceElement = document.createElement('div');
+            serviceElement.classList.add('service');
+
+            const images = Array.isArray(service.images) ? service.images : [];
+            const videos = Array.isArray(service.videos) ? service.videos : [];
+            let galleryItems = '';
+            let firstImageAdded = false; // Flag para marcar se a primeira imagem já foi adicionada
+            
+            console.log('Imagens carregadas:', images);
+            galleryItems += images.map((imgId, index) => {
+                // Garante que a primeira imagem seja marcada como ativa
+                const isActive = !firstImageAdded;
+                firstImageAdded = true;
+                return `
+                    <img src="/uploads/img/${imgId}" alt="${service.service_name}" class="${isActive ? 'active' : ''}">
+                `;
+            }).join('');
+            
+            // Adicione os vídeos depois das imagens, sem a classe "active" inicialmente
+            console.log('Vídeos carregados:', videos);
+            galleryItems += videos.map(vidId => `
+                <video src="/uploads/video/${vidId}" controls></video>
+            `).join('');
+
+            const description = service.description || 'Descrição não disponível';
+            // Log da foto de perfil para verificar se está chegando
+            console.log('Foto de perfil carregada:', service.perfil_foto);
+            content.innerHTML = `
+            <div class="titulo-container">
+                <h3 class="tituloAvaliacao">${service.service_name}</h3>
+            </div>
+            <div class="gallery">
+                ${galleryItems}
+                <div class="video-container">
+                    <div class="video-description active">
+                        <div class="responsavel-info" id="responsavel-${service.id}">
+                            <div class="perfil-foto" style="background-image: url('/uploads/img/${service.perfil_foto}');"></div>
+                            <p>${service.person_name}</p>
+                        </div>
+                        <p><strong>Nota:</strong> ${service.rating !== null ? service.rating : 'N/A'}</p>
+                        <p><strong>Descrição:</strong>
+                        <div class="description-container">
+                            <span class="short-description">${description.substring(0, 50)}...</span>
+                            <span class="full-description" style="display: none;">${description}</span>
+                            <button type="button" class="read-more-btn">Ler mais</button>
+                        </div>
+                        </p>
+                    </div>
+                </div>
+                <div class="navigation-buttons-horizontal">
+                    <button type="button" class="prev">&laquo;</button>
+                    <button type="button" class="next">&raquo;</button>
+                </div>
+                
+            </div>
+            `;
+
+            backdrop.style.display = 'block';
+            container.style.display = 'flex';
+            console.log('Modal exibido com sucesso.');
+
+            const gallery = content.querySelector('.gallery');
+            const videoDescription = content.querySelector('.video-description');
+            if (gallery && videoDescription) {
+                let activeIndex = 0;
+                const imagesAndVideos = gallery.querySelectorAll('img, video');
+
+                function showNext() {
+                    const currentItem = imagesAndVideos[activeIndex];
+                    currentItem.classList.remove('active');
+                    currentItem.classList.add('slide-left'); // Animação para sair pela esquerda
+        
+                    activeIndex = (activeIndex + 1) % imagesAndVideos.length;
+        
+                    const nextItem = imagesAndVideos[activeIndex];
+                    nextItem.classList.remove('slide-left', 'slide-right');
+                    nextItem.classList.add('active'); // Ativa o próximo item
+        
+                    // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
+                    if (activeIndex === 0) {
+                        videoDescription.classList.add('active'); // Aplica fade in para a descrição
+                        videoDescription.classList.remove('hidden'); // Remove a classe que esconde
+                        // if (solicitarServicoBtn) {
+                        //     solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
+                        //     solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
+                        // }
+                    } else {
+                        videoDescription.classList.remove('active'); // Esconde a descrição
+                        videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
+                        // if (solicitarServicoBtn) {
+                        //     solicitarServicoBtn.classList.remove('active'); // Esconde o botão
+                        //     solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
+                        // }
+                    }
+                }
+        
+                function showPrev() {
+                    const currentItem = imagesAndVideos[activeIndex];
+                    currentItem.classList.remove('active');
+                    currentItem.classList.add('slide-right'); // Animação para sair pela direita
+        
+                    activeIndex = (activeIndex - 1 + imagesAndVideos.length) % imagesAndVideos.length;
+        
+                    const prevItem = imagesAndVideos[activeIndex];
+                    prevItem.classList.remove('slide-left', 'slide-right');
+                    prevItem.classList.add('active'); // Ativa o item anterior
+        
+                    // Atualiza a descrição e o botão de solicitação para o primeiro item do carrossel horizontal
+                    if (activeIndex === 0) {
+                        videoDescription.classList.add('active'); // Aplica fade in para a descrição
+                        videoDescription.classList.remove('hidden'); // Remove a classe que esconde
+                        // if (solicitarServicoBtn) {
+                        //     solicitarServicoBtn.classList.add('active'); // Aplica fade in para o botão
+                        //     solicitarServicoBtn.classList.remove('hidden'); // Remove a classe que esconde o botão
+                        // }
+                    } else {
+                        videoDescription.classList.remove('active'); // Esconde a descrição
+                        videoDescription.classList.add('hidden'); // Adiciona a classe que esconde a descrição
+                        // if (solicitarServicoBtn) {
+                        //     solicitarServicoBtn.classList.remove('active'); // Esconde o botão
+                        //     solicitarServicoBtn.classList.add('hidden'); // Adiciona a classe que esconde o botão
+                        // }
+                    }
+                }
+                
+                const nextBtn = content.querySelector('.next');
+                const prevBtn = content.querySelector('.prev');
+                if (nextBtn && prevBtn) {
+                    console.log("Botões Next e Prev encontrados.");
+                    nextBtn.addEventListener('click', showNext);
+                    prevBtn.addEventListener('click', showPrev);
+                } else {
+                    console.error("Erro: Botões Next ou Prev não encontrados.");
+                }
+                
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados:', error);
+            content.innerHTML = `<p>Erro ao carregar dados: ${error}</p>`;
+        });
+}
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('read-more-btn')) {
+        const btn = event.target;
+        const descriptionContainer = btn.parentElement; // Obtém o contêiner pai
+        const shortDescription = descriptionContainer.querySelector('.short-description');
+        const fullDescription = descriptionContainer.querySelector('.full-description');
+        
+        if (fullDescription.style.display === 'none') {
+            fullDescription.style.display = 'block'; // Mostra a descrição completa
+            shortDescription.style.display = 'none'; // Esconde a descrição curta
+            btn.textContent = 'Ler menos';
+        } else {
+            fullDescription.style.display = 'none'; // Esconde a descrição completa
+            shortDescription.style.display = 'inline'; // Mostra a descrição curta
+            btn.textContent = 'Ler mais';
+        }
+    }
+});
+
+
+function closeModal() {
+    const backdrop = document.getElementById('modal-backdrop');
+    const container = document.getElementById('popup-container');
+
+    // Oculta o fundo escuro e o contêiner
+    backdrop.style.display = 'none';
+    container.style.display = 'none';
+}
+
 
 function logoutUser() {
     // Redirecionar para a página de login

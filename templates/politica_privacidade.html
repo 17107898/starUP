@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade - Tech. Informatic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .logo-container img {
+            height: 70px;
+            border-radius: 50%; /* Torna a imagem circular */
+            border: 2px solid #007bff; /* Adiciona uma borda */
+            cursor: pointer;
+            transition: transform 0.3s ease; /* Animação suave ao passar o mouse */
+        }
+
+        .logo-container img:hover {
+            transform: scale(1.1); /* Aumenta levemente o tamanho ao passar o mouse */
+        }
+
+        .privacy-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .privacy-container h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .privacy-container h2 {
+            color: #007bff;
+            margin-top: 20px;
+        }
+
+        .privacy-container p {
+            margin: 10px 0;
+        }
+
+        .privacy-container ul {
+            list-style-type: disc;
+            margin: 10px 0 10px 20px;
+        }
+
+        .privacy-container ul li {
+            margin: 5px 0;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo-container">
+        <a href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='images/Empresa.png') }}" alt="Tech Informatic Logo">
+        </a>
+    </div>
+    <div class="privacy-container">
+        <h1>Política de Privacidade</h1>
+        <p>A Tech. Informatic valoriza a privacidade e a segurança das informações de seus usuários. Este documento descreve como coletamos, utilizamos e protegemos os dados de clientes e prestadores que utilizam nossa plataforma.</p>
+
+        <h2>1. Dados Coletados</h2>
+        <h3>1.1 Clientes</h3>
+        <ul>
+            <li><strong>Informações pessoais:</strong> Nome, e-mail e senha (armazenada de forma criptografada).</li>
+            <li><strong>Informações de contato:</strong> Telefone, método preferencial de contato e data para retorno.</li>
+            <li><strong>Informações de localização:</strong> CEP, rua, bairro, cidade e estado.</li>
+            <li><strong>Informações sobre a solicitação:</strong> Tipo de serviço, descrição do problema, orçamento disponível e nível de urgência.</li>
+            <li><strong>Preferências adicionais:</strong> Preferências sobre prestadores, comentários e referências (opcionais).</li>
+        </ul>
+
+        <h3>1.2 Prestadores</h3>
+        <ul>
+            <li><strong>Informações pessoais:</strong> Nome, e-mail e informações de contato.</li>
+            <li><strong>Perfil profissional:</strong> Tipo de serviço oferecido, descrição, orçamento sugerido e localização.</li>
+            <li><strong>Feedbacks e avaliações:</strong> Comentários e notas atribuídas pelos clientes.</li>
+            <li><strong>Mídias enviadas:</strong> Imagens, vídeos e documentos (incluindo foto de perfil).</li>
+            <li><strong>Outras informações:</strong> Histórico de interações, como visualizações de perfis e mensagens trocadas.</li>
+        </ul>
+
+        <h2>2. Uso das Informações</h2>
+        <p>Os dados coletados são utilizados para:</p>
+        <ul>
+            <li><strong>Conexão entre clientes e prestadores:</strong> Melhorar o matchmaking e oferecer sugestões personalizadas.</li>
+            <li><strong>Comunicação:</strong> Garantir que clientes e prestadores possam entrar em contato de forma direta e segura.</li>
+            <li><strong>Melhoria da experiência:</strong> Ajustar algoritmos de recomendação com base em interações e preferências.</li>
+            <li><strong>Segurança:</strong> Verificar e validar os dados fornecidos para prevenir fraudes.</li>
+        </ul>
+
+        <h2>3. Segurança dos Dados</h2>
+        <p>Nossa plataforma utiliza medidas de segurança avançadas para proteger as informações:</p>
+        <ul>
+            <li>Criptografia de senhas utilizando o método <strong>bcrypt</strong>.</li>
+            <li>Firewalls e tecnologias de proteção para evitar acessos indevidos.</li>
+            <li>Backups periódicos para prevenir perdas de dados.</li>
+        </ul>
+
+        <h2>4. Direitos dos Usuários</h2>
+        <p>Os usuários têm os seguintes direitos em relação aos seus dados:</p>
+        <ul>
+            <li><strong>Acesso:</strong> Solicitar uma cópia das informações armazenadas.</li>
+            <li><strong>Correção:</strong> Atualizar ou corrigir informações incorretas.</li>
+            <li><strong>Exclusão:</strong> Solicitar a exclusão de dados pessoais, respeitando os limites legais.</li>
+            <li><strong>Portabilidade:</strong> Receber uma cópia estruturada dos dados fornecidos.</li>
+        </ul>
+
+        <h2>5. LGPD e Conformidade Legal</h2>
+        <p>A Tech. Informatic está em conformidade com a <strong>Lei Geral de Proteção de Dados (LGPD)</strong>, assegurando:</p>
+        <ul>
+            <li>Consentimento claro e explícito para o uso dos dados.</li>
+            <li>Transparência no tratamento de informações.</li>
+            <li>Garantia de privacidade e proteção contra acessos indevidos.</li>
+        </ul>
+
+        <h2>6. Contato</h2>
+        <p>Para dúvidas ou solicitações relacionadas à privacidade, entre em contato:</p>
+        <p>
+            <strong>E-mail:</strong> suporte@techinformatic.com<br>
+            <strong>Telefone:</strong> (81) 9 8487-0534
+        </p>
+    </div>
+</body>
+</html>

@@ -37,12 +37,34 @@ h2 {
 }
 
 /* Estilos para os rótulos */
-label {
-    display: block;
-    margin-bottom: 10px;
+.label-icon {
+    display: flex; /* Para alinhar o ícone e o texto lado a lado */
+    align-items: center; /* Alinha verticalmente */
     font-weight: bold;
     color: #555;
     text-align: left;
+    margin-bottom: 10px;
+}
+
+.upload-limit-message {
+    color: #ffffff; /* Cor do texto branco */
+    background-color: #ff4d4d; /* Vermelho vibrante para fundo */
+    border: 2px solid #ff0000; /* Borda vermelha */
+    border-radius: 5px; /* Arredonda as bordas */
+    padding: 10px; /* Espaçamento interno */
+    font-size: 16px; /* Tamanho da fonte */
+    font-weight: bold; /* Texto em negrito */
+    text-align: center; /* Centraliza o texto */
+    margin-top: 20px; /* Espaço superior */
+    display: none; /* Inicialmente escondido */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Sombra para destaque */
+    animation: fadeIn 0.5s ease-in-out, bounce 1s ease infinite alternate; /* Animações */
+}
+
+.label-icon .icon {
+    width: 20px; /* Ajuste o tamanho do ícone */
+    height: 20px; /* Ajuste o tamanho do ícone */
+    margin-right: 8px; /* Espaço entre o ícone e o texto */
 }
 
 /* Inputs de upload de arquivos */
@@ -55,21 +77,37 @@ input[type="file"] {
     font-size: 14px;
 }
 
-/* Botão de envio */
-button {
-    background-color: #28a745;
+#button-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-save {
+    display: flex;
+    align-items: center;
+    background-color: #007bff;
     color: white;
-    padding: 10px 15px;
     border: none;
+    padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    width: 100%;
-    max-width: 150px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    opacity: 1;
 }
 
-button:hover {
-    background-color: #218838;
+.btn-save .button-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.btn-save:hover {
+    background-color: #0056b3;
 }
 
 /* Mensagem de resposta */
@@ -79,7 +117,25 @@ button:hover {
     font-weight: bold;
     text-align: center;
 }
+#response-message {
+    display: none; /* Oculta por padrão */
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
 
+#response-message.success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+#response-message.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
 /* Responsividade para telas menores */
 @media (max-width: 600px) {
     form {
@@ -173,4 +229,42 @@ button:hover {
 
 .upload-icon:hover {
     transform: scale(1.1); /* Zoom ao passar o mouse */
+}
+
+.upload-icon.disabled {
+    opacity: 0.5; /* Reduz a opacidade */
+    cursor: not-allowed; /* Mostra um indicador de que está desabilitado */
+    transform: none; /* Remove o efeito de zoom */
+}
+
+.profile-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: #ccc;
+    background-size: cover;
+    background-position: center;
+    margin: 0 auto;
+}
+
+/* Garantindo estilos específicos para o botão de remoção */
+button.remove-image-perfil {
+    all: unset; /* Remove todos os estilos herdados */
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    background-color: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    height: 33px;
+    border-radius: 50%;
+    width: 33px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+button.remove-image-perfil:hover {
+background-color: rgba(192, 3, 3, 0.8);
 }

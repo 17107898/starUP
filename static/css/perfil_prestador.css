@@ -381,8 +381,8 @@ select {
 
 .logout-container {
     position: fixed;
-    top: 50px; /* Ajuste a posição vertical em relação ao ícone de notificação */
-    right: 20px;
+    top: 50px; /* Ajuste para alinhar verticalmente em relação ao ícone de notificação */
+    right: 20px; /* Alinhado à direita */
     z-index: 1000;
     text-align: center;
 }
@@ -396,6 +396,251 @@ select {
 
 .logout-icon:hover {
     transform: scale(1.1); /* Efeito de zoom ao passar o mouse */
+}
+
+/* Novo estilo para o botão do carrossel */
+.abrir-carrosel-perfil {
+    position: fixed;
+    top: 100px; /* Colocado logo abaixo do ícone de logout */
+    right: 20px; /* Mesmo alinhamento horizontal do logout */
+    z-index: 999; /* Mantém o botão acima de outros elementos */
+}
+
+.abrir-carrosel-perfil-btn {
+    background-color: transparent; /* Fundo transparente */
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.popup-icon {
+    width: 30px; /* Mesmo tamanho do ícone de logout */
+    height: 30px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.popup-icon:hover {
+    transform: scale(1.1); /* Efeito de zoom ao passar o mouse */
+}
+
+/* Estilo do contêiner branco */
+/* Estilo do contêiner branco */
+/* Fundo escuro */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+    z-index: 999; /* Fica atrás do popup-container */
+    display: none; /* Inicialmente oculto */
+}
+
+/* Contêiner branco */
+.popup-container {
+    position: fixed;
+    top: 50%; /* Centraliza verticalmente */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translate(-50%, -50%); /* Ajusta o ponto de referência para o centro */
+    width: 750px; /* Largura */
+    height: 570px; /* Altura */
+    background-color: #fff; /* Cor de fundo branca */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve */
+    border-radius: 8px; /* Bordas arredondadas */
+    z-index: 1000; /* Fica acima do fundo escuro */
+    display: flex;
+    justify-content: center; /* Alinha conteúdo horizontalmente */
+    align-items: center; /* Alinha conteúdo verticalmente */
+    text-align: center;
+}
+.popup-close-fechar {
+    position: absolute;
+    top: 10px; /* Ajuste a posição vertical */
+    right: 10px; /* Ajuste a posição horizontal */
+    font-size: 24px; /* Tamanho do ícone */
+    color: #000; /* Cor do botão */
+    cursor: pointer; /* Mostra que é clicável */
+    background: none;
+    border: none;
+    outline: none;
+    z-index: 1001; /* Certifique-se de que esteja acima do conteúdo do modal */
+    transition: transform 0.2s ease-in-out;
+}
+
+.popup-close-fechar:hover {
+    transform: scale(1.2); /* Aumenta o ícone ao passar o mouse */
+    color: #ff0000; /* Muda a cor para vermelho ao passar o mouse */
+}
+#popup-content {
+    padding: 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #333;
+    margin-top: -105px;
+}
+.gallery {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* position: relative; */
+    width: 100%;
+    margin: 0 auto;
+    height: 80vh;
+    flex-direction: column;
+}
+
+
+/* Estilo padrão da galeria (como você já configurou) */
+.gallery img, .gallery video {
+    position: absolute;
+    width: 300px;
+    height: 490px;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
+    border: 5px solid #ccc;
+    border-radius: 10px;
+}
+
+/* Imagem ou vídeo ativo */
+.gallery img.active, .gallery video.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Sai pela esquerda */
+.gallery img.slide-left, .gallery video.slide-left {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+/* Sai pela direita */
+.gallery img.slide-right, .gallery video.slide-right {
+    transform: translateX(100%);
+    opacity: 0;
+}
+/* Estilo de descrição no carrossel para desktop */
+.video-description {
+    position: absolute;
+    /* bottom: -383px;
+    left: 10px; */
+    color: white;
+    padding: 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    max-width: 200px;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin-left: -146px;
+    margin-top: 52px;
+    text-align: left;
+    transition: opacity 0.5s ease;
+}
+.description-container {
+    max-height: 65px; /* Limite de altura */
+    overflow-y: auto; /* Ativa o scroll vertical */
+    width: 100%; /* Garante que ocupe toda a largura do contêiner */
+    box-sizing: border-box; /* Inclui padding no tamanho total */
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo semitransparente */
+    padding: 5px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+}
+
+.full-description {
+    display: none; /* Por padrão, está escondida */
+    max-height: 100%; /* Ocupa no máximo a altura do contêiner pai */
+    overflow-y: auto; /* Scroll vertical caso o conteúdo exceda o espaço disponível */
+    padding: 5px; /* Ajusta o espaçamento interno */
+    color: #fff; /* Texto branco */
+    width: 100%; /* Ocupa toda a largura do contêiner pai */
+    box-sizing: border-box; /* Inclui o padding na largura */
+}
+
+.short-description {
+    display: inline; /* A descrição curta é exibida por padrão */
+}
+
+
+
+.perfil-foto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover; /* Ajusta a imagem para cobrir todo o div */
+    background-position: center; /* Centraliza a imagem */
+    display: inline-block;
+}
+
+.responsavel-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.responsavel-info p {
+    margin: 0;
+    font-size: 16px;
+}
+
+
+/* Quando a descrição estiver ativa */
+.video-description.active {
+    opacity: 1; /* Descrição visível */
+}
+
+/* Quando a descrição for oculta */
+.video-description.hidden {
+    opacity: 0; /* Descrição invisível */
+    display: none;
+}
+
+.video-description p {
+    margin: 6px 10px;
+}
+.read-more-btn {
+    background: none;
+    border: none;
+    color: #00f;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 12px;
+    padding: 0;
+}
+
+button.next, button.prev {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 24px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 50%;
+}
+button.next {
+    left: 540px;
+}
+button.prev {
+    left: 166px;
+}
+
+.tituloAvaliacao {
+    font-size: 1.5em;
+    color: #555;
+    margin: 0px;
+    margin-bottom: -25px;
+    margin-top: 139px;
 }
 
 
@@ -794,6 +1039,99 @@ select {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Sombra para destaque */
     animation: fadeIn 0.5s ease-in-out, bounce 1s ease infinite alternate; /* Animações */
 }
+/* Container para os dias */
+#contactDays {
+    display: flex;
+    gap: 10px; /* Reduz a distância entre os dias */
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Ocultando o checkbox */
+.day-selector input[type="checkbox"] {
+    display: none;
+}
+
+/* Estilo normal da label */
+.day-selector .day-label {
+    display: inline-block;
+    padding: 8px 15px; /* Reduz o padding */
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    border-radius: 20px; /* Ajusta as bordas */
+    border: 1px solid #ccc;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Estilo quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked + .day-label {
+    background-color: #007bff; /* Cor de fundo quando selecionado */
+    color: #fff; /* Texto branco */
+    border-color: #007bff;
+}
+
+/* Estilo do campo de hora */
+.day-selector input[type="time"] {
+    margin-top: 5px; /* Ajuste da margem superior */
+    margin-left: auto; /* Remove espaços extras ao lado */
+    margin-right: auto;
+    font-size: 12px; /* Reduz o tamanho do texto */
+    display: none; /* Inicialmente escondido */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px 5px; /* Reduz o padding interno */
+    width: 70px; /* Define uma largura menor */
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); /* Pequeno sombreado */
+    text-align: center; /* Centraliza o texto no campo */
+}
+
+/* Exibe o campo de hora quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked ~ input[type="time"] {
+    display: block;
+    margin-top: 4px; /* Reduz o espaço entre o label e o campo de hora */
+}
+
+/* Estilo do botão (label) quando selecionado */
+.day-selector label {
+    display: inline-block;
+    padding: 8px 12px; /* Ajusta o padding */
+    font-size: 12px; /* Tamanho menor */
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    color: #000; /* Cor do texto padrão */
+    border: 1px solid #ccc; /* Borda padrão */
+    background-color: #f8f8f8; /* Fundo padrão */
+}
+
+/* Label destacada quando o checkbox está marcado */
+.day-selector input[type="checkbox"]:checked + label {
+    background-color: #007bff; /* Fundo azul */
+    color: #fff; /* Texto branco */
+    border-color: #007bff;
+}
+
+/* Manutenção do estado da label quando o horário é confirmado */
+.day-selector label.confirmed {
+    background-color: #007bff; /* Fundo azul mais escuro */
+    color: #fff;
+    border-color: #007bff;
+}
+
+
+/* Estilo para os ícones ao lado */
+.imagem-lado {
+    width: 24px; /* Ajuste o tamanho do ícone conforme necessário */
+    height: 24px;
+    margin-right: 10px; /* Espaço entre o ícone e o texto */
+    vertical-align: middle;
+}
+
 
 .upload-message {
     margin-top: 10px;
@@ -897,5 +1235,40 @@ label {
 @media (max-width: 1080px) {  /* Para telas de largura de até 1080px */
     .close {
         margin-left: 333px !important;
+    }
+
+    #popup-content {
+        padding: 20px;
+        text-align: center;
+        font-size: 16px;
+        color: #333;
+        margin-top: -830px;
+    }
+
+    .tituloAvaliacao {
+        font-size: 1.5em;
+        color: #555;
+        margin: 0px;
+        margin-bottom: -160px;
+        margin-top: 1000px;
+    }
+
+    .popup-close-fechar {
+        position: absolute;
+        top: 10px; /* Ajuste a posição vertical */
+        right: 10px; /* Ajuste a posição horizontal */
+        left: 460px;
+        font-size: 24px; /* Tamanho do ícone */
+        color: #000; /* Cor do botão */
+        cursor: pointer; /* Mostra que é clicável */
+        background: none;
+        border: none;
+        outline: none;
+        z-index: 1001; /* Certifique-se de que esteja acima do conteúdo do modal */
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .popup-container {
+    height: 680px;
     }
 }

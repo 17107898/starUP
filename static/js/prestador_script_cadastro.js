@@ -53,3 +53,13 @@ document.getElementById('prestadorForm').addEventListener('submit', function(eve
         document.getElementById('response').textContent = 'Erro ao cadastrar prestador de serviços.';
     });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const termosAceitos = urlParams.get('termos_aceitos') === 'true'; // Verifica se o checkbox foi confirmado
+
+    const termsCheckbox = document.getElementById("terms");
+    if (termosAceitos) {
+        termsCheckbox.checked = true; // Marca o checkbox automaticamente
+    }
+});

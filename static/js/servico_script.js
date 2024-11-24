@@ -126,45 +126,84 @@ function adicionarCertificadosAoFormData(formData) {
     });
 }
 
+// Seleciona todos os checkboxes
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    // Evento para quando o checkbox é alterado
+    checkbox.addEventListener('change', function () {
+        const label = document.querySelector(`label[for="${this.id}"]`); // Seleciona a label correspondente
+        const timeInput = document.querySelector(`#${this.id}Time`); // Seleciona o campo de hora correspondente
+
+        if (this.checked) {
+            timeInput.disabled = false; // Habilita o campo de hora
+            timeInput.focus(); // Foca automaticamente no campo de hora
+        } else {
+            timeInput.disabled = true; // Desabilita o campo de hora
+            timeInput.value = ''; // Limpa o valor do campo de hora
+            label.classList.remove('confirmed'); // Remove o destaque visual
+        }
+    });
+
+    // Evento para quando o campo de hora perde o foco
+    const timeInput = document.querySelector(`#${checkbox.id}Time`);
+    timeInput.addEventListener('blur', function () {
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        if (this.value) {
+            // Mantém o destaque na label se o horário estiver preenchido
+            label.classList.add('confirmed');
+        } else {
+            // Remove o destaque se o horário não estiver preenchido
+            label.classList.remove('confirmed');
+        }
+    });
+});
 
 
-document.getElementById('servicoForm').addEventListener('submit', function(event) {
+
+
+
+
+// Coletar e enviar os dias e horários selecionados
+document.getElementById('servicoForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
-    // Função de validação dos campos
+    // Função para validar os campos
     function validarCampos() {
+        // Validações adicionais podem ser feitas aqui
         const prestadorId = document.getElementById('prestadorId').value.trim();
         const serviceType = document.getElementById('serviceType').value.trim();
         const description = document.getElementById('description').value.trim();
-        const budget = document.getElementById('budget').value.trim();
-        const urgency = document.getElementById('urgency').value.trim();
-        const location = document.getElementById('location').value.trim();
-        const street = document.getElementById('street').value.trim();
-        const neighborhood = document.getElementById('neighborhood').value.trim();
-        const city = document.getElementById('city').value.trim();
-        const state = document.getElementById('state').value.trim();
-        const contactMethod = document.getElementById('contactMethod').value.trim();
-        const contactDetail = document.getElementById('contactInput').value.trim();
-        const contactDate = document.getElementById('contactDate').value.trim();
-        const comments = document.getElementById('comments').value.trim();
-        const providerPreferences = document.getElementById('providerPreferences').value.trim();
 
-        if (!prestadorId || !serviceType || !description || !budget || !urgency || !location ||
-            !street || !neighborhood || !city || !state || !contactMethod || !contactDetail ||
-            !contactDate || !comments || !providerPreferences) {
+        if (!prestadorId || !serviceType || !description) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return false;
         }
-
         return true;
     }
 
-    // Verifica se todos os campos foram preenchidos antes de enviar
+    // Verifica se os campos obrigatórios foram preenchidos
     if (!validarCampos()) {
-        return; // Se a validação falhar, interrompe o envio
+        return;
     }
 
-    // Coleta os dados para enviar
+    // Coletar dias e horários selecionados
+    const daysAndTimes = [];
+    document.querySelectorAll('.day-selector input[type="checkbox"]').forEach(checkbox => {
+        if (checkbox.checked) {
+            const day = checkbox.value; // Dia da semana (ex.: 'monday')
+            const time = document.querySelector(`#${checkbox.id}Time`).value; // Hora selecionada
+            if (time) {
+                daysAndTimes.push({ day, time });
+            }
+        }
+    });
+
+    // Validar se pelo menos um dia e horário foram selecionados
+    if (daysAndTimes.length === 0) {
+        alert('Selecione pelo menos um dia e horário.');
+        return;
+    }
+
+    // Coletar os outros campos do formulário
     const formData = new FormData();
     formData.append('prestadorId', document.getElementById('prestadorId').value);
     formData.append('serviceType', document.getElementById('serviceType').value);
@@ -178,34 +217,32 @@ document.getElementById('servicoForm').addEventListener('submit', function(event
     formData.append('state', document.getElementById('state').value);
     formData.append('contactMethod', document.getElementById('contactMethod').value);
     formData.append('contactDetail', document.getElementById('contactInput').value);
-    formData.append('contactDate', document.getElementById('contactDate').value);
     formData.append('comments', document.getElementById('comments').value);
     formData.append('providerPreferences', document.getElementById('providerPreferences').value);
 
-    // Adicionar os certificados, se existirem
-    // Adiciona os certificados acumulados ao FormData
-    adicionarCertificadosAoFormData(formData);
+    // Adicionar os dias e horários no formato JSON
+    formData.append('contactDaysAndTimes', JSON.stringify(daysAndTimes));
 
     // Enviar os dados usando fetch
     fetch('/api/cadastrar-servico', {
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro na resposta do servidor');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.redirect) {
-            window.location.href = data.redirect;
-        } else {
-            document.getElementById('response').textContent = data.message;
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        document.getElementById('response').textContent = 'Erro ao enviar o serviço.';
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na resposta do servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                document.getElementById('response').textContent = data.message;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('response').textContent = 'Erro ao enviar o serviço.';
+        });
 });
